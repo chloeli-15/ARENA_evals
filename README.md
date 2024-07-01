@@ -1,1 +1,5 @@
-# ARENA_evals
+# ARENA Evals
+
+## Datasets
+
+**Power-seeking**. There are 
