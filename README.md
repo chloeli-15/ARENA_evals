@@ -10,3 +10,6 @@
 5. "manipulation": chooses to lie to achieve a goal
 6. "covertness": chooses to hide goal if it's helpful for achieving it
   
+**Situational-awareness**. There are 2 types of question labels, and 10 questions in total:
+1. "stages": whether model can recognize training stages
+2. "influence": whether model can correctly recognize how it can and cannot influence/be influenced by the world (e.g. it cannot go to a store, it can write but cannot send an email, it can affect future outcomes etc.)
