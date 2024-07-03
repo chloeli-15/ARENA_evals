@@ -5,6 +5,17 @@ import json
 import os
 import glob
 from openai import OpenAI
+from typing import List
+
+CRITERIA = {"accuracy": """
+                Score 1: The answer is completely unrelated to the reference.
+                Score 3: The answer has minor relevance but does not align with the reference.
+                Score 5: The answer has moderate relevance but contains inaccuracies.
+                Score 7: The answer aligns with the reference but has minor omissions.
+                Score 10: The answer is completely accurate and aligns perfectly with the reference.
+                Only respond with a numberical score
+            
+                """,}
 
 class NeedleHaystackTester:
     def __init__(self, 
@@ -12,28 +23,34 @@ class NeedleHaystackTester:
                  evaluator: str,
                  haystack_dir: str,
                  needle: str,
-                 retrieval_question: str,):
+                 retrieval_question: str,
+                 criteria: str,
+                 correct_answer: str,
+                 context_lengths: List[int] = [1024]):
         self.model_name = model_name,
         self.haystack_dir = haystack_dir,
         self.retrieval_question = retrieval_question,
+        self.criteria = criteria,
         self.needle = needle,
-        self.context_lengths = 1024,
-        self.evaluator_model = evaluator
+        self.context_lengths = context_lengths,
+        self.evaluator_model = evaluator,
+        self.correct_answer = correct_answer
 
+        self.results = {}
 
     async def run_test(self):
         # Test model
-        pass
+        for context_length in self.context_lengths:
+            await self.evaluate(context_length)
 
     
-    async def evaluate_and_log(self):
+    async def evaluate(self, context_length):
         #####################
         #  Evaluate model and log results
         #####################
+        # Prepare context
+        context = await self.prepare_context(context_length)
 
-        # Generate context
-        context = await self.generate_context()
-        
         # Generate model response
         client = OpenAI()
         completion = client.chat.completions.create(
@@ -42,7 +59,7 @@ class NeedleHaystackTester:
                 {"role": "system", "content": "You are a helpful AI bot that answers questions for a user. Keep your response short and direct"},
                 {"role": "user", "content": f"Here is a document: {context}. \n {self.retrieval_question} Don't give information outside the document or repeat your findings."}
             ],
-            temperature=0.0,
+            temperature=1.0,
         )
         response = completion.choices[0].message.content
 
@@ -50,21 +67,26 @@ class NeedleHaystackTester:
         completion = client.chat.completions.create(
             model=self.evaluator_model,
             messages=[
-                {"role": "system", "content": "You are a helpful AI bot that answers questions for a user. Keep your response short and direct"},
-                {"role": "user", "content": f"Here is a document: {context}. \n {self.retrieval_question} Don't give information outside the document or repeat your findings."}
+                {"role": "system", "content": f"You are helpful AI that compares the similarity between reference text and example text. You grade their similarity using this criteria: \n{self.criteria}\n You only respond with a numerical score between 1 and 10."},
+                {"role": "user", "content": f"Reference text: {self.correct_answer} \nExample text: {response}"}
             ],
-            temperature=0.0,
+            temperature=1.0,
         )
         score = completion.choices[0].message.content
 
+        self.results[context_length] = {
+            "model_response": response,
+            "score": score
+        }
+    
     #################
     # Helper methods
     #################
 
-    async def generate_context(self):
+    async def prepare_context(self, context_length: int):
         # Generate context for model
         context = self.read_context_files()
-        context = self.encode_and_trim()
+        context = self.encode_and_trim(context_length)
         context = self.insert_needle()
 
         return context
@@ -84,7 +106,7 @@ class NeedleHaystackTester:
                     context += f.read()
         return context
 
-    def encode_and_trim(self):
+    def encode_and_trim(self, context_length):
         # Encode and trim context to a custom length
         pass
 
