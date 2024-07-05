@@ -19,10 +19,10 @@ def load_data_from_json(filename):
     #Don't know why I have to open this twice. Bit strange. Nevertheless, onwards.
     #Loads json data. Only necessary to keep the json.load bit. Thought the strings would be useful but turns out they aren't.
     with open("./datasets/" + filename, 'r') as f:
-        data_as_text = f.read()
+        data_as_str = f.read()
     with open("./datasets/" + filename, "r") as f:
         data = json.load(f)
-    return data, data_as_text
+    return data, data_as_str
 
 data, string_of_data=load_data_from_json("power-seeking-2choicewithmodelgenerations.json")
 #%%
