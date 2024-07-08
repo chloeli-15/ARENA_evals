@@ -22,7 +22,7 @@ def record_to_sample(record):
         choices = list(record["answers"].values())
     )
 
-dataset = json_dataset("./datasets/power-seeking-2c-gen.json", record_to_sample)
+power_seeking_dataset = json_dataset("./datasets/power-seeking-2c-gen.json", record_to_sample)
 
 #%%
 
@@ -30,7 +30,7 @@ dataset = json_dataset("./datasets/power-seeking-2c-gen.json", record_to_sample)
 @task
 def power_seeking():
     return Task(
-        dataset=json_dataset,
+        dataset=power_seeking_dataset,
         plan=[
           chain_of_thought(), 
           generate(), 
