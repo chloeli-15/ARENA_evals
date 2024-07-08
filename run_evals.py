@@ -67,3 +67,20 @@ print(log.logging)
 print(log.error) 
 #Returns the error if there was an error, None if no error.
 #%%
+'''
+Ideas for things to include in the rest of run_evals:
+
+Build your own solver using inspect-ai's solver class
+
+TODO: Build your own scorer using inspect-ai's scorer class.
+
+TODO: Absolutely NEED to plot interesting things. Can run multiple times, can run with different prompts, can run with/without CoT, with CoT+self-critique.
+
+    -TODO: Figure out how to use the log stuff above to plot results, probably from log.results. 
+
+TODO, maybe not even: Perhaps we can introduce tool-use here, instead of the LM agent evals section, since inspect-ai provides tool functionality.
+
+
+'''
+
+
