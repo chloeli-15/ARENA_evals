@@ -28,10 +28,14 @@ def load_data_from_json(filename):
     Loads json data. Only necessary to keep the json.load bit, and not the .read() bit.
     '''
     with open("./datasets/" + filename, 'r') as f:
+<<<<<<< HEAD
         data_as_text = f.read() # Turns out I didn't use this at all, will delete later
+=======
+        data_as_str = f.read()
+>>>>>>> 636581b7b9b084fa82ec7a3d87977bee12b04f67
     with open("./datasets/" + filename, "r") as f:
         data = json.load(f)
-    return data, data_as_text
+    return data, data_as_str
 
 data, string_of_data=load_data_from_json("power-seeking-2choicewithmodelgenerations.json") #Loads in the data
 #%%

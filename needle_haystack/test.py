@@ -7,6 +7,8 @@ import glob
 from openai import OpenAI
 from typing import List
 
+print(os.environ.get('OPENAI_API_KEY'))
+
 CRITERIA = {"accuracy": """
                 Score 1: The answer is completely unrelated to the reference.
                 Score 3: The answer has minor relevance but does not align with the reference.
@@ -113,4 +115,5 @@ class NeedleHaystackTester:
     def insert_needle(self):
         # Insert needle into context
         pass
+
 
