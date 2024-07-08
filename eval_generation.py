@@ -141,4 +141,5 @@ print('yes: ' + str(num_yes_answers) + ', no: '+ str(num_no_answers))
 #%%
 def write_generation_to_file():
     #Writes the generated evals to a file - need to do when we have a working evaluator
+    pass
 #%%
