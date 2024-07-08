@@ -1,12 +1,19 @@
 #%%
 from inspect_ai import Task, eval, task
-from inspect_ai.dataset import example_dataset
+from inspect_ai.dataset import example_dataset, FieldSpec, json_dataset
 from inspect_ai.scorer import model_graded_fact
 from inspect_ai.solver import (
   chain_of_thought, generate, self_critique
 )
 from itertools import product
 #When you set your OpenAI API key, should be named OPENAI_API_KEY, since the inspect-ai library looks for a key with that name by default as far as I can tell. Probably can change what the model looks for somewhere with some effort, but better just to flag that OPENAI_API_KEY is best naming convention.
+dataset = json_dataset(
+    ""
+)
+
+
+
+
 @task
 def theory_of_mind():
     return Task(
