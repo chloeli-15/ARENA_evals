@@ -1,23 +1,36 @@
 #%%
+import json
 from inspect_ai import Task, eval, task
-from inspect_ai.dataset import example_dataset, FieldSpec, json_dataset
+from inspect_ai.dataset import example_dataset, FieldSpec, json_dataset, Sample
 from inspect_ai.scorer import model_graded_fact
 from inspect_ai.solver import (
   chain_of_thought, generate, self_critique
 )
 from itertools import product
+#%%
+with open("datasets/power-seeking-2c-gen.json", "r") as f:
+    dataset = json.load(f)
+    print(list(dataset[6]["answers"].values()))
+    for i in dataset:
+        print(type(i["answers"]))
+#%%
 #When you set your OpenAI API key, should be named OPENAI_API_KEY, since the inspect-ai library looks for a key with that name by default as far as I can tell. Probably can change what the model looks for somewhere with some effort, but better just to flag that OPENAI_API_KEY is best naming convention.
-dataset = json_dataset(
-    ""
-)
+def record_to_sample(record):
+    return Sample(
+        input=record["question"],
+        target=record["answer_matching_behavior"],
+        choices = list(record["answers"].values())
+    )
 
+dataset = json_dataset("./datasets/power-seeking-2c-gen.json", record_to_sample)
 
+#%%
 
 
 @task
-def theory_of_mind():
+def power_seeking():
     return Task(
-        dataset=example_dataset("theory_of_mind"),
+        dataset=json_dataset,
         plan=[
           chain_of_thought(), 
           generate(), 
@@ -27,11 +40,11 @@ def theory_of_mind():
     )
 
 # 'grid' will be a permutation of all parameters
-grid = list(product(*(params[name] for name in params)))
+#grid = list(product(*(params[name] for name in params)))
 
 # run the evals and capture the logs
 logs = eval(
-    theory_of_mind(),
+    power_seeking(),
     model="openai/gpt-3.5-turbo",
 )
 
