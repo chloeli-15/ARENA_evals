@@ -104,13 +104,13 @@ def summarize_results(rubric_name:str, dataset_to_evaluate:str):
         scores = [q["score"] for q in results]
         log = {}
         log["dataset"] = dataset_to_evaluate
+        log["n_questions"] = len(scores)
         log["model_evaluator"] = model_name
         log["rubric"] = rubric_name
         log["mean"] = sum(scores) / len(scores)
         log["max"] = max(scores)
         log["min"] = min(scores)
         log["std"] = pd.Series(scores).std()
-        log["n_questions"] = len(scores)
         
         # Save log
         log_file = filename.replace(".json", "-log.json").replace("scores","scores_log")
@@ -125,7 +125,7 @@ if __name__ == "__main__":
     client = OpenAI()
     
     model_name = "gpt-4o"
-    datasets_to_evaluate = ["power-seeking-2c"]
+    datasets_to_evaluate = ["test-questions"]
     rubric_name = "quality"
     temperature = 1.0
 
