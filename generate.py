@@ -109,7 +109,9 @@ for i in evals:
 print('yes: ' + str(num_yes_answers) + ', no: '+ str(num_no_answers))
 
 #%%
-def write_generation_to_file():
+def write_generation_to_file(list_of_new_evals):
     #Writes the generated evals to a file - need to do when we have a working evaluator
-    pass
+    with open("./datasets/power-seeking-2c-onlygenerated.json", "a") as f:
+        for _eval in list_of_new_evals:
+            f.write(_eval)
 #%%
