@@ -103,30 +103,34 @@ def clean_and_save_response(dataset_name, response, output_filepath):
     return cleaned_responses 
 #%%
 
-if __name__=="__main__":
-    client = establish_client_OpenAI()
+#if __name__=="__main__":
 
-    dataset_name = "power-seeking-2c-seed-v2"
-    num_shots = 10
-    num_total_q_to_gen = 2
-    num_gens = 2
-    num_gen_batches = math.ceil(num_total_q_to_gen/num_gens)
-    seed_dataset = import_json(f"datasets/{dataset_name}.json") #Loads in the data
-    num_choices = "4-choice" # "4-choice" or "2-choice"
-    system_prompt = reload_gen_prompt(num_choices)
+client = establish_client_OpenAI()
 
-    date = time.strftime("%Y-%m-%d")
-    output_filepath = f"./datasets/{dataset_name}-gen-{date}.json"
-   
-    for _ in range(num_gen_batches):
-        user_prompt = prepare_instruction(seed_dataset, num_shots, num_gens)
-        print(user_prompt)
-        response = generate_questions(user_prompt, 
-                                    system_prompt, 
-                                    "gpt-4o", 
-                                    num_shots, 
-                                    num_gens)
-        cleaned_responses = clean_and_save_response(dataset_name, response, output_filepath)
+dataset_name = "power-seeking-2c-seed-v2"
+num_shots = 10
+num_total_q_to_gen = 2
+num_gens = 2
+num_gen_batches = math.ceil(num_total_q_to_gen/num_gens)
+seed_dataset = import_json(f"datasets/{dataset_name}.json") #Loads in the data
+num_choices = "4-choice" # "4-choice" or "2-choice"
+system_prompt = reload_gen_prompt(num_choices)
+
+date = time.strftime("%Y-%m-%d")
+output_filepath = f"./datasets/{dataset_name}-gen-{date}.json"
+
+for _ in range(num_gen_batches):
+    user_prompt = prepare_instruction(seed_dataset, num_shots, num_gens)
+    print(user_prompt)
+    response = generate_questions(user_prompt, 
+                                system_prompt, 
+                                "gpt-4o", 
+                                num_shots, 
+                                num_gens)
+#%%
+cleaned_responses = clean_and_save_response(dataset_name, response, output_filepath)
+#%%
+print(json.loads(cleaned_responses[0]))
 
 #%%
 #This is a test cell that I was using to check the balance of yes and no answers in the existing dataset. Could end up as a final test in the actual exercises, since they will need to test the model outputs a good balance of questions.
