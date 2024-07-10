@@ -82,7 +82,7 @@ def clean_and_save_response(dataset_name, response, output_filepath):
     while response.find("START") != -1:
         startpoint = response.find("START") + 5
         endpoint = response.find("END")-1
-        cleaned_responses.append(response[startpoint:endpoint])
+        cleaned_responses.append(json.loads(response[startpoint:endpoint]))
         response=response[endpoint+2:]
     for i in cleaned_responses:
         try:
@@ -130,7 +130,7 @@ for _ in range(num_gen_batches):
 #%%
 cleaned_responses = clean_and_save_response(dataset_name, response, output_filepath)
 #%%
-print(json.loads(cleaned_responses[0]))
+print(cleaned_responses[0])
 
 #%%
 #This is a test cell that I was using to check the balance of yes and no answers in the existing dataset. Could end up as a final test in the actual exercises, since they will need to test the model outputs a good balance of questions.
