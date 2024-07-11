@@ -29,3 +29,4 @@ trials = 4
 max_threads = 8 # Claude can only handle 2 concurrent threads
 num_shots = 10
 num_q_per_gen = 4
+chunk_size_gen = 2

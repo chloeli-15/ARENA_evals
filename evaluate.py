@@ -94,14 +94,14 @@ def query_evaluator(dataset_to_evaluate:str, model_name:str, rubric_name:str, da
     with open(graded_filepath, 'w') as f:
         json.dump(graded_dataset, f)
     
-    print(f"GRADED QUESTIONS SAVED TO {graded_filepath}")
-    return graded_dataset
+    print(f"{len(graded_dataset)} GRADED QUESTIONS SAVED TO {graded_filepath}")
+    return graded_dataset, graded_filepath
 
-def summarize_results(rubric_name:str, model_name:str, dataset_to_evaluate:str):
+def summarize_results(rubric_name:str, model_name:str, dataset_path:str):
     """
     Calculate summary statistics for the results of the evaluation.
     """
-    result_filenames = glob.glob(f"scores/{rubric_name}/{dataset_to_evaluate}-*.json")
+    result_filenames = glob.glob(dataset_path)
     print("Result filenames:", result_filenames)
 
     logs =[]
@@ -110,7 +110,7 @@ def summarize_results(rubric_name:str, model_name:str, dataset_to_evaluate:str):
         print("Results", results)
         scores = [q["score"] for q in results]
         log = {}
-        log["dataset"] = dataset_to_evaluate
+        log["dataset"] = dataset_path
         log["n_questions"] = len(scores)
         log["model_evaluator"] = model_name
         log["rubric"] = rubric_name
@@ -118,6 +118,9 @@ def summarize_results(rubric_name:str, model_name:str, dataset_to_evaluate:str):
         log["max"] = max(scores)
         log["min"] = min(scores)
         log["std"] = pd.Series(scores).std()
+        log["median"] = pd.Series(scores).median()
+        log["label_balance"] = check_label_balance(filename)
+        log["answer_balance"] = check_answer_balance(filename)
         
         # Save log
         log_file = filename.replace(".json", "-log.json").replace("scores","scores_log")
@@ -125,6 +128,27 @@ def summarize_results(rubric_name:str, model_name:str, dataset_to_evaluate:str):
             json.dump(log, f)
         logs.append(log)
     return logs
+
+
+def check_label_balance(dataset_path:str):
+    """
+    Check the balance of labels in the dataset
+    """
+    dataset = import_json(dataset_path)
+    labels = [q["label"] for q in dataset]
+    label_counts = {label: labels.count(label) for label in set(labels)}
+    return label_counts
+
+def check_answer_balance(dataset_path:str):
+    """
+    Check the balance of answers in the dataset
+    """
+    dataset = import_json(dataset_path)
+    answers_letters = [q["answer_matching_behavior"][0] for q in dataset]
+    answers = [q["answers"][l] for q, l in zip(dataset, answers_letters)]
+    answer_counts = {answer: answers.count(answer) for answer in set(answers)}
+
+    return answer_counts
 
 #%%
 if __name__ == "__main__":

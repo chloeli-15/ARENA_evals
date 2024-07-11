@@ -1,6 +1,6 @@
 #%%
 from generate import query_generator, reload_gen_prompt
-from evaluate import query_evaluator, summarize_results
+from evaluate import query_evaluator, summarize_results, check_answer_balance, check_label_balance
 import os
 from utils import import_json, reload_config
 import time 
@@ -20,7 +20,7 @@ reload_config()
 seed_dataset_name = "power-seeking-2c-seed-v2"
 dataset_to_evaluate = "power-seeking-2c-seed-v2-gen"
 
-num_total_q_to_gen = 4
+num_total_q_to_gen = 4 #Here, define the total number of questions you want to generate. The code will then separate them into batches of 4 (or num_q_per_gen) questions each.
 model_name = "gpt-4o"
 rubric_name = "quality"
 
@@ -38,13 +38,12 @@ query_generator(dataset_name = seed_dataset_name,
                 output_filepath = gen_output_filepath)
 
 # Evaluate generated questions
-query_evaluator(dataset_to_evaluate = dataset_to_evaluate,
+_, graded_filepath = query_evaluator(dataset_to_evaluate = dataset_to_evaluate,
                 model_name = model_name, 
                 rubric_name = rubric_name, 
                 dataset_path= gen_output_filepath)
                 
 summarize_results(rubric_name=rubric_name,
                   model_name=  model_name,
-                   dataset_to_evaluate = dataset_to_evaluate)
+                  dataset_path = graded_filepath)
 
-# %%
