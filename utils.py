@@ -9,10 +9,14 @@ def save_json(file_path, data, do_not_overwrite=False):
     if do_not_overwrite:
         try: 
             with open(file_path, "r") as f:
+                print(f"File {file_path} already exists. Appending to existing file.")
                 existing_data = json.load(f)
         except FileNotFoundError:
+                print(f"File {file_path} does not exist. Creating new file.")
                 existing_data = []
+        print(f"Old: {len(data)=}, {len(existing_data)=}")
         existing_data.extend(data)
+        print(f"New: {len(existing_data)=}")
         with open(file_path, 'w') as f:
             json.dump(data, f, indent=4)
     else:
