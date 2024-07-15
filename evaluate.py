@@ -3,9 +3,8 @@ import openai
 from openai import OpenAI
 import os
 import rubric 
-from utils import import_json_as_string, import_json, establish_client_OpenAI
+from utils import import_json, establish_client_OpenAI, save_json
 from dotenv import load_dotenv
-import json
 import time
 import importlib
 import re
@@ -105,9 +104,7 @@ def query_evaluator(dataset_to_evaluate: str, model_name: str, rubric_name: str,
         executor.map(process_chunk, range(total_chunks))
 
     # Save graded dataset
-    with open(graded_filepath, 'w') as f:
-        json.dump(graded_dataset, f)
-    
+    save_json(graded_filepath, graded_dataset, do_not_overwrite=True)
     print(f"{len(graded_dataset)} GRADED QUESTIONS SAVED TO {graded_filepath}")
     return graded_dataset, graded_filepath
 
@@ -144,8 +141,7 @@ def summarize_results(rubric_name:str, model_name:str, dataset_path:str):
     
     # Save log
     log_file = dataset_path.replace(".json", "-log.json").replace("scores","scores_log")
-    with open(log_file, 'w') as f:
-        json.dump(log, f)
+    save_json(log_file, log, do_not_overwrite=True)
     return log
 
 
@@ -176,8 +172,7 @@ def filter_low_score_questions(dataset_path:str, threshold:int=7):
     dataset = import_json(dataset_path)
     filtered_dataset = [q for q in dataset if q["score"] >= threshold]
     filtered_path = dataset_path.replace(".json", f"-above-{threshold}.json").replace("scores", "datasets").replace("quality", "quality_filtered")
-    with open(filtered_path, 'w') as f:
-        json.dump(filtered_dataset, f)
+    save_json(filtered_path, filtered_dataset, do_not_overwrite=True)
     return filtered_dataset, filtered_path
 
 #%%

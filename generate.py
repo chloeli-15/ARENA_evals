@@ -6,10 +6,10 @@ import torch as t
 import json
 import random 
 assert os.environ.get("OPENAI_API_KEY") != None, "API_KEY_NOT_WORKING"
-from utils import import_json, establish_client_OpenAI
+from utils import import_json, establish_client_OpenAI, save_json
 import datetime
 import time
-import gen_prompts 
+import prompts_for_gen 
 import importlib
 import math
 import config
@@ -19,9 +19,9 @@ from concurrent.futures import ThreadPoolExecutor
 
 #%%
 def reload_gen_prompt(num_choices):
-    global gen_prompts
-    importlib.reload(gen_prompts)
-    return gen_prompts.GEN_PROMPTS[num_choices]
+    global prompts_for_gen
+    importlib.reload(prompts_for_gen)
+    return prompts_for_gen.GEN_PROMPTS[num_choices]
 
 def prepare_generation_instruction(seed_dataset): 
     '''
@@ -83,14 +83,7 @@ def clean_and_save_response(dataset_name, response, output_filepath) -> List[dic
         response=response[endpoint+2:]
 
     # Save model responses
-    try: 
-        with open(output_filepath, "r") as f:
-            data = json.load(f)
-    except FileNotFoundError:
-            data = []
-    data.extend(cleaned_responses)
-    with open(output_filepath, 'w') as f:
-        json.dump(data, f, indent=4)
+    save_json(output_filepath, cleaned_responses, do_not_overwrite=True)
 
     return cleaned_responses 
 

@@ -5,13 +5,27 @@ import openai
 from openai import OpenAI
 import os
 
+def save_json(file_path, data, do_not_overwrite=False):
+    if do_not_overwrite:
+        try: 
+            with open(file_path, "r") as f:
+                existing_data = json.load(f)
+        except FileNotFoundError:
+                existing_data = []
+        existing_data.extend(data)
+        with open(file_path, 'w') as f:
+            json.dump(data, f, indent=4)
+    else:
+        with open(file_path, 'w') as f:
+            json.dump(data, f, indent=4)
+
+
 def get_openai_api_key():
     return json.loads(open('secrets.json').read())['OPENAI_API_KEY']
 
 def import_json_as_string(file_path):
     with open(file_path, 'r') as f:
         return f.read()
-    
 
 def import_json(file_path):
     with open(file_path, 'r') as f:
