@@ -158,12 +158,11 @@ def power_seeking_comprehension(averse=False):
 
 #%%
 modelList = ["openai/gpt-3.5-turbo","openai/gpt-4-turbo","openai/gpt-4o","openai/gpt-4-turbo-preview","openai/gpt-4","anthropic/claude-3-5-sonnet=20240620","anthropic/claude-3-opus-20240229","anthropic/claude-3-sonnet-20240229","anthropic/claude-3-haiku-20240307"]
-systemVar=[True, False]
 chain_of_thoughtVar = [True, False]
 self_critiqueVar = [True, False]
 languageVar = [None, "French", "Chinese"]
 
-initial_param_array = list(product(modelList, systemVar, chain_of_thoughtVar, self_critiqueVar,languageVar))
+initial_param_array = list(product(modelList, chain_of_thoughtVar, self_critiqueVar,languageVar))
 param_array = [i for i in initial_param_array if i[-3]==True or i[-2]==False]
 print(len(param_array))
 
