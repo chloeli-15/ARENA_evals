@@ -18,8 +18,8 @@ reload_config()
 
 # Set file paths
 example_dataset_name = "2c-written"
-output_filepath = "./datasets/2c-generated-6.json"
-score_filepath = "./scores/quality/2c-generated-6.json"
+output_filepath = "./datasets/2c-generated-7.json"
+score_filepath = "./scores/quality/2c-generated-7.json"
 
 # Set parameters
 num_total_q_to_gen = 50 #Here, define the total number of questions you want to generate. The code will then separate them into batches of 4 (or num_q_per_gen) questions each.
@@ -46,11 +46,8 @@ results, _ = query_evaluator(generated_dataset_path=output_filepath,
 log = summarize_results(results=results,
                   rubric_name=rubric_name,
                   model_name=  model_name,
-                  generated_dataset_path= output_filepath)
+                  generated_dataset_path= output_filepath,
+                  score_filepath=score_filepath)
 
-#%%
-# Save results
-save_json(score_filepath, results, do_not_overwrite=True)
-save_json(score_filepath.replace("scores", "scores_log").replace(".json", "-log.json"), log, do_not_overwrite=True)
 
 # %%

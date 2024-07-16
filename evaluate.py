@@ -109,11 +109,15 @@ def query_evaluator(generated_dataset_path: str, model_name: str, rubric_name: s
     print(f"FINISHED EVALUATING {len(graded_dataset)} QUESTIONS.")
 
     # Save graded dataset
-    # save_json(score_filepath, graded_dataset, do_not_overwrite=True)
+    save_json(score_filepath, graded_dataset, do_not_overwrite=True)
 
     return graded_dataset, score_filepath
 
-def summarize_results(rubric_name:str, model_name:str, results: List[dict], generated_dataset_path:str):
+def summarize_results(rubric_name:str, 
+                      model_name:str, 
+                      results: List[dict], 
+                      generated_dataset_path:str,
+                      score_filepath: str):
     """
     Calculate summary statistics for the results of the evaluation.
     """
@@ -146,8 +150,8 @@ def summarize_results(rubric_name:str, model_name:str, results: List[dict], gene
     log["date"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
     # Save log
-    # log_file = dataset_path.replace(".json", "-log.json").replace("scores","scores_log")
-    # save_json(log_file, log, do_not_overwrite=True)
+    log_file = score_filepath.replace(".json", "-log.json").replace("scores","scores_log")
+    save_json(log_file, log, do_not_overwrite=True)
     return log
 
 
