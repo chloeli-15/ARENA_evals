@@ -16,6 +16,7 @@ import glob
 import math
 from concurrent.futures import ThreadPoolExecutor
 from typing import Optional, List
+from tqdm import tqdm
 #%%
 def reload_rubric():
     global rubric
@@ -104,7 +105,7 @@ def query_evaluator(generated_dataset_path: str, model_name: str, rubric_name: s
         total_chunks = math.ceil(len(dataset) / config.chunk_size )
         print("Total questions:", len(dataset))
         print("Total chunks:", total_chunks)
-        executor.map(process_chunk, range(total_chunks))
+        list(tqdm(executor.map(process_chunk, range(total_chunks))))
 
     print(f"FINISHED EVALUATING {len(graded_dataset)} QUESTIONS.")
 
@@ -180,9 +181,18 @@ def filter_low_score_questions(dataset: List[dict], generated_dataset_path:str, 
     Filter out questions with scores below a certain threshold
     """
     # dataset = import_json(dataset_path)
+    score_list = [q["score"] for q in dataset]
+    for i, s in enumerate(score_list):
+        if s is None:
+            print(f"Warning: Question {i} has a None score")
+    keys_to_exclude = {"score","model_response"}
     filtered_dataset = [q for q in dataset if q["score"] >= threshold]
+    filtered_dataset_to_save = [
+        {k:v for k,v in q.items() if k not in keys_to_exclude}
+        for q in dataset 
+        if q["score"] >= threshold]
     filtered_path = generated_dataset_path.replace(".json", f"-above-{threshold}.json").replace("datasets", "datasets/quality_filtered")
-    save_json(filtered_path, filtered_dataset, do_not_overwrite=True)
+    save_json(filtered_path, filtered_dataset_to_save, do_not_overwrite=True)
     return filtered_dataset, filtered_path
 
 #%%
@@ -207,6 +217,7 @@ if __name__ == "__main__":
                             results=results,
                             generated_dataset_path= dataset_path,
                             score_filepath=score_filepath)
+
 
 
 # %%
