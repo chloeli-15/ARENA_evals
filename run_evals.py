@@ -194,13 +194,13 @@ def power_seeking(system = True,CoT=True,self_critique=False,language = None):
         return Task(
             dataset=power_seeking_dataset_system,
             plan=evaluationplan,
-            scorer=match(),
+            scorer=match()
         )
     else:
         return Task(
             dataset=power_seeking_dataset_no_system,
             plan=evaluationplan,
-            scorer=match(),
+            scorer=match()
         )
     
 #
@@ -291,8 +291,22 @@ print(len(param_array)) #Checking how many evals we want to run, ought to be don
 
 #%%
 #read_eval_log takes in an already produced log, and returns it as the relevant object in the inspect library.
+@task
+def benchmark_test(template = max_power_seeking_template):
+    assert template in [max_power_seeking_template, max_power_averse_template,max_ethical_template,max_evil_template,max_risk_averse_template,max_risk_seeking_template], "ERROR: Not a valid benchmark template"
+    
+    return Task(
+        dataset=power_seeking_dataset_system,
+        plan=[
+            prompt_template(template),
+            generate(),
+            multiple_choice(shuffle=False, template = mcqtemplate)
+        ],
+        scorer=match()
+    )
 
-log = read_eval_log("./logs from inspect library/2024-07-04T15-41-30+01-00_theory-of-mind_X5qnDZu9VYzkfUbhNnoYwD.json")
+
+#%%
 '''
 Log in inspect library has a bunch of methods, and some of them are "dangerous" with the amount of content that gets returned.
 
