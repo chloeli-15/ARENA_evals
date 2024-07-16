@@ -18,8 +18,8 @@ reload_config()
 
 # Set file paths
 example_dataset_name = "2c-written"
-output_filepath = "./datasets/2c-generated-7.json"
-score_filepath = "./scores/quality/2c-generated-7.json"
+output_filepath = "./datasets/2c-generated-9.json"
+score_filepath = "./scores/quality/2c-generated-9.json"
 
 # Set parameters
 num_total_q_to_gen = 50 #Here, define the total number of questions you want to generate. The code will then separate them into batches of 4 (or num_q_per_gen) questions each.
@@ -51,3 +51,4 @@ log = summarize_results(results=results,
 
 
 # %%
+# Process datasets
