@@ -193,13 +193,20 @@ if __name__ == "__main__":
     client = OpenAI()
     
     model_name = "gpt-4o"
-    dataset_to_evaluate = "power-seeking-2c-seed-v3-gen-2"
+    dataset_path = "./datasets/2c-generated-balanced.json"
+    score_filepath = "scores/quality/2c-generated-balanced.json"
     rubric_name = "quality"
 
-    _, graded_filepath = query_evaluator(dataset_to_evaluate, model_name, rubric_name)
-    summarize_results(rubric_name, model_name, graded_filepath)
-
-
+    results,_ = query_evaluator(generated_dataset_path=dataset_path,
+                                model_name = model_name, 
+                                rubric_name = rubric_name, 
+                                score_filepath = score_filepath)
+    
+    log = summarize_results(rubric_name=rubric_name,
+                            model_name= model_name,
+                            results=results,
+                            generated_dataset_path= dataset_path,
+                            score_filepath=score_filepath)
 
 
 # %%

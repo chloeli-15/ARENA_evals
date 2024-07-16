@@ -52,3 +52,4 @@ log = summarize_results(results=results,
 
 # %%
 # Process datasets
+answer_balance = check_answer_balance("datasets/2c-generated-combined.json")

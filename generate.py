@@ -13,8 +13,9 @@ import prompts
 import importlib
 import math
 import config
-from typing import List
+from typing import List, Optional
 from utils import import_json, reload_config
+from evaluate import reload_rubric
 from concurrent.futures import ThreadPoolExecutor
 
 #%%
@@ -23,6 +24,7 @@ def reload_gen_prompt():
     global prompts
     importlib.reload(prompts)
     return prompts.GEN_PROMPTS
+
 
 def prepare_generation_instruction(example_dataset, variance_p = 0.2): 
     '''
@@ -62,7 +64,6 @@ def retry_with_exponential_backoff(func,
             except Exception as e:
                 if "rate_limit_exceeded" in str(e):
                     sleep_time *=  backoff_factor * (1 + jitter * random.random())
-                    print(f"Rate limit exceeded, retrying in {sleep_time} seconds...")
                     time.sleep(sleep_time)
                 else:
                     raise # Re-raise the exception if it's not a rate limit error
@@ -72,25 +73,31 @@ def retry_with_exponential_backoff(func,
 @retry_with_exponential_backoff
 def generate_questions(user_prompt,
                        system_prompt, 
-                       model_name: str):
+                       model_name: str,
+                       few_shot_examples: Optional[List[dict]] = None) -> str:
     '''
     This function generates questions from the model. It takes in a user prompt, a system prompt, and a model name, and returns the model's response.
     '''
 
     client = establish_client_OpenAI()
+    messages = [{"role" : "system", "content" : system_prompt}]
+    if few_shot_examples:
+        messages.extend(few_shot_examples)
+    messages.append({"role" : "user", "content" : user_prompt})
     completions = client.chat.completions.create(
         model = model_name,
-        messages = [
-            {"role" : "system", "content" : system_prompt},
-            {"role" : "user", "content" : user_prompt}
-        ]
+        messages = messages
     )
     response = completions.choices[0].message.content 
     return response
 
-   
+def prepare_revert_instruction(system_prompt, user_prompt, few_shot_examples):
+    messages = [{"role" : "system", "content" : system_prompt}]
+    if few_shot_examples:
+        messages.extend(few_shot_examples)
+    messages.append({"role" : "user", "content" : user_prompt})
 
-def clean_responses(dataset_name, response, output_filepath) -> List[dict]:
+def clean_responses(response) -> List[dict]:
     '''
     This function cleans the model response and saves it to a file. It takes in the dataset name, the model response, and the output file path, and returns the cleaned responses to save as a JSON.
     '''
@@ -108,6 +115,88 @@ def clean_responses(dataset_name, response, output_filepath) -> List[dict]:
         response=response[endpoint+2:]
 
     return cleaned_responses 
+
+def calculate_flips_to_no(dataset_path):
+
+    dataset = import_json(dataset_path) 
+    model_name = "gpt-4o"
+    n_q = len(dataset)
+    print(f"Total q: {n_q}")
+
+    yes_qs, no_qs, errors = [], [], []
+
+    for item in dataset:
+        match_index = item["answer_matching_behavior"][0]
+        answer = item["answers"][match_index].lower()
+
+        if "yes" in answer:
+            yes_qs.append(item)
+        elif "no" in answer:
+            no_qs.append(item)
+        else:
+            errors.append(item)
+
+    if errors:
+        for err in errors:
+            print(f"Error: Question answers {err['answers']} does not have a valid answer at index {err['answer_matching_behavior']}.")
+
+    n_yes = len(yes_qs)
+    n_no = len(no_qs)
+    n_flip = round((0.5 - n_no/n_q)*n_q)
+    print(f"Number of yes answers: {n_yes}, number of no answers: {n_no}")
+    print(f"Flipping {n_flip} questions from yes to no.")
+    return {"n_flip": n_flip, "yes_qs": yes_qs, "no_qs": no_qs}
+
+def flip_yes_to_no(dataset_path, model_name):
+
+    flips = calculate_flips_to_no(dataset_path)
+
+    q_to_flip = random.sample(flips["yes_qs"], flips["n_flip"])
+    flipped_yes = []
+    # Process each chunk of the dataset
+    def process_chunk(chunk_id):
+        try:
+            start = chunk_id * config.chunk_size
+            end = start + config.chunk_size
+            chunk = q_to_flip[start:end].copy()
+
+            print(f"Loaded chunk {chunk_id} with {len(chunk)} questions...")
+
+            # Get prompts
+            RUBRIC = reload_rubric()
+            system_prompt = RUBRIC["yes-to-no"][0]
+            examples = RUBRIC["yes-to-no"][1]
+
+            # Apply LM calls to each question in the chunk
+            for q in chunk:
+                user_prompt = "START"+json.dumps(q)+"END"
+                response = generate_questions(user_prompt=user_prompt,
+                                             system_prompt=system_prompt,
+                                             model_name=model_name,
+                                             few_shot_examples=examples)
+                cleaned_response = clean_responses(response)
+                flipped_yes.extend(cleaned_response)
+
+            # Extend the graded dataset with the processed chunk
+            print(f"Chunk {chunk_id} processed, {len(flipped_yes)} questions fipped so far ...")
+        except Exception as e:
+            print(f"Error processing chunk {chunk_id}: {e}")
+
+    # Process each chunk in parallel
+    with ThreadPoolExecutor(max_workers=config.max_threads) as executor: # EXPLAIN THIS
+        total_chunks = math.ceil(len(q_to_flip) / config.chunk_size )
+        print("\nTotal chunks:", total_chunks)
+        executor.map(process_chunk, range(total_chunks))
+    print(f"FINISHED FLIPPING {len(flipped_yes)} QUESTIONS.")
+
+    # Reassemble a balanced dataset
+    unflipped_yes = [i for i in flips["yes_qs"] if i not in q_to_flip]
+    print(f"Unflipped yes: {len(unflipped_yes)}")
+    balanced_dataset = unflipped_yes + flipped_yes + flips["no_qs"]
+    print(f"Balanced dataset: {len(balanced_dataset)}")
+
+    return balanced_dataset
+
 
 def query_generator(dataset_name, 
                     model_name,
@@ -135,7 +224,7 @@ def query_generator(dataset_name,
         try:
             responses = executor.map(lambda x: generate_questions(*x), input_args) 
             for response in responses:
-                cleaned_responses.extend(clean_responses(dataset_name, response, output_filepath))
+                cleaned_responses.extend(clean_responses(response))
             save_json(output_filepath, cleaned_responses, do_not_overwrite=True)
             print(f"FINISHED GENERATING {len(cleaned_responses)} QUESTIONS. OUTPUT SAVED TO {output_filepath}")
         except Exception as e:
@@ -165,23 +254,23 @@ def query_generator(dataset_name,
 #%%
 if __name__=="__main__":
 
-    client = establish_client_OpenAI()
-    reload_config()
-    model_name = "gpt-4o"
-    dataset_name = "2c-written"
-    num_total_q_to_gen =20
-    num_choices = "2-choice" # "4-choice" or "2-choice"
-    PROMPTS = reload_gen_prompt()
-    system_prompt = PROMPTS[num_choices]
+    # client = establish_client_OpenAI()
+    # reload_config()
+    # model_name = "gpt-4o"
+    # dataset_name = "2c-written"
+    # num_total_q_to_gen =20
+    # num_choices = "2-choice" # "4-choice" or "2-choice"
+    # PROMPTS = reload_gen_prompt()
+    # system_prompt = PROMPTS[num_choices]
 
-    # date = time.strftime("%Y-%m-%d")
-    output_filepath = f"./datasets/test-num.json"
+    # # date = time.strftime("%Y-%m-%d")
+    # output_filepath = f"./datasets/test-num.json"
 
-    query_generator(dataset_name, 
-                    model_name,
-                    num_total_q_to_gen,
-                    system_prompt, 
-                    output_filepath)
+    # query_generator(dataset_name, 
+    #                 model_name,
+    #                 num_total_q_to_gen,
+    #                 system_prompt, 
+    #                 output_filepath)
         
     #%%
     #This is a test cell that I was using to check the balance of yes and no answers in the existing dataset. Could end up as a final test in the actual exercises, since they will need to test the model outputs a good balance of questions.
@@ -196,3 +285,7 @@ if __name__=="__main__":
             num_no_answers+=1
     print('yes: ' + str(num_yes_answers) + ', no: '+ str(num_no_answers))
 
+    
+
+    save_json("datasets/2c-generated-balanced.json", balanced_dataset, do_not_overwrite=True)
+    return balanced_dataset
