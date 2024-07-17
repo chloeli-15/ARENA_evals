@@ -123,7 +123,7 @@ topic_sizes = extract_topic_sizes(docs_df); topic_sizes.head(10)
 fig = px.scatter(
     result, x='x', y='y', color='labels',
     color_continuous_scale='hsv_r',
-    title='UMAP Clustering',
+    title='Power-seeking Dataset Topics ',
     labels={'x': 'UMAP 1', 'y': 'UMAP 2', 'labels': 'Cluster'},
     hover_data={'question': True, 'answer_matching_behavior': True,  'label': True, 'x': False, 'y': False, 'labels': False}
 )
@@ -157,7 +157,7 @@ def wrap_text(text, width=45):
 
 result['wrapped_question'] = result['question'].apply(wrap_text)
 result['wrapped_answer'] = result['answer_matching_behavior'].apply(wrap_text)
-result['wrapped_labels'] = result['labels'].apply(wrap_text)
+result['wrapped_labels'] = result['label'].astype(str)
 
 
 hover_template = (
@@ -169,7 +169,7 @@ hover_template = (
 
 fig.update_traces(
     hovertemplate=hover_template,
-    customdata=result[['wrapped_question', 'wrapped_answer']].values,
+    customdata=np.stack((result['wrapped_question'], result['wrapped_answer'], result['wrapped_labels']), axis=-1),
     marker=dict(size=9)  # Adjust the size of the markers if needed
 )
 
@@ -181,8 +181,10 @@ config = {
 }
 fig.show(config=config)
 
+#%%
 # Export the figure as an HTML file
-# pio.write_html(fig, file='umap_clustering.html', auto_open=True, config=config)
+#THIS EXPORTS THE FILE AS AN HTML. MAKE SURE FILEPATH DOES NOT OVERWRITE EXISTING FILE BEFORE RUNNING!
+# pio.write_html(fig, file='umap_clustering4.html', auto_open=True, config=config) 
 # Plot scores fo 4-generated questions vs 8-generated questions
 
 # %%
