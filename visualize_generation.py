@@ -17,7 +17,7 @@ import plotly.io as pio
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
 # The sentences to encode
-dataset_names = ["datasets/2c-generated-balanced.json"]
+dataset_names = ["scores/quality/2c-generated-balanced.json"]
 datasets = []
 for name in dataset_names:
     dataset = import_json(name)
@@ -118,7 +118,6 @@ def extract_topic_sizes(df):
 top_n_words = extract_top_n_words_per_topic(tf_idf, count, docs_per_topic, n=20)
 topic_sizes = extract_topic_sizes(docs_df); topic_sizes.head(10)
 
-#%%
 # Plotting
 fig = px.scatter(
     result, x='x', y='y', color='labels',
@@ -184,7 +183,7 @@ fig.show(config=config)
 #%%
 # Export the figure as an HTML file
 #THIS EXPORTS THE FILE AS AN HTML. MAKE SURE FILEPATH DOES NOT OVERWRITE EXISTING FILE BEFORE RUNNING!
-# pio.write_html(fig, file='umap_clustering4.html', auto_open=True, config=config) 
+pio.write_html(fig, file='umap_clustering_7clus.html', auto_open=True, config=config) 
 # Plot scores fo 4-generated questions vs 8-generated questions
 
 # %%
