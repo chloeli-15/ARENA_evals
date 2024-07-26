@@ -186,4 +186,3 @@ fig.show(config=config)
 # pio.write_html(fig, file='umap_clustering_7clus.html', auto_open=True, config=config) 
 # Plot scores fo 4-generated questions vs 8-generated questions
 
-# %%

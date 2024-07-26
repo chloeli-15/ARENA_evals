@@ -4,17 +4,7 @@ import wikipedia
 from openai import OpenAI
 from utils import establish_client_OpenAI
 from pprint import pprint
-page_object = wikipedia.page("Iły, Masovian Voivodeship", auto_suggest=False,redirect=True)
-pprint(page_object)
-content = page_object.content
-page_links = []
-for i in page_object.links:
-    if i in content:
-        page_links.append(i)
-    else:
-        pass
-print(page_links)
-print(page_object.content)
+import numpy as np
 # %%
 '''
 wikipedia.page returns a page_object type with most useful properties being:
@@ -25,39 +15,51 @@ wikipedia.page returns a page_object type with most useful properties being:
 
 client = establish_client_OpenAI()
 
-def get_current_page_content(current_page_title):
+def get_page_summary(current_page_title: str):
+    return wikipedia.summary(current_page_title, auto_suggest=False, redirect=True)
+
+def get_page_content(current_page_title: str):
     #Outputs the content of the wikipedia page
     return wikipedia.page(current_page_title, auto_suggest=False, redirect=True).content
 
-def get_all_page_links(current_page_title):
-    return wikipedia.page(current_page_title, auto_suggest = False, redirect = True).links
+# def get_all_page_links(current_page_title):
+#     return wikipedia.page(current_page_title, auto_suggest = False, redirect = True).links
 
-def get_current_page_links(current_page_title):
+
+def get_page_links(current_page_title: str):
     #Our
-    allLinks = wikipedia.page(current_page_title, auto_suggest=False, redirect = True).links
-    content = wikipedia.page(current_page_title, auto_suggest=False, redirect=True).content
-    permittedLinks = []
-    for i in allLinks:
+    current_page = wikipedia.page(current_page_title, auto_suggest=False, redirect=True)
+    all_links = current_page.links
+    content = current_page.content
+    permitted_links = []
+    for i in all_links:
         if i in content:
-            permittedLinks.append(i)
-    return permittedLinks
+            permitted_links.append(i)
+    return permitted_links
 
 
-def check_if_permitted_link(link, current_page_title):
-    allLinks = wikipedia.page(current_page_title, auto_suggest=False, redirect = True).links
-    content = wikipedia.page(current_page_title, auto_suggest=False, redirect=True).content
-    permittedLinks = []
-    for i in allLinks:
-        if i in content:
-            permittedLinks.append(i)
-    if link in permittedLinks:
+def check_if_permitted_link(link: str, current_page_title: str):
+    permitted_links = get_page_links(current_page_title)
+    if link.lower() in np.char.lower(permitted_links):
         return True
     else:
         return False
 
-print(len(get_current_page_links("India")))
-print(len(get_all_page_links("India")))
-print(get_current_page_content("India"))
+#%%
+page_object = wikipedia.page("Barack Obama", auto_suggest=False,redirect=True)
+get_page_links("Barack Obama")
+# content = page_object.content
+# page_links = []
+# for i in page_object.links:
+#     if i in content:
+#         page_links.append(i)
+#     else:
+#         pass
+# print(page_links)
+# print(page_object.content)
+# print(len(get_page_links("India")))
+# # print(len(get_all_page_links("India")))
+# print(get_page_content("India"))
 
 
 

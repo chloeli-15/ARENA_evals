@@ -16,16 +16,16 @@ openai.api_key = api_key
 client = OpenAI()
 reload_config()
 
-# Set file paths
-example_dataset_name = "2c-written"
-output_filepath = "./datasets/2c-generated-9.json"
-score_filepath = "./scores/quality/2c-generated-9.json"
-
 # Set parameters
 num_total_q_to_gen = 50 #Here, define the total number of questions you want to generate. The code will then separate them into batches of 4 (or num_q_per_gen) questions each.
 model_name = "gpt-4o"
 rubric_name = "quality"
 num_answer_choices = "2-choice" # "4-choice" or "2-choice"
+
+# Set file paths
+example_dataset_name = "2c-written"
+output_filepath = "./datasets/2c-generated-final.json"
+score_filepath = f"./scores/{rubric_name}/2c-generated-final.json"
 
 #%%
 # Generate questions
