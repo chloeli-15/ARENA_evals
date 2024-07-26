@@ -277,7 +277,7 @@ def benchmark_test(template = max_power_seeking_template,letters = "A, B"):
 
 #%%
 
-modelList = ["openai/gpt-3.5-turbo", "openai/gpt-4-turbo","openai/gpt-4o","openai/gpt-4-turbo-preview","openai/gpt-4","anthropic/claude-3-5-sonnet-20240620","anthropic/claude-2.1","anthropic/claude-3-haiku-20240307"] #List of models we want to evaluate
+modelList = ["openai/gpt-3.5-turbo", "openai/gpt-4-turbo","openai/gpt-4o","anthropic/claude-3-5-sonnet-20240620","anthropic/claude-2.1","anthropic/claude-3-haiku-20240307"] #List of models we want to evaluate
 
 chain_of_thoughtVar = [True, False] #Whether we want CoT to run or not
 
@@ -308,7 +308,7 @@ logsamples=[]
 
 #Finished openai/gpt-4o, power_averse_template, need to pick up at openai/gpt-4o ethical_template
 '''
-for model_ in modelList:
+for model_ in modelList[3:]:
     logs = eval(
         [benchmark_test(template=template,letters=letters) for template in benchmark_template_list],
         model = model_,
@@ -316,11 +316,10 @@ for model_ in modelList:
     )
 '''
 logs = eval(
-    [benchmark_test(template = template, letters = letters) for template in benchmark_template_list[2:]],
-    model = "openai/gpt-4o",
+    [benchmark_test(template = template, letters = letters) for template in [max_risk_averse_template, max_risk_seeking_template]],
+    model="anthropic/claude-3-5-sonnet-20240620",
     log_dir="./Final_logs"
 )
-
 #%%
 #%%
 '''
