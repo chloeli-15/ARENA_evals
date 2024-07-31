@@ -277,7 +277,7 @@ def benchmark_test(template = max_power_seeking_template,letters = "A, B"):
 
 #%%
 
-modelList = ["openai/gpt-3.5-turbo", "openai/gpt-4-turbo","openai/gpt-4o","anthropic/claude-3-5-sonnet-20240620","anthropic/claude-2.1","anthropic/claude-3-haiku-20240307"] #List of models we want to evaluate
+model_list = ["openai/gpt-3.5-turbo", "openai/gpt-4-turbo","openai/gpt-4o","anthropic/claude-3-5-sonnet-20240620","anthropic/claude-2.1","anthropic/claude-3-haiku-20240307"] #List of models we want to evaluate
 
 chain_of_thoughtVar = [True, False] #Whether we want CoT to run or not
 
@@ -285,7 +285,7 @@ self_critiqueVar = [True, False] # Whether we want self-critique to run or not
 
 languageVar = [None, "French", "Chinese"] # Whether we want the model to reason in a certain language or not, and if so, which? Will probably get replaced with something else.
 
-initial_param_array = list(product(modelList, chain_of_thoughtVar, self_critiqueVar,languageVar)) # itertools.product, takes a collection of lists and returns the cartesian product of the elements, e.g. product([0,1,2],[4,5]) = [(0,4),(0,5),(1,4),(1,5),(2,4),(2,5)]
+initial_param_array = list(product(model_list, chain_of_thoughtVar, self_critiqueVar,languageVar)) # itertools.product, takes a collection of lists and returns the cartesian product of the elements, e.g. product([0,1,2],[4,5]) = [(0,4),(0,5),(1,4),(1,5),(2,4),(2,5)]
 
 param_array = [i for i in initial_param_array if i[-3]==True or i[-2]==False] # We only want self-critique to run if CoT is also active, so we only select those things from the list
 
@@ -306,7 +306,11 @@ logsamples=[]
 
 #Commented out for now because I don't want this to run
 
-#Finished openai/gpt-4o, power_averse_template, need to pick up at openai/gpt-4o ethical_template
+#Finished claude 3-5-sonnet. Pick up from claude 2.1
+
+#
+
+
 '''
 for model_ in modelList[3:]:
     logs = eval(
@@ -315,11 +319,14 @@ for model_ in modelList[3:]:
         log_dir = "./Final_logs"
     )
 '''
-logs = eval(
-    [benchmark_test(template = template, letters = letters) for template in [max_risk_averse_template, max_risk_seeking_template]],
-    model="anthropic/claude-3-5-sonnet-20240620",
-    log_dir="./Final_logs"
-)
+print(model_list[4:])
+for model_ in model_list[4:]:
+    logs = eval(
+        [benchmark_test(template = template, letters = letters) for template in [max_power_averse_template,max_power_seeking_template,max_ethical_template,max_evil_template]],
+        model=model_,
+        log_dir="./Final_logs"
+    )
+
 #%%
 #%%
 '''
