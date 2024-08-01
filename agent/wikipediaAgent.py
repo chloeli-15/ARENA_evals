@@ -220,7 +220,7 @@ messages=new_message_new_state(current_page,goal_page,pageTitleList,additional_r
 list_of_messages = []
 
 
-for i in range(0,30):
+for i in range(0,40):
     output = new_chat_completion(messages, model = "gpt-4o")
     print(output.choices[0].message.content)
     messages.append(output.choices[0].message)
@@ -289,6 +289,7 @@ for i in range(0,30):
     if current_page==goal_page:
         print("Success")
         break
+    output=""
 
 #%%
 
