@@ -18,7 +18,9 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Optional, List, Tuple, Union
 from tqdm import tqdm
 #%%
-def reload_rubric():
+
+## ============================ Helper functions ============================
+def load_rubric():
     global rubric
     importlib.reload(rubric)
     return rubric.RUBRIC
@@ -45,6 +47,7 @@ def retry_with_exponential_backoff(func,
         raise Exception(f"Maximum retries {retries} exceeded")
     return wrapper
 
+## ============================ Main functions ============================
 @retry_with_exponential_backoff
 def generate_model_score(question:str, rubric, examples: List[dict], model_name):
     """
@@ -84,7 +87,7 @@ def query_evaluator(generated_dataset_path: str, model_name: str, rubric_name: s
     For a given dataset to evaluate, splits the dataset into chunks/batches and apply LM calls on each chunk in parallel using multi-threading 
     """
     print("EVALUATING GENERATED QUESTIONS....")
-    RUBRIC = reload_rubric()
+    RUBRIC = load_rubric()
     rubric = RUBRIC[rubric_name][0] #system prompt for the scorer
     examples = RUBRIC[rubric_name][1] #few-shot examples for the scorer
     
@@ -132,6 +135,7 @@ def query_evaluator(generated_dataset_path: str, model_name: str, rubric_name: s
 
     return graded_dataset, score_filepath
 
+ ## ============================ Summary/Check functions ============================
 def summarize_results(rubric_name:str, 
                       model_name:str, 
                       results: List[dict], 
