@@ -413,12 +413,24 @@ class WikipediaRacingAgent:
 Games of varying difficulty:
 
 Obama -> India
+MVP results
+V2 results
 
 Colin McEvedy -> India
+MVP results
+V2 results
+
+1511 Daléra -> John Hume
+MVP results
+V2 results
 
 Obama -> Tsetse fly (the MVP agent can solve this in 18 steps (including start and end), this agent can do it in 12)
+MVP results
+V2 results
 
 Doyle Brunson -> Montu
+MVP results
+V2 results
 
 
 '''
