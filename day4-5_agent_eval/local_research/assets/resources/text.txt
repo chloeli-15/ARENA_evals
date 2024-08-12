@@ -1,0 +1,35 @@
+John Schulman, Filip Wolski
+OpenAI
+Abstract
+We propose a new family of policy gradient methods for reinforcement learning, which alternate between sampling data
+through interaction with the environment, and optimizing a
+“surrogate” objective function using stochastic gradient ascent. Whereas standard policy gradient methods perform one
+gradient update per data sample, we propose a novel objective
+function that enables multiple epochs of minibatch updates. The new methods, which we call
+proximal policy optimization, have some of the benefits of trust region policy optimization (TRPO), but they are
+much simpler to implement, more general, and have better sample
+complexity (empirically). Our experiments test PPO on a collection of benchmark tasks, including simulated robotic
+locomotion and Atari game playing, and we show that PPO outperforms
+other online policy gradient methods, and overall strikes a favorable balance between sample
+complexity, simplicity, and wall-time.
+1 Introduction
+In recent years, several different approaches have been proposed for reinforcement learning with
+neural network function approximators. The leading contenders are deep Q-learning [Mni+15],
+“vanilla” policy gradient methods [Mni+16], and trust region / natural policy gradient methods
+[Sch+15b]. However, there is room for improvement in developing a method that is scalable (to
+large models and parallel implementations), data efficient, and robust (i.e., successful on a variety
+of problems without hyperparameter tuning). Q-learning (with function approximation) fails on
+many simple problems1 and is poorly understood, vanilla policy gradient methods have poor data
+effiency and robustness; and trust region policy optimization (TRPO) is relatively complicated,
+and is not compatible with architectures that include noise (such as dropout) or parameter sharing
+(between the policy and value function, or with auxiliary tasks).
+This paper seeks to improve the current state of affairs by introducing an algorithm that attains
+the data efficiency and reliable performance of TRPO, while using only first-order optimization.
+We propose a novel objective with clipped probability ratios, which forms a pessimistic estimate
+(i.e., lower bound) of the performance of the policy. To optimize policies, we alternate between
+sampling data from the policy and performing several epochs of optimization on the sampled data.
+Our experiments compare the performance of various different versions of the surrogate objective, and find that the
+version with the clipped probability ratios performs best. We also compare
+PPO to several previous algorithms from the literature. On continuous control tasks, it performs
+better than the algorithms we compare against. On Atari, it performs significantly better (in terms
+of sample complexity) than A2C and similarly to ACER though it is much simpler.
