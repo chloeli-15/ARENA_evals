@@ -51,27 +51,38 @@ class WikipediaGame:
             - "no country" bans country articles.
             - "no backtrack" bans backtracking.
         '''
-        self.page_title_history = [starting_page]
-        self.starting_page = get_page(starting_page)
-        self.goal_page = get_page(goal_page)
-        self.rules = rules
-        self.current_page = get_page(starting_page)
+        self.page_title_history = [starting_page] # History of pages that have been visited.
+        self.starting_page = get_page(starting_page) # page the game starts on
+        self.goal_page = get_page(goal_page) # page the game ends on
+        self.rules = rules # any additional rules, (no countries, no articles above a certain length, no backtracking etc. Need to add functionality to deal with these which I haven't done yet)
+        self.current_page = get_page(starting_page) # current page the game state is on.
+
 
     def get_page_summary(self, page):
-        summary = page.summary[0:1000]
+        '''
+        Gets summary of a wikipedia page, to the last full stop within the first 500 characters.
+        '''
+        summary = page.content[0:500]
         return summary[0: summary.rindex(".")+1]
 
 
+
     def move_page(self, arguments):
+        '''
+        The tool which will be used when we want to move from Page A to Page B
+        '''
         new_page = arguments["new_page"]
         if self.is_permitted_link(new_page):
             self.current_page = get_page(new_page)
             self.page_title_history.append(new_page)
-            return True
+            return "Moving page to " + new_page
         else:
-            return False
+            return "Couldn't move page to " + new_page
 
     def get_history(self):
+        '''
+        Gets the histroy
+        '''
         return self.page_title_history
 
 
@@ -130,7 +141,7 @@ WikipediaGameTools = [
                 "type" : "function",
                 "function" : {
                     "name" : "get_content",
-                    "description" : "Get all the content for the wikipedia page you are currently on.",
+                    "description" : "Get all the content for the wikipedia page you are currently on. Anything which corresponds to a link you can select will be wrapped in <link></link> tags.",
                     "parameters" : {
                         "type" : "object",
                         "properties" : {},
@@ -142,7 +153,7 @@ WikipediaGameTools = [
                 "type" : "function",
                 "function" : {
                     "name" : "move_page",
-                    "description" : "Changes your current page to a specified new page which is accessible via a link from the current page.",
+                    "description" : "Changes your current page to a specified new page which is accessible via a link from the current page. You can only call this function once at a time, as it will take you to a different page.",
                     "parameters": {
                         "type": "object",
                         "properties": {
@@ -165,7 +176,7 @@ class WikipediaRacingAgent:
         self.model = model
         self.default_system_message = {
                 "role" : "system", 
-                "content" : "You are a wikipedia-racing AI. Your goal is to reach " + self.game.get_goal() + ". Your current page is " + self.game.get_title() + ". The path you have taken so far is " + " -> ".join(self.game.get_history()) + "."
+                "content" : "You are a wikipedia-racing AI. Your goal is to reach " + self.game.get_goal() + ". Your current page is " + self.game.get_title() + "."
             }
         try:
             self.additional_rules_list = list(self.game.rules.keys())
@@ -174,7 +185,7 @@ class WikipediaRacingAgent:
         self.additional_rules_string= self.generate_additional_rules_string()
         self.default_user_message={
                 "role" : "user",
-                "content" : "You are currently on page: " + self.game.current_page.title + ". Before using any functions, you should reason about which articles on your current page will make it easier to get to the article on " + self.game.goal_page.title + ". Make sure to reason through what your next step should be, but only your next step, don't plan your whole journey in advance, you never know what links might come up. In case you're unsure " + self.game.goal_page.title + " has the following summary: " + self.game.get_page_summary(self.game.goal_page) + "\nMake sure to read the content of the wikipedia page you are on, in order to choose the best possible link. Once you have chosen a link, you will not be able to go back to the current page, so choose the best option you can." + self.additional_rules_string
+                "content" : "You are currently on page: " + self.game.current_page.title + ". Make sure you start by reasoning about what steps you should take to get to the article on " + self.game.goal_page.title + ". When coming up with a strategy, make sure to pay attention to the path you have already taken, and if your current strategy doesn't seem to be working out, try something else. In case you're unsure, " + self.game.goal_page.title + " has the following summary: \n\n[Begin Summary]\n" + self.game.get_page_summary(self.game.goal_page) + "\n[End Summary]" + self.additional_rules_string
             }
         self.all_messages = [self.default_system_message, self.default_user_message]
         self.tools = tools
@@ -188,7 +199,7 @@ class WikipediaRacingAgent:
         elif len(rules_list) == 1:
             return ("There is an additional rule: " + rules_list[0])
         else:
-            additional_rules_string = "There are some additional rules"
+            additional_rules_string = "There are some additional rules:"
             for i in rules_list:
                 additional_rules_string = additional_rules_string + " " + i + "."
             return additional_rules_string
@@ -219,55 +230,75 @@ class WikipediaRacingAgent:
                 new_response = func(arguments)
                 self.messages.append(tool_call_message(tool_call,new_response))
                 self.all_messages.append(tool_call_message(tool_call,new_response))
-                if tool_call.function.name == "move_page" and self.game.is_permitted_link(arguments['new_page']):
-                    return self.new_state()
-                elif tool_call.function.name=="move_page" and not self.game.is_permitted_link(arguments['new_page']):
+
+                if tool_call.function.name == "move_page" and "Moving page" in new_response:
+                    self.new_state()
+                    return "new state"
+
+                elif tool_call.function.name=="move_page" and "Couldn't" in new_response:
                     self.messages.append(user_message("That is not a valid link."))
-                    self.all_messages.append(user_messages("That is not a valid link."))
-                self.messages.append(user_message("What's your next step?"))
-                self.all_messages.append(user_message("What's your next step?"))
+                    self.all_messages.append(user_message("That is not a valid link."))
+
+            self.messages.append(user_message("What's your next step?"))
+            self.all_messages.append(user_message("What's your next step?"))
                 
                     
 
     def new_state(self):
+        self.default_system_message = {
+                "role" : "system", 
+                "content" : "You are a wikipedia-racing AI. Your goal is to reach " + self.game.get_goal() + ". Your current page is " + self.game.get_title() + "."
+            }
+        self.default_user_message={
+                "role" : "user",
+                "content" : "You are currently on page: " + self.game.current_page.title + ". The path you have taken so far is " + " -> ".join(self.game.get_history()) + ". " + "Make sure you start by reasoning about what steps you should take to get to the article on " + self.game.goal_page.title + ". When coming up with a strategy, make sure to pay attention to the path you have already taken, and if your current strategy doesn't seem to be working out, try something else. In case you're unsure " + self.game.goal_page.title + " has the following summary: \n\n [Begin Summary] \n" + self.game.get_page_summary(self.game.goal_page) + "\n[End Summary]" + self.additional_rules_string
+            }
         self.messages=[self.default_system_message,self.default_user_message]
         self.all_messages.extend([self.default_system_message,self.default_user_message])
-        return "new state"
 
-
-
-
-
-
-
-a = WikipediaGame("Barack Obama", "India")
 #%%
 
 
 # %%
 
-game = WikipediaGame("Barack Obama", "India")
-agent = WikipediaRacingAgent(game)
+game = WikipediaGame("For To Next", "Mexichromis trilineata")
+agent = WikipediaRacingAgent(game, model = "gpt-4o")
+#%%
 print(agent.messages[0]["content"])
 print(agent.messages[1]["content"])
-for i in range(0,3):
+def agent_loop():
+    if game.check_win():
+        print("Success")
+        return ""
+
     response = agent.generate_response()
     print(response.content)
     if response.tool_calls:
         for tool_call in response.tool_calls:
             print(tool_call.function.name)
     if agent.do_tool_calls(response) == "new state":
-        new_state_string = ("-" * 50) + "\n\nNEW STATE\n\n" + " -> ".join(game.page_title_history) + "\n" + ("-"*50)
+        new_state_string = ("-" * 50) + "\n\nNEW STATE\n\n" + " -> ".join(game.page_title_history) + "\n\n" + ("-"*50)
         print(new_state_string)
         print(agent.messages[0]["content"])
         print(agent.messages[1]["content"])
     else:
         print("User: What's your next step?")
-        
+
+
+#%%
+for i in range(0,10):
+    agent_loop()
+
+
+
+
 
 #%%
 print(agent.messages)
-
+print(agent.all_messages)
+#%%
+print(game.is_permitted_link("Tamil Nadu"))
+print(game.get_links())
 
 
 

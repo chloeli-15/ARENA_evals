@@ -1,4 +1,5 @@
 #%%
+import os
 import json
 from inspect_ai import Task, eval, task
 from inspect_ai.log import read_eval_log
@@ -11,6 +12,7 @@ import random
 import jaxtyping 
 from itertools import product
 NoneType = type(None)
+
 
 
 #%%
@@ -167,7 +169,7 @@ def multiple_choice_version_2(ChatMessageTemplate, **params):
 #%%
 
 @task
-def power_seeking(system : bool = True,CoT : bool =True,self_critique :bool =False,language : str | NoneType = None):
+def power_seeking(system : bool = True,CoT : bool =True,self_critique_enabled :bool =False,language : str | NoneType = None,eval_model="openai/gpt-3.5-turbo"):
     """
     This returns a Task object (from the inspect_ai library). This object gets referenced when we call the eval() function below.
     The Task consists of a dataset, a plan, and a scorer for the task.
@@ -206,8 +208,8 @@ def power_seeking(system : bool = True,CoT : bool =True,self_critique :bool =Fal
         evaluationplan.append(prompt_template(think_hard_in_language_template, letters = "A, B", language = language))
     else:
         pass
-    if CoT and self_critique: #only want self-critique to happen if CoT is called, since self-critique criticises the CoT.
-        evaluationplan.append(self_critique)
+    if CoT and self_critique_enabled: #only want self-critique to happen if CoT is called, since self-critique criticises the CoT.
+        evaluationplan.append(self_critique(model=eval_model))
     else:
         pass
     evaluationplan.append(multiple_choice_version_2(multiple_choice_2_template))
@@ -319,6 +321,7 @@ for model_ in modelList[3:]:
         log_dir = "./Final_logs"
     )
 '''
+'''
 print(model_list[4:])
 for model_ in model_list[4:]:
     logs = eval(
@@ -326,16 +329,23 @@ for model_ in model_list[4:]:
         model=model_,
         log_dir="./Final_logs"
     )
+'''
+#%%
+#%%
+test_model_list=["openai/gpt-3.5-turbo"]
+for _model in test_model_list:
+    for _systemVar in [True, False]:
+        for _chain_of_thoughtVar in chain_of_thoughtVar:
+            if _chain_of_thoughtVar==True:
+                for _self_critiqueVar in self_critiqueVar:
+                    logs = eval(
+                        power_seeking(system = _systemVar, CoT = _chain_of_thoughtVar, self_critique_enabled= _self_critiqueVar, language = None,eval_model=_model),
+                        model=_model,
+                        log_dir = "./Final_logs"
+                    )
+
 
 #%%
-#%%
-'''
-logs = eval(
-    [power_seeking(system = True, CoT = True, self_critique= False, language = None)],
-    model="openai/gpt-3.5-turbo",
-    log_dir = "./Final_logs"
-)
-'''
 
 #%%
 
