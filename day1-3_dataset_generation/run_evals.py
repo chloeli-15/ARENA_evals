@@ -19,7 +19,7 @@ NoneType = type(None)
 
 #Just a test.
 
-with open("datasets/2c-generated-final.json", "r") as f:
+with open("day1-3_dataset_generation/datasets/2c-generated-final.json", "r") as f:
     dataset = json.load(f)
     for i in dataset:
         assert type(i["answers"]) == dict
@@ -88,14 +88,14 @@ def generate_dataset_function(system = True, system_prompt_as_context = False):
     return wrapper
 #This does the system prompt and kwargs and stuff. TODO name these functions better
 
-power_seeking_dataset_system = json_dataset("./datasets/2c-generated-final.json", generate_dataset_function(True))
+power_seeking_dataset_system = json_dataset("day1-3_dataset_generation/datasets/2c-generated-final.json", generate_dataset_function(True))
 print(power_seeking_dataset_system[0])
 
 #%%
-power_seeking_dataset_no_system=json_dataset("./datasets/2c-generated-final.json", generate_dataset_function(False))
+power_seeking_dataset_no_system=json_dataset("day1-3_dataset_generation/datasets/2c-generated-final.json", generate_dataset_function(False))
 print(power_seeking_dataset_no_system[0])
 
-power_seeking_dataset_benchmark = json_dataset("./datasets/2c-generated-final.json", generate_dataset_function(None, True))
+power_seeking_dataset_benchmark = json_dataset("day1-3_dataset_generation/datasets/2c-generated-final.json", generate_dataset_function(None, True))
 print(power_seeking_dataset_benchmark[0])
 #%%
 '''
@@ -214,7 +214,7 @@ def power_seeking(system : bool = True,CoT : bool =True,self_critique_enabled :b
         pass
     evaluationplan.append(multiple_choice_version_2(multiple_choice_2_template))
     evaluationplan.append(generate())
-    #Docs say no need to call generate for MCQ since MCQ already calls generate. I think you still need to call generate after CoT though (or a general solver, unless you call generate within the solver itself). 
+    #Docs say no need to call generate for MCQ since MCQ already calls generate. I think you still need to call generate after CoT though (or a general solver, unless you call generate within the solver itself). In my own multiple choice template, I didn't automatically call generate, but it's a matter of taste.
 
     if system:
         return Task(
@@ -318,7 +318,7 @@ for model_ in modelList[3:]:
     logs = eval(
         [benchmark_test(template=template,letters=letters) for template in benchmark_template_list],
         model = model_,
-        log_dir = "./Final_logs"
+        log_dir = "./final_logs"
     )
 '''
 '''
@@ -327,25 +327,46 @@ for model_ in model_list[4:]:
     logs = eval(
         [benchmark_test(template = template, letters = letters) for template in [max_power_averse_template,max_power_seeking_template,max_ethical_template,max_evil_template]],
         model=model_,
-        log_dir="./Final_logs"
+        log_dir="./final_logs"
     )
 '''
 #%%
+for _systemVar in [True, False]:
+        for _chain_of_thoughtVar in chain_of_thoughtVar:
+            if _chain_of_thoughtVar==True:
+                for _self_critiqueVar in self_critiqueVar:
+                    
+                    print(power_seeking(system = _systemVar, CoT = _chain_of_thoughtVar, self_critique_enabled= _self_critiqueVar, language = None,eval_model=_model))
+            else:
+                print(power_seeking(system = _systemVar, CoT = _chain_of_thoughtVar, self_critique_enabled= _self_critiqueVar, language = None,eval_model=_model))
+
 #%%
-test_model_list=["openai/gpt-3.5-turbo"]
+test_model_list=["openai/gpt-4-turbo"]
 for _model in test_model_list:
     for _systemVar in [True, False]:
         for _chain_of_thoughtVar in chain_of_thoughtVar:
             if _chain_of_thoughtVar==True:
                 for _self_critiqueVar in self_critiqueVar:
+                    '''
                     logs = eval(
                         power_seeking(system = _systemVar, CoT = _chain_of_thoughtVar, self_critique_enabled= _self_critiqueVar, language = None,eval_model=_model),
                         model=_model,
-                        log_dir = "./Final_logs"
+                        log_dir = "./day1-3_dataset_generation/final_logs"
+                    )
+                    '''
+                    pass
+            else:
+                _self_critiqueVar=False
+                logs = eval(
+                        power_seeking(system = _systemVar, CoT = _chain_of_thoughtVar, self_critique_enabled= _self_critiqueVar, language = None,eval_model=_model),
+                        model=_model,
+                        log_dir = "./day1-3_dataset_generation/final_logs"
                     )
 
 
 #%%
+
+
 
 #%%
 
