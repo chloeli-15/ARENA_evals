@@ -56,6 +56,7 @@ def get_page(title):
     return wikipedia.page(title, auto_suggest = False, redirect = True)
 
 def tool_call_message(tool_call,content):
+        #Easily creates tool call messages
         return {
             "tool_call_id" : tool_call.id,
             "role" : "tool",
@@ -63,6 +64,7 @@ def tool_call_message(tool_call,content):
             "content" : content
         }
 def user_message(content):
+    #Easily creates user messages
     return {
         "role" : "user",
         "content" : content
@@ -77,11 +79,8 @@ class WikipediaGame:
 
         goal_page is the page the agent is trying to get to.
 
-        rules is a list of dictionaries specifying any additional rules along with a description of that rule to be fed to the agent.
-
-        Rules that are handled currently:
-            - "no country" bans country articles.
-            - "no backtrack" bans backtracking.
+        rules is a list of dictionaries specifying any additional rules along with a description of that rule to be fed to the agent
+            - rules aren't handled right now.
         '''
         self.page_title_history = [starting_page] # History of pages that have been visited.
         self.starting_page = get_page(starting_page) # page the game starts on
@@ -92,18 +91,18 @@ class WikipediaGame:
 
     def get_page_summary(self, page):
         '''
-        Gets summary of a wikipedia page, to the last full stop within the first 500 characters.
+        Gets summary of a wikipedia page, to the last full stop within the first 700 characters.
         '''
-        summary = page.content[0:500]
+        summary = page.content[0:700]
         return summary[0: summary.rindex(".")+1]
 
 
 
     def move_page(self, arguments):
         '''
-        The tool which will be used when we want to move from Page A to Page B
+        The tool which the agent will use when it wants to move from Page A to Page B
         '''
-        new_page = arguments["new_page"].lower() # Have to do .lower() *everywhere*, or there's always an issue *somewhere*
+        new_page = arguments["new_page"] # Have to do .lower() *everywhere*, or there's always an issue *somewhere*
         if self.is_permitted_link(new_page):
             self.current_page = get_page(new_page)
             self.page_title_history.append(new_page)
@@ -113,17 +112,22 @@ class WikipediaGame:
 
     def get_history(self):
         '''
-        Gets the histroy
+        Returns the list of the titles of previous pages that have been visited. (NOT ChatHistory !)
         '''
         return self.page_title_history
 
 
     def get_plain_content(self):
+        '''
+        Just returns the plain content of the current page. Usually this only gets called by other functions in the class, because the agent will call "get_content" which will wrap accessible pages with <link> tags.
+        '''
         return self.current_page.content
 
 
     def get_content(self,arguments):
-        #Gives content with links
+        '''
+        Gives content of wikipedia page with <link> tags. There's probably a better way to do this. Didn't use .replace() because of case sensitivity annoyances, so had to use regular expressions (re) library with the flag re.I
+        '''
         content = self.current_page.content
         for word in sorted(self.get_links(), key=len, reverse = True):
             content = re.sub(" " + word + " ", " " + f"<link>{word}</link>" + " ",content, flags = re.I)
@@ -138,6 +142,10 @@ class WikipediaGame:
         return content
     
     def get_links_of_page(self, page_title):
+        '''
+        Gets a list of links of a given page. This won't be called by the agent, since it can't get arbitrary links, but is necessary for the reflexion test_path function, as we need to check that the links actually are accessible.
+        
+        '''
         page = wikipedia.page(page_title, redirect= True, auto_suggest=False)
         all_links = page.links
         content = page.content
@@ -148,14 +156,13 @@ class WikipediaGame:
         return permitted_links
     
     def test_path(self, arguments : dict) -> str:
+        '''
+        Reflexion test_path function, takes a dict like {"path": "Barack Obama -> Indonesia -> India"} and returns True if the path works, for a path like "Barack Obama -> Indonesia -> Pink Floyd" it would return "This path works until Pink floyd, which is not accessible from Indonesia".
+        '''
         path = arguments["path"].split("->")
-        print(path[0].strip())
-        print(self.current_page.title)
         if path[0].strip() != self.current_page.title:
             return "ERROR: The title of the start page of this path is not the title of your current page."
         for i in range(len(path)-1):
-            print(self.get_links_of_page(path[i]))
-            print(path[i+1].strip())
             if path[i+1].strip().lower() in self.get_links_of_page(path[i]):
                 continue
             else:
@@ -163,6 +170,9 @@ class WikipediaGame:
         return "This path completely works."
     
     def get_links(self):
+        '''
+        Gets the list of permitted links from the current page. This is a different function than the get_links_of_page function because loading pages through the wikipedia api takes time, and we've already loaded the current page in, so there's no need to reload the page (whereas for the models suggested paths, we *have* to load a bunch of new pages in no matter what).
+        '''
         all_links = self.current_page.links
         content = self.current_page.content
         permitted_links = []
@@ -172,20 +182,35 @@ class WikipediaGame:
         return permitted_links
 
     def is_permitted_link(self, link):
-        if link in self.get_links():
+        '''
+        Checks if a link is accessible from the current page. Checked when the agent calls move_page.
+        '''
+        if link.lower() in self.get_links():
             return True
         else:
             return False
 
     def get_title(self):
+        '''
+        Gets the title of the current page. Basically a completely unnecessary vestigial function, since you can just call self.current_page.title. It is called though sometimes so delete with care.
+        '''
         return self.current_page.title
 
     def get_start(self):
+        '''
+        Gets the title of the starting page, similar to the above, totally unnecessary. It is called though sometimes so delete with care.
+        '''
         return self.starting_page.title
 
     def get_goal(self):
+        '''
+        Gets the title of the goal page, also unnecessary. It is called though sometimes so delete with care.
+        '''
         return self.goal_page.title
     def check_win(self):
+        '''
+        Checks if the game has been won by the agent
+        '''
         if self.current_page==self.goal_page:
             return True
         else:
@@ -196,6 +221,8 @@ a = WikipediaGame("Barack Obama", "India")
 
 '''
 Ensure that the wikipedia tool names correspond to callable functions on the WikipediaGame class (as this is how I'm going to handle them to avoid annoying things).
+
+Below is a list of all the tools we're using.
 '''
 
 WikipediaGameTools = [
@@ -249,6 +276,14 @@ WikipediaGameTools = [
 
 #%%
 '''
+
+*********************COMMENT************************
+
+This was me messing around with something. Commented out as there's no need for it to run, but I also would rather not delete it right now because working out the regexes are kind of annoying, and it might be useful at some point down the line
+
+****************************************************
+
+
 import re
 import wikipedia
 
@@ -282,7 +317,6 @@ def evaluate_path(path : list) -> str:
 print(evaluate_path(path_list[2]))
 
 '''
-tool_string =  "You have access to three functions:\n\nget_content: This outputs the wikipedia content of the current page you are in, with any available links wrapped in <link> </link> tags. \nmove_page: This takes a page title as argument, and lets you move page to any available link from your current page.\ntest_path: this takes a trial path in the form current_page -> page_1 -> page_2 -> ... -> goal_page as argument, and outputs success if the path works, or tells you where the path goes wrong if the path doesn't work.\n"
 #%%
 class WikipediaRacingAgent:
     def __init__(self, wikigame, model = "gpt-4o", tools = WikipediaGameTools):
@@ -294,10 +328,10 @@ class WikipediaRacingAgent:
                 "content" : "You are a wikipedia-racing AI. Your goal is to reach " + self.game.get_goal() + ". Your current page is " + self.game.get_title() + ". You can determine which links are accessible as they will be wrapped in <link> </link> tags when you call get_content."
             }
         try:
-            self.additional_rules_list = list(self.game.rules.keys())
+            self.additional_rules_list = list(self.game.rules.keys()) # Loads in additional rules to tell the agent about, if they exist.
         except:
             self.additional_rules_list = []
-        self.additional_rules_string= self.generate_additional_rules_string()
+        self.additional_rules_string= self.generate_additional_rules_string() # Generates a string to append to the prompt to let the agent know about the additional rules. Not currently handled or used, but don't delete as will probably add later (it is trivial to add this, but depends on whether the agent saturates performance).
         self.default_user_message={
                 "role" : "user",
                 "content" : "\n\nYou are playing the wikipedia game. You're starting on page " + self.game.get_title() + ". You're goal page is " + self.game.goal_page.title + " In case you're unsure, " + self.game.goal_page.title + " has the following summary: \n\n[Begin Goal Page Summary]\n" + self.game.get_page_summary(self.game.goal_page) + "\n[End Goal Page Summary]" + self.additional_rules_string
@@ -308,6 +342,9 @@ class WikipediaRacingAgent:
         self.messages = [self.default_system_message, self.default_user_message]
     
     def generate_additional_rules_string(self):
+        '''
+        Generates a string to append to the prompt to let the agent know about the additional rules. Not currently handled or used, but don't delete as will probably add later (it is trivial to add this, but depends on whether the agent saturates performance).
+        '''
         rules_list = self.additional_rules_list
         if len(rules_list) == 0:
             return ""
@@ -321,6 +358,9 @@ class WikipediaRacingAgent:
     
     @retry_with_exponential_backoff
     def generate_response(self, tools=True):
+        '''
+        The basic generate response function. Gets an agent output with the prompt, with access to tools. This is what is used in the MVP (with tools=True). In V2 it's only used in the context of the ReAct_framework_generate_response function.
+        '''
         if tools:
             new_response = client.chat.completions.create(
                 model = self.model,
@@ -340,6 +380,9 @@ class WikipediaRacingAgent:
     
     @retry_with_exponential_backoff
     def ReAct_framework_generate_response(self, self_evaluate=True):
+        '''
+        ReAct framework response function. Gets the agent to reason without tools. Then gets it to use the tools. Probably worth including information about the tools in the thought thing here.
+        '''
         num_thoughts = 1
         num_actions = 1
         response_list=[]
@@ -365,9 +408,17 @@ class WikipediaRacingAgent:
                 return response_list
         
     def get_response(self):
+        '''
+        Returns the agent response.
+        
+        '''
         return self.response
 
     def do_tool_calls(self, output):
+        '''
+        Handles tool calling behaviour. If the agent calls tools, then we iterate through the list of tool calls. We use getattr to just call the tool directly from the game class. We have to handle some tools carefully (e.g. arguments are "None" for the get_content, but OpenAI forces us to use arguments ugh, move_page also needs to be handled carefully as it triggers new_state())
+        
+        '''
         tool_calls = output.tool_calls
         if tool_calls:
             for tool_call in tool_calls:
@@ -391,6 +442,15 @@ class WikipediaRacingAgent:
                     
 
     def new_state(self):
+        '''
+        When the agent moves page we trigger this function.
+
+        high_state_string was a hacky thing to warn it to pay attention to what it's been doing in a vain attempt to imrpove performance. Could arguably be deleted and probably won't lose much.
+
+        Need to update default user and system message to inform it of a new game, and then extend the list of messages with these.
+
+        The bit at the end handles removing all the prior wikipedia content. It's pretty hacky and there's probably a better way to do it, but it works (if no wikipedia page opens with the character "[" at least, which I haven't yet encountered).
+        '''
         if self.state_count>=4:
             high_state_string="\n\nYou should pay attention to the path you have taken so far. If you have been going around certain pages in circles, and you keep returning to the same page, then try a plan that will take you in a different direction."
         else:
@@ -408,16 +468,24 @@ class WikipediaRacingAgent:
                 "content" : "[START GAME SUMMARY]\n\nYou are now on page: " + self.game.current_page.title + ". So far you have visisted the following list of pages in order:" +"".join(["\n" + str(i+1) + ". " + self.game.page_title_history[i] for i in range(len(self.game.page_title_history))]) + high_state_string + self.additional_rules_string + "\n[END GAME SUMMARY]\nMake sure to consider using the test_path tool to test your future plans. The paths can potentially be very long paths, and you might be able to gain a lot of information this way.\n"
                 }
         self.messages.extend([self.default_system_message,self.default_user_message])
+
         for i in self.messages: 
             try: x = i.role
             except: x = i['role']
             if (x == "tool") and (i['content'][0]!="[") and (i['name'] == "get_content"):
-                i['content'] = "[The content of the wikipedia page: " + self.game.current_page.title + "]"
+                i['content'] = "[The content of the wikipedia page: " + self.game.get_history()[-1] + "]"
         self.all_messages.extend([self.default_system_message,self.default_user_message])
 #%%
 
 # %%
 '''
+
+**************COMMENT*************
+
+A list of candidate games to test the MVP and V2 agents on. We can do more AI focused stuff if you want, or come up with funnier/more interesting ideas here, but these seem to test the agent effectively.
+
+**********************************
+
 Games of varying difficulty:
 
 Obama -> India
@@ -451,8 +519,17 @@ V2:
 game = WikipediaGame("Barack Obama", "Tsetse Fly")
 agent = WikipediaRacingAgent(game, model = "gpt-4o")
 #%%
-print(agent.messages[0])
-print(agent.messages[1])
+'''
+
+
+Agent loop. 
+
+Prints a bunch of stuff so I can actually see what the agent is doing. The printing isn't perfect (especially with tool calls, as I can't return all the tool calls, because that would end the function, and there are sometimes more than one, could fix this with a list but haven't gotten around to it as it's a minor detail). IT generally should give a good idea of what the agent is seeing.
+
+
+'''
+print(agent.messages[0].content)
+print(agent.messages[1].content)
 def agent_loop():
     if game.check_win():
         print("Success")
@@ -477,12 +554,17 @@ def agent_loop():
     else:
         print("User: What's your next step?")
 #%%
-game.test_path({"path" : "Wildlife -> Insects ->"})
-
 
 #%%
+'''
+Loop to run the agent a fixed number of times. DO NOT "while" loop this ever as it costs lots of money !!!!!!!!!!!!!!
+'''
 for i in range(0,20):
     agent_loop()
+
+
+
+
 
 
 #%%
@@ -491,8 +573,14 @@ print(" -> ".join(game.get_history()[:-1]))
 
 #%%
 for i in agent.messages:
-    try: print(i['content']) 
-    except: print(i.content)
+    try: x = i['content']
+    except: x = i.content
+    if x==None:
+        for j in i.tool_calls:
+            print(j.function.name," ", j.function.arguments)
+    else:
+        print(x)
+
 #%%
 print(game.is_permitted_link("Tamil Nadu"))
 print(game.get_links())
@@ -503,6 +591,7 @@ print(game.current_page.content)
 
 
 # %%
+'''
 test_game = WikipediaGame("Wildlife","Barack Obama")
 #print(test_game.get_content({}))
 print(test_game.test_path({"path" : "Wildlife -> intensive farming -> Insecticide -> Insect -> Tsetse Fly"}))
@@ -510,4 +599,5 @@ print(test_game.test_path({"path" : "Wildlife -> intensive farming -> Insecticid
 print(test_game.get_links())
 print(test_game.current_page.links)
 print("Intensive farming".lower() in test_game.current_page.content.lower())
+'''
 #%%
