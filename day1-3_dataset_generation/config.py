@@ -28,5 +28,5 @@ chunk_size = 5
 trials = 4
 max_threads = 10 # Claude can only handle 2 concurrent threads
 num_shots = 5
-num_q_per_call = 4
+q_per_call = 4
 chunk_size_gen = 48
