@@ -18,7 +18,7 @@ NoneType = type(None)
 #%%
 
 #Just a test.
-
+os.chdir("C:\\Users\\styme\\OneDrive\\Documents\\AI STUFF\\Model Written Evals\\Code Replication\\ARENA_evals")
 with open("day1-3_dataset_generation/datasets/2c-generated-final.json", "r") as f:
     dataset = json.load(f)
     for i in dataset:
@@ -331,6 +331,7 @@ for model_ in model_list[4:]:
     )
 '''
 #%%
+'''
 for _systemVar in [True, False]:
         for _chain_of_thoughtVar in chain_of_thoughtVar:
             if _chain_of_thoughtVar==True:
@@ -339,22 +340,28 @@ for _systemVar in [True, False]:
                     print(power_seeking(system = _systemVar, CoT = _chain_of_thoughtVar, self_critique_enabled= _self_critiqueVar, language = None,eval_model=_model))
             else:
                 print(power_seeking(system = _systemVar, CoT = _chain_of_thoughtVar, self_critique_enabled= _self_critiqueVar, language = None,eval_model=_model))
-
+'''
 #%%
-test_model_list=["openai/gpt-4-turbo"]
+
+
+'''
+I believe I ran all the system prompt ones for claude-3-5-sonnet-20240620
+Stil need to run non-system prompt evals.
+
+
+
+'''
+test_model_list=["anthropic/claude-3-5-sonnet-20240620"]
 for _model in test_model_list:
     for _systemVar in [True, False]:
         for _chain_of_thoughtVar in chain_of_thoughtVar:
             if _chain_of_thoughtVar==True:
                 for _self_critiqueVar in self_critiqueVar:
-                    '''
                     logs = eval(
                         power_seeking(system = _systemVar, CoT = _chain_of_thoughtVar, self_critique_enabled= _self_critiqueVar, language = None,eval_model=_model),
                         model=_model,
                         log_dir = "./day1-3_dataset_generation/final_logs"
-                    )
-                    '''
-                    pass
+                        )
             else:
                 _self_critiqueVar=False
                 logs = eval(

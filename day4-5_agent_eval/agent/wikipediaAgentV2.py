@@ -1,7 +1,7 @@
 #%%
 import json
 import os
-os.chdir("c:\\Users\\styme\\OneDrive\\Documents\\AI STUFF\\Model Written Evals\\Code Replication\\ARENA_evals\\agent")
+os.chdir("c:\\Users\\styme\\OneDrive\\Documents\\AI STUFF\\Model Written Evals\\Code Replication\\ARENA_evals\\day4-5_agent_eval\\agent")
 import wikipedia
 import re
 from openai import OpenAI
@@ -68,8 +68,6 @@ def user_message(content):
         "content" : content
     }
 
-
-
 class WikipediaGame:
     def __init__(self, starting_page : str, goal_page : str, rules : list | type[None] = None):
         '''
@@ -105,7 +103,7 @@ class WikipediaGame:
         '''
         The tool which will be used when we want to move from Page A to Page B
         '''
-        new_page = arguments["new_page"]
+        new_page = arguments["new_page"].lower() # Have to do .lower() *everywhere*, or there's always an issue *somewhere*
         if self.is_permitted_link(new_page):
             self.current_page = get_page(new_page)
             self.page_title_history.append(new_page)
@@ -128,31 +126,37 @@ class WikipediaGame:
         #Gives content with links
         content = self.current_page.content
         for word in sorted(self.get_links(), key=len, reverse = True):
-            content = content.replace(" " + word + " ", " " + f"<link>{word}</link>" + " ")
+            content = re.sub(" " + word + " ", " " + f"<link>{word}</link>" + " ",content, flags = re.I)
         for word in sorted(self.get_links(), key=len, reverse = True):
-            content = content.replace(" " + word + ",", " " + f"<link>{word}</link>" + ",")
+            content = re.sub(" " + word + ",", " " + f"<link>{word}</link>" + ",", content, flags=re.I)
         for word in sorted(self.get_links(), key=len, reverse = True):
-            content = content.replace(" " + word + ".", " " + f"<link>{word}</link>" + ".")
+            content = re.sub(" " + word + ".", " " + f"<link>{word}</link>" + ".", content, flags=re.I)
+        for word in sorted(self.get_links(), key=len, reverse = True):
+            content = re.sub("(" + word + ")", "(" + f"(<link>{word}</link>)" + ")", content, flags = re.I)
+        for word in sorted(self.get_links(), key=len, reverse = True):
+            content = re.sub(" " + word + "s", " " + f"(<link>{word}</link>)" + "s", content, flags = re.I)
         return content
     
-    def get_links_of_page(page_title):
+    def get_links_of_page(self, page_title):
         page = wikipedia.page(page_title, redirect= True, auto_suggest=False)
         all_links = page.links
         content = page.content
         permitted_links = []
         for i in all_links:
-            if i in content:
-                permitted_links.append(i)
+            if i.lower() in content.lower():
+                permitted_links.append(i.lower())
         return permitted_links
     
     def test_path(self, arguments : dict) -> str:
-        path = arguments["path"]
+        path = arguments["path"].split("->")
+        print(path[0].strip())
+        print(self.current_page.title)
         if path[0].strip() != self.current_page.title:
             return "ERROR: The title of the start page of this path is not the title of your current page."
-        if path[-1].strip()!= self.goal_page.title:
-            return "ERROR: The title of the final page of this path is not the title of your goal page."
         for i in range(len(path)-1):
-            if path[i+1].strip() in get_links_of_page(path[i]):
+            print(self.get_links_of_page(path[i]))
+            print(path[i+1].strip())
+            if path[i+1].strip().lower() in self.get_links_of_page(path[i]):
                 continue
             else:
                 return "This path works until " + path[i+1].strip() + ", which is not accessible from " +path[i].strip()
@@ -163,8 +167,8 @@ class WikipediaGame:
         content = self.current_page.content
         permitted_links = []
         for i in all_links:
-            if i in content:
-                permitted_links.append(i)
+            if i.lower() in content.lower():
+                permitted_links.append(i.lower())
         return permitted_links
 
     def is_permitted_link(self, link):
@@ -217,7 +221,7 @@ WikipediaGameTools = [
                         "properties": {
                             "new_page": {
                                 "type": "string",
-                                "description": "The title of the new page you want to move to.",
+                                "description": "The title of the new page you want to move to. This can be sensitive to plurals, or rewordings.",
                             },
                         },
                         "required": ["new_page"]
@@ -228,7 +232,7 @@ WikipediaGameTools = [
                 "type" : "function",
                 "function" : {
                     "name" : "test_path",
-                    "description" : "Accepts a test path string in the form \"current_page -> new_page1 -> new_page2 -> ... -> goal_page\" and returns where the path goes wrong if the path does not work, or \"success\" if the path works.",
+                    "description" : "Accepts a test path string in the form \"current_page -> new_page1 -> new_page2 -> ... -> goal_page\" and returns where the path goes wrong if the path does not work, or \"success\" if the path works. Path titles can be sensitive to plurals or rewordings.",
                     "parameters" : {
                         "type" : "object",
                         "properties": {
@@ -287,7 +291,7 @@ class WikipediaRacingAgent:
         self.model = model
         self.default_system_message = {
                 "role" : "system", 
-                "content" : "You are a wikipedia-racing AI. Your goal is to reach " + self.game.get_goal() + ". Your current page is " + self.game.get_title() + "."
+                "content" : "You are a wikipedia-racing AI. Your goal is to reach " + self.game.get_goal() + ". Your current page is " + self.game.get_title() + ". You can determine which links are accessible as they will be wrapped in <link> </link> tags when you call get_content."
             }
         try:
             self.additional_rules_list = list(self.game.rules.keys())
@@ -296,7 +300,7 @@ class WikipediaRacingAgent:
         self.additional_rules_string= self.generate_additional_rules_string()
         self.default_user_message={
                 "role" : "user",
-                "content" : "[GAME SUMMARY]\n\nYou are currently on page: " + self.game.current_page.title + ". The path you have taken so far is " + " -> ".join(self.game.get_history()) + ". When you use get_content, any pages you can access will be wrapped in <link> tags. You should try to use the test_path function to get information about your plans." +"\n[GAME SUMMARY]\nWhen coming up with a strategy, pay attention to the previous path you've taken, and if it doesn't seem to be working out then try something else. In case you're unsure, " + self.game.goal_page.title + " has the following summary: \n\n[Begin Target Page Summary]\n" + self.game.get_page_summary(self.game.goal_page) + "\n[End Target Page Summary]" + self.additional_rules_string
+                "content" : "\n\nYou are playing the wikipedia game. You're starting on page " + self.game.get_title() + ". You're goal page is " + self.game.goal_page.title + " In case you're unsure, " + self.game.goal_page.title + " has the following summary: \n\n[Begin Goal Page Summary]\n" + self.game.get_page_summary(self.game.goal_page) + "\n[End Goal Page Summary]" + self.additional_rules_string
                 }
         self.all_messages = [self.default_system_message, self.default_user_message]
         self.tools = tools
@@ -334,6 +338,7 @@ class WikipediaRacingAgent:
         #self.all_messages.append(self.response)
         return self.response
     
+    @retry_with_exponential_backoff
     def ReAct_framework_generate_response(self, self_evaluate=True):
         num_thoughts = 1
         num_actions = 1
@@ -341,7 +346,7 @@ class WikipediaRacingAgent:
         for i in range(num_thoughts+num_actions):
             if i%2 == 0:
                 self.messages.append(user_message(
-                    "Think about what plans you want to take. Generate at least two (possibly more if you can) candidate plans. Then decide which plan you think is best."
+                    "Think about what you want to do."
                 ))
                 new_response = self.generate_response(tools=False)
                 response_list.append(new_response)
@@ -350,7 +355,7 @@ class WikipediaRacingAgent:
                 self.all_messages.append(self.response)
             else:
                 self.messages.append(user_message(
-                    "Now act on your best plan."
+                    "Now act on your thoughts."
                 ))
                 new_response = self.generate_response(tools=True)
                 response_list.append(new_response)
@@ -387,7 +392,7 @@ class WikipediaRacingAgent:
 
     def new_state(self):
         if self.state_count>=4:
-            high_state_string="\nYou should pay attention to the path you have taken so far. If you have been going around certain pages in circles, and you keep returning to the same page, then try a plan that will take you in a different direction."
+            high_state_string="\n\nYou should pay attention to the path you have taken so far. If you have been going around certain pages in circles, and you keep returning to the same page, then try a plan that will take you in a different direction."
         else:
             high_state_string=""
         if self.game.current_page.title in game.get_history()[:-1]:
@@ -396,16 +401,19 @@ class WikipediaRacingAgent:
             already_visited_string=""
         self.default_system_message = {
                 "role" : "system", 
-                "content" : "You are a wikipedia-racing AI. Your goal is to reach " + self.game.get_goal() + ". Your current page is " + self.game.get_title() + "."
+                "content" : "You are a wikipedia-racing AI. Your goal is to reach " + self.game.get_goal() + ". Your current page is " + self.game.get_title() + ". You have access to 3 tools: \n\ntest_path: This takes as input a path forward, and tells you whether this path works, or if not, where it goes wrong.\nget_content: This gets the content of the wikipedia page you are currently on.\nmove_page: This takes you to a new page, which must be a page that is accessible from your current page."
             }
         self.default_user_message={
                 "role" : "user",
-                "content" : "[GAME SUMMARY]\n\nYou are currently on page: " + self.game.current_page.title + ". The path you have taken so far is " + " -> ".join(self.game.get_history()) + ". When you use get_content, any pages you can access will be wrapped in <link> tags. You should try to use the test_path function to get information about your plans." +"\n[GAME SUMMARY]\n When coming up with a strategy, pay attention to the previous path you've taken, and if it doesn't seem to be working out then try something else. In case you're unsure, " + self.game.goal_page.title + " has the following summary: \n\n[Begin Target Page Summary]\n" + self.game.get_page_summary(self.game.goal_page) + "\n[End Target Page Summary]" + high_state_string + self.additional_rules_string + already_visited_string
+                "content" : "[START GAME SUMMARY]\n\nYou are now on page: " + self.game.current_page.title + ". So far you have visisted the following list of pages in order:" +"".join(["\n" + str(i+1) + ". " + self.game.page_title_history[i] for i in range(len(self.game.page_title_history))]) + high_state_string + self.additional_rules_string + "\n[END GAME SUMMARY]\nMake sure to consider using the test_path tool to test your future plans. The paths can potentially be very long paths, and you might be able to gain a lot of information this way.\n"
                 }
-        self.messages=[self.default_system_message,self.default_user_message]
+        self.messages.extend([self.default_system_message,self.default_user_message])
+        for i in self.messages: 
+            try: x = i.role
+            except: x = i['role']
+            if (x == "tool") and (i['content'][0]!="[") and (i['name'] == "get_content"):
+                i['content'] = "[The content of the wikipedia page: " + self.game.current_page.title + "]"
         self.all_messages.extend([self.default_system_message,self.default_user_message])
-        self.state_count+=1
-
 #%%
 
 # %%
@@ -421,8 +429,8 @@ MVP results
 V2 results
 
 1511 Daléra -> John Hume
-MVP results
-V2 results
+MVP results: 8
+V2 results: 8
 
 Obama -> Tsetse fly (the MVP agent can solve this in 18 steps (including start and end), this agent can do it in 12)
 MVP results
@@ -432,14 +440,19 @@ Doyle Brunson -> Montu
 MVP results
 V2 results
 
+For to Next -> Mexichromis trilineata
+MVP results: 
+V2:
 
 '''
 
 
 
-game = WikipediaGame("Doyle Brunson", "Montu")
+game = WikipediaGame("Barack Obama", "Tsetse Fly")
 agent = WikipediaRacingAgent(game, model = "gpt-4o")
 #%%
+print(agent.messages[0])
+print(agent.messages[1])
 def agent_loop():
     if game.check_win():
         print("Success")
@@ -457,10 +470,14 @@ def agent_loop():
             elif tool_call.function.name == "test_path":
                 print(tool_call.function.name + " " + json.loads(tool_call.function.arguments)["path"])
     if agent.do_tool_calls(responses[1]) == "new state":
-        new_state_string = ("-" * 50) + "\n\nNEW STATE\n\n" + " -> ".join(game.page_title_history) + "\n\n" + ("-"*50)
+        new_state_string = ("-" * 50) + "\n\nNEW STATE: " + game.get_title() + "\n\n" + " -> ".join(game.page_title_history) + "\n\n" + ("-"*50)
         print(new_state_string)
-        print(agent.messages[0]["content"])
-        print(agent.messages[1]["content"])
+        print("SYSTEM MESSAGE: " + agent.default_system_message["content"])
+        print("USER MESSAGE: " + agent.default_user_message["content"])
+    else:
+        print("User: What's your next step?")
+#%%
+game.test_path({"path" : "Wildlife -> Insects ->"})
 
 
 #%%
@@ -473,7 +490,7 @@ print(" -> ".join(game.get_history()[:-1]))
 
 
 #%%
-for i in agent.all_messages:
+for i in agent.messages:
     try: print(i['content']) 
     except: print(i.content)
 #%%
@@ -486,3 +503,11 @@ print(game.current_page.content)
 
 
 # %%
+test_game = WikipediaGame("Wildlife","Barack Obama")
+#print(test_game.get_content({}))
+print(test_game.test_path({"path" : "Wildlife -> intensive farming -> Insecticide -> Insect -> Tsetse Fly"}))
+
+print(test_game.get_links())
+print(test_game.current_page.links)
+print("Intensive farming".lower() in test_game.current_page.content.lower())
+#%%
