@@ -13,37 +13,6 @@ from country_list import countrylist
 countrylist = [i[1] for i in countrylist]
 
 client = establish_client_OpenAI()
-
-
-'''
-TODO: 
-    - Build a more robust ReAct framework into the agent calls. !
-        - Generate + Evaluate strategies. (Probably as part of ReAct Framework) Done!
-        - Get agent to use tools more effectively. Done-ish!
-
-    - Build trialling paths. (either tool or special call after the first "thought") (e.g. generate 3 "guess" paths, and I will tell you where/when they go wrong.) Done!
-
-    TODO: Ban list pages, table pages, etc since they aren't allowed so often lead to stubs/purely circular routes :(
-
-    - Reasoning histories (hard to know how to implement this). Maybe build some sort of Meta-Agent to handle this.
-
-    - New Tools:
-        - Build get_plain_content_of_any_wikipedia_page tool
-        - Build get_page_summary_before_moving tool
-        - Build get_arbitrary_page_summary
-        - Build
-
-
-
-
-
-
-
-
-'''
-
-
-
 #%%
 
 
@@ -77,6 +46,8 @@ class WikipediaGame:
 
         starting_page is the page the agent starts on.
 
+        current_page is the page the agent is currently on.
+
         goal_page is the page the agent is trying to get to.
 
         rules is a list of dictionaries specifying any additional rules along with a description of that rule to be fed to the agent
@@ -91,7 +62,7 @@ class WikipediaGame:
 
     def get_page_summary(self, page):
         '''
-        Gets summary of a wikipedia page, to the last full stop within the first 700 characters.
+        Gets summary of a wikipedia page, to the last full stop within the first 700 characters (so I don't cut off the middle of sentences).
         '''
         summary = page.content[0:700]
         return summary[0: summary.rindex(".")+1]
@@ -102,7 +73,9 @@ class WikipediaGame:
         '''
         The tool which the agent will use when it wants to move from Page A to Page B
         '''
-        new_page = arguments["new_page"] # Have to do .lower() *everywhere*, or there's always an issue *somewhere*
+        new_page = arguments["new_page"] # Have to do .lower() in lots of places, or case issues arise.
+
+        #Check that the page is permitted, if so move there. Otherwise say we can't move there.
         if self.is_permitted_link(new_page):
             self.current_page = get_page(new_page)
             self.page_title_history.append(new_page)
@@ -115,14 +88,6 @@ class WikipediaGame:
         Returns the list of the titles of previous pages that have been visited. (NOT ChatHistory !)
         '''
         return self.page_title_history
-
-
-    def get_plain_content(self):
-        '''
-        Just returns the plain content of the current page. Usually this only gets called by other functions in the class, because the agent will call "get_content" which will wrap accessible pages with <link> tags.
-        '''
-        return self.current_page.content
-
 
     def get_content(self,arguments):
         '''
@@ -144,7 +109,6 @@ class WikipediaGame:
     def get_links_of_page(self, page_title):
         '''
         Gets a list of links of a given page. This won't be called by the agent, since it can't get arbitrary links, but is necessary for the reflexion test_path function, as we need to check that the links actually are accessible.
-        
         '''
         page = wikipedia.page(page_title, redirect= True, auto_suggest=False)
         all_links = page.links
@@ -455,7 +419,7 @@ class WikipediaRacingAgent:
             high_state_string="\n\nYou should pay attention to the path you have taken so far. If you have been going around certain pages in circles, and you keep returning to the same page, then try a plan that will take you in a different direction."
         else:
             high_state_string=""
-        if self.game.current_page.title in game.get_history()[:-1]:
+        if self.game.current_page.title in game.page_title_history[:-1]:
             already_visited_string = "\n\nNotice that you have *already* visited this page. You can see what went wrong last time you visited this page in the \"paths you've taken so far.\" Make sure you react to this appropriately, and don't just try the same thing you already tried before."
         else:
             already_visited_string=""
@@ -473,7 +437,7 @@ class WikipediaRacingAgent:
             try: x = i.role
             except: x = i['role']
             if (x == "tool") and (i['content'][0]!="[") and (i['name'] == "get_content"):
-                i['content'] = "[The content of the wikipedia page: " + self.game.get_history()[-1] + "]"
+                i['content'] = "[The content of the wikipedia page: " + self.game.page_title_history[-1] + "]"
         self.all_messages.extend([self.default_system_message,self.default_user_message])
 #%%
 
@@ -568,7 +532,7 @@ for i in range(0,20):
 
 
 #%%
-print(" -> ".join(game.get_history()[:-1]))
+print(" -> ".join(game.page_title_history[:-1]))
 
 
 #%%
@@ -601,3 +565,23 @@ print(test_game.current_page.links)
 print("Intensive farming".lower() in test_game.current_page.content.lower())
 '''
 #%%
+
+'''
+TODO: 
+    - Build a more robust ReAct framework into the agent calls. !
+        - Generate + Evaluate strategies. (Probably as part of ReAct Framework) Done!
+        - Get agent to use tools more effectively. Done-ish!
+
+    - Build trialling paths. (either tool or special call after the first "thought") (e.g. generate 3 "guess" paths, and I will tell you where/when they go wrong.) Done!
+
+    TODO: Ban list pages, table pages, etc since they aren't allowed so often lead to stubs/purely circular routes :(
+
+    - Reasoning histories (hard to know how to implement this). Maybe build some sort of Meta-Agent to handle this.
+
+    - New Tools:
+        - Build get_plain_content_of_any_wikipedia_page tool
+        - Build get_page_summary_before_moving tool
+        - Build get_arbitrary_page_summary
+        - Build
+
+'''
