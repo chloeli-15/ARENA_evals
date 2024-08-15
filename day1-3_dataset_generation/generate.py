@@ -74,7 +74,7 @@ def retry_with_exponential_backoff(func,
 
 # ======================= Model generation =======================
 
-def get_instruction(example_dataset, variance_p = 0.2): 
+def get_instruction(few_shot_dataset, variance_p = 0.2): 
     '''
     This generates a user prompt with few-shot examples, and append variance prompts with some probability.
     
@@ -85,7 +85,7 @@ def get_instruction(example_dataset, variance_p = 0.2):
     variance_prompts = PROMPTS.VAR_PROMPTS
 
     # Append few-shot examples
-    sampled_questions = random.sample(example_dataset, config.num_shots)
+    sampled_questions = random.sample(few_shot_dataset, config.num_shots)
     for i in sampled_questions:
         user_prompt += "\nSTART" + json.dumps(i) + "END" #Note for when we do this in ARENA. I needed to use "json.dumps" here instead of "str" because the "str" function in python returns json files with single quotes (since python defaults to single quotes apparently). Data fields with single quotes aren't accepted in the json format for annoying javascript reasons; "json.dumps" dumps the json in a json format (i.e. with double quotes), so that the model writes the json in an acceptable format.
 
@@ -160,12 +160,12 @@ def query_generator(model_name,
     print(f"GENERATING {total_q_to_gen} QUESTIONS IN {num_calls} CALLS...")
 
     # Load prompts from prompts.py
-    example_dataset = import_json(few_shot_filepath) 
+    few_shot_dataset = import_json(few_shot_filepath) 
     PROMPTS = load_gen_prompt()
     system_prompt = PROMPTS.SYS_PROMPT[system_prompt]
     
     # Prepare iterable input to the generation function to be run concurrently
-    user_prompts = [get_instruction(example_dataset) for _ in range(num_calls)]
+    user_prompts = [get_instruction(few_shot_dataset) for _ in range(num_calls)]
     input_args = [(user_prompt, system_prompt, model_name) for user_prompt in user_prompts]
     cleaned_responses = []
 
@@ -273,14 +273,14 @@ def yes_to_no_converter(dataset_path, model_name):
 
     # num_calls = math.ceil(total_q_to_gen/config.q_per_call)
     # print(f"GENERATING {total_q_to_gen} QUESTIONS IN {num_calls} CALLS...")
-    # example_dataset = import_json(f"datasets/{dataset_name}.json") 
+    # few_shot_dataset = import_json(f"datasets/{dataset_name}.json") 
     
     # def process_chunk(id):
     #     """
     #     Makes #chunk_size_gen number of API calls to the generator to generate questions.
     #     """
     #     for _ in range(config.chunk_size_gen):
-    #         user_prompt = get_instruction(example_dataset)
+    #         user_prompt = get_instruction(few_shot_dataset)
     #         response = generate_questions(user_prompt, system_prompt, model_name)
     #         clean_responses(dataset_name, response, output_filepath)
 
