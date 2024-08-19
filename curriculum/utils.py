@@ -4,6 +4,9 @@ import config
 import openai
 from openai import OpenAI
 import os
+from typing import Any
+
+
 
 def save_json(file_path, data, do_not_overwrite=False):
     if do_not_overwrite:
@@ -46,5 +49,12 @@ def establish_client_anthropic():
     '''
     #Returns anthropic client - Do later.
     pass
+
+def omit(x: dict[str, Any], vars: list[str]) -> dict[str, Any]:
+    x = x.copy()
+    for var in vars:
+        if var in x:
+            del x[var]
+    return x
 
 #Note for when we make ARENA content: emphasise that API keys need to be a secret. This is annoying but can be set in the terminal and teaches good practice for API key usage going forward (I didn't know about this). You can set them in cmd on windows or BASH on mac. https://platform.openai.com/docs/quickstart for info on how to do this.

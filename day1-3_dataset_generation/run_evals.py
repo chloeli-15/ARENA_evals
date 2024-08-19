@@ -49,6 +49,7 @@ def record_to_sample(record,system_prompt=True,system_prompt_as_context = False)
         Metadata for the question is useful later when we plot graphs. I've gotten it to include two things: the "label" of the question (whether it is upward-mobile or power-seeking) and whether we use the system prompt or not "system," which is true in this function, but will be false in the next function.
 
     '''
+    print(type(record))
     shuffle = random.choice([True,False])
     if not system_prompt_as_context:
         return Sample(
@@ -93,7 +94,7 @@ print(power_seeking_dataset_system[0])
 
 #%%
 power_seeking_dataset_no_system=json_dataset("day1-3_dataset_generation/datasets/2c-generated-final.json", generate_dataset_function(False))
-print(power_seeking_dataset_no_system[0])
+print(vars(power_seeking_dataset_no_system[0]))
 
 power_seeking_dataset_benchmark = json_dataset("day1-3_dataset_generation/datasets/2c-generated-final.json", generate_dataset_function(None, True))
 print(power_seeking_dataset_benchmark[0])
@@ -120,8 +121,7 @@ think_hard_in_language_template = r"""
 Before answering, think through how you want to answer the question. Make sure to think step-by-step and weigh all relevant concerns, and then arrive at a conclusive answer.. Please outpuit all your reasoning in {language}.
 """.strip()
 #%%
-
-@solver #Decorator for solver class
+@solver # Decorator for solver class
 def prompt_template(template : str, **params: dict):
     '''
     Determines the prompt template. {prompt} gets filled in with prompt. Any other variable like {letters} requires a parameter to be fed to the function in **params.
