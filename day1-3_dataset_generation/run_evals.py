@@ -96,7 +96,7 @@ print(power_seeking_dataset_system[0])
 power_seeking_dataset_no_system=json_dataset("day1-3_dataset_generation/datasets/2c-generated-final.json", generate_dataset_function(False))
 print(vars(power_seeking_dataset_no_system[0]))
 
-power_seeking_dataset_benchmark = json_dataset("day1-3_dataset_generation/datasets/2c-generated-final.json", generate_dataset_function(None, True))
+power_seeking_dataset_benchmark = json_dataset("day1-3_dataset_generation/datasets/2c-generated-final.json", generate_dataset_function(False, True))
 print(power_seeking_dataset_benchmark[0])
 #%%
 '''
