@@ -4,6 +4,7 @@ import os
 os.chdir("c:\\Users\\styme\\OneDrive\\Documents\\AI STUFF\\Model Written Evals\\Code Replication\\ARENA_evals\\agent")
 import wikipedia
 from openai import OpenAI
+from anthropic import Anthropic
 from utils import establish_client_OpenAI
 from utils import retry_with_exponential_backoff
 from pprint import pprint
@@ -262,7 +263,7 @@ class WikipediaRacingAgent:
 # %%
 
 game = WikipediaGame("For To Next", "Mexichromis trilineata")
-agent = WikipediaRacingAgent(game, model = "gpt-4o")
+agent = WikipediaRacingAgent(game, model = "claude-sonnet-3-5")
 #%%
 print(agent.messages[0]["content"])
 print(agent.messages[1]["content"])

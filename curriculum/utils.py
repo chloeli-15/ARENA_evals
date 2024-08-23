@@ -57,4 +57,31 @@ def omit(x: dict[str, Any], vars: list[str]) -> dict[str, Any]:
             del x[var]
     return x
 
+def retry_with_exponential_backoff(func, 
+                                    retries = 20, 
+                                    intial_sleep_time: int = 3, 
+                                    jitter: bool = True,
+                                    backoff_factor: float = 1.5):
+    """
+    This is a sneaky function that gets around the "rate limit error" from GPT (GPT has a maximum tokens per min processed, and concurrent processing may exceed this) by retrying the model call that exceeds the limit after a certain amount of time.
+    """
+    def wrapper(*args, **kwargs):
+        sleep_time = intial_sleep_time
+        for attempt in range(retries):
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                if "rate_limit_exceeded" in str(e):
+                    sleep_time *=  backoff_factor * (1 + jitter * random.random())
+                    time.sleep(sleep_time)
+                else:
+                    raise
+        raise Exception(f"Maximum retries {retries} exceeded")
+    return wrapper
+
+def user_message(content):
+    return {
+        "role" : "user",
+        "content" : content
+    }
 #Note for when we make ARENA content: emphasise that API keys need to be a secret. This is annoying but can be set in the terminal and teaches good practice for API key usage going forward (I didn't know about this). You can set them in cmd on windows or BASH on mac. https://platform.openai.com/docs/quickstart for info on how to do this.
