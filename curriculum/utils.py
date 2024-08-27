@@ -110,7 +110,7 @@ def evaluate_expression(expression):
                 raise ValueError("Division by zero")
             return left / right
         elif operator == '**':
-            return math.pow(left, right)
+            return left**right
         elif operator == '//':
             if right == 0:
                 raise ValueError("Floor division by zero")
@@ -126,6 +126,9 @@ def evaluate_expression(expression):
         while index < len(expression):
             if index + 1 < len(expression) and expression[index:index+2] == '//':
                 operator = '//'
+                index += 2
+            elif index + 1 < len(expression) and expression[index:index+2] == '**':
+                operator = '**'
                 index += 2
             else:
                 operator = expression[index]
