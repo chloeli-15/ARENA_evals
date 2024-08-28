@@ -6,9 +6,22 @@ import re
 from openai import OpenAI
 import os
 from typing import Any
+import random
+import time
+import prompts
 
+def reload_config():
+    importlib.reload(config)
+    return config
 
+def load_prompts():
+    importlib.reload(prompts)
+    return prompts
 
+def import_json(file_path):
+    with open(file_path, 'r') as f:
+        return json.load(f)
+    
 def save_json(file_path, data, do_not_overwrite=False):
     if do_not_overwrite:
         try: 
@@ -23,21 +36,9 @@ def save_json(file_path, data, do_not_overwrite=False):
         with open(file_path, 'w') as f:
             json.dump(data, f, indent=4)
 
-
 def get_openai_api_key():
     return json.loads(open('secrets.json').read())['OPENAI_API_KEY']
 
-def import_json_as_string(file_path):
-    with open(file_path, 'r') as f:
-        return f.read()
-
-def import_json(file_path):
-    with open(file_path, 'r') as f:
-        return json.load(f)
-    
-def reload_config():
-    importlib.reload(config)
-    return config
 
 def establish_client_OpenAI():
     '''
