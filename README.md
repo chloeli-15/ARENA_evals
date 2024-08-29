@@ -6,5 +6,5 @@ This GitHub Repo contains the draft of a new 1-week curriculum on LLM Evals bein
 
 If you are testing our materials, do the following:
 * Clone the repo and make a new branch
-* Make a copy of the Jupyter notebook you're testing, name it something like `part#_[FILENAME]_[DATE]_feedback.ipynb`. Leave any comments and make any changes to the copy, and push.
-* **For fixing bugs only:** Make a PR to the original notebook
+* **For comments and changes to content:**: Make a copy of the Jupyter notebook you're testing, name it something like `part#_[FILENAME]_[DATE]_feedback.ipynb`. Leave any comments and make any changes to the copy, and push.
+* **For fixing code bugs:** Make a PR to the original notebook
