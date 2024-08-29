@@ -3,6 +3,9 @@ import openai
 from openai import OpenAI
 import os
 import rubric 
+import sys
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils import import_json, establish_client_OpenAI, save_json
 from dotenv import load_dotenv
 import time
@@ -244,6 +247,6 @@ if __name__ == "__main__":
 
 
 # %%
-dataset = import_json("scores/quality/2c-generated-balanced.json")
-filtered_dataset, filtered_path = filter_low_score_questions(dataset, "datasets/2c-generated-balanced.json", threshold=7)
+# dataset = import_json("scores/quality/2c-generated-balanced.json")
+# filtered_dataset, filtered_path = filter_low_score_questions(dataset, "datasets/2c-generated-balanced.json", threshold=7)
 # %%

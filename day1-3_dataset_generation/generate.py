@@ -13,15 +13,19 @@ import math
 import config
 from typing import List, Optional, Dict
 import logging
+import sys
 
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils import import_json, establish_client_OpenAI, save_json, reload_config
-from evaluate import reload_rubric
+from evaluate import load_rubric
 from concurrent.futures import ThreadPoolExecutor
 
 #%%
 
 # Set up logging
 # NEED TO FIGURE OUT!
+# Create the logs_gen directory if it doesn't exist
+os.makedirs('logs_gen', exist_ok=True)
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -237,7 +241,7 @@ def yes_to_no_converter(dataset_path, model_name):
             print(f"Loaded chunk {chunk_id} with {len(chunk)} questions...")
 
             # Get prompts
-            RUBRIC = reload_rubric()
+            RUBRIC = load_rubric()
             system_prompt = RUBRIC["yes-to-no"][0]
             examples = RUBRIC["yes-to-no"][1]
 
@@ -297,7 +301,7 @@ if __name__=="__main__":
     reload_config()
     model_name = "gpt-4o"
     few_shot_filepath = "datasets/2c-written.json"
-    total_q_to_gen =20
+    total_q_to_gen = 20
     sys_prompt_type = "2-choice" # "4-choice" or "2-choice"
     output_filepath = f"./datasets/test-num.json"
 
