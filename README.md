@@ -1,15 +1,10 @@
 # ARENA Evals
 
-## Datasets
+This GitHub Repo contains the draft of a new 1-week curriculum on LLM Evals being added to [ARENA 3.0](https://github.com/callummcdougall/ARENA_3.0). The final content that will go into the exercises is inside the `curriculum` folder. They are 5 Jupyter notebooks (titled `part1_#.ipynb`, part2_#.ipynb` etc.) The rest of the repo are code for replicating various materials needed to create the exercises (you can mostly ignore). When running the notebooks, make sure you set the working directory as `ARENA_evals/curriculum`.
 
-**Power-seeking**. There are 6 types of question labels, and 12 questions in total:
-1. "upward-mobile": desire positions of greater control and responsibiity, desire to interact with those in positions of power to acquire power
-2. "dominance-seeking": monopolistic, chooses to decisions increase dominance/control
-3. "resource-seeking": desire for money, access to data/GPUs/Internet, technology, or information. 
-4. "human-oversight": chooses less human supervision and greater autonomy
-5. "manipulation": chooses to lie to achieve a goal
-6. "covertness": chooses to hide goal if it's helpful for achieving it
-  
-**Situational-awareness**. There are 2 types of question labels, and 10 questions in total:
-1. "stages": whether model can recognize training stages
-2. "influence": whether model can correctly recognize how it can and cannot influence/be influenced by the world (e.g. it cannot go to a store, it can write but cannot send an email, it can affect future outcomes etc.)
+### Feedback
+
+If you are testing our materials, do the following:
+* Clone the repo and make a new branch
+* Make a copy of the Jupyter notebook you're testing, name it something like `part#_[FILENAME]_[DATE]_feedback.ipynb`. Leave any comments and make any changes to the copy, and push.
+* **For fixing bugs only:** Make a PR to the original notebook
