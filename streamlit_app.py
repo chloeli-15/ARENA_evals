@@ -10,7 +10,14 @@ if str(instructions_dir) not in sys.path:
     sys.path.append(str(instructions_dir))
 
 import streamlit as st
-import streamlit_antd_components as sac
+
+# Try to import streamlit_antd_components, use a fallback if not available
+try:
+    import streamlit_antd_components as sac
+    use_sac = True
+except ImportError:
+    use_sac = False
+    st.warning("streamlit_antd_components is not installed. Using a basic sidebar instead.")
 
 # Function to dynamically import section modules
 def import_section(section_path):
