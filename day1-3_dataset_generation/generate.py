@@ -301,7 +301,7 @@ if __name__=="__main__":
     reload_config()
     model_name = "gpt-4o"
     few_shot_filepath = "datasets/2c-written.json"
-    total_q_to_gen = 20
+    total_q_to_gen = 10
     sys_prompt_type = "2-choice" # "4-choice" or "2-choice"
     output_filepath = f"./datasets/test-num.json"
 
