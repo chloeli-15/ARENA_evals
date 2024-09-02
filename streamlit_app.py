@@ -3,11 +3,11 @@ import sys
 from pathlib import Path
 import importlib
 
-# Add the curriculum directory to the Python path
+# Add the curriculum/instructions directory to the Python path
 repo_dir = Path(__file__).parent.absolute()
-curriculum_dir = repo_dir / "curriculum"
-if str(curriculum_dir) not in sys.path:
-    sys.path.append(str(curriculum_dir))
+instructions_dir = repo_dir / "curriculum" / "instructions"
+if str(instructions_dir) not in sys.path:
+    sys.path.append(str(instructions_dir))
 
 import streamlit as st
 import streamlit_antd_components as sac
