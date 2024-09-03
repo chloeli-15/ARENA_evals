@@ -32,7 +32,7 @@ Links to other chapters: [**(0) Fundamentals**](https://arena3-chapter0-fundamen
 
 This is an introduction to designing and running LLM evaluations. The exercises are written in partnership with [Apollo Research](https://www.apolloresearch.ai/), and designed to give you the foundational skills for doing safety evaluation research on language models. 
 
-There is more continuity between days in this chapter than other chapters. Chapter [3.1[] to [3.3] focuses on designing and building a multiple-choice (MC) questions benchmark for one chosen target property, and using it to run evals on models. Day 3.4 to 3.5 focuses on building an LLM-agent that plays the Wikipedia racing game, and eliciting agent behavior.
+There is more continuity between days in this chapter than other chapters. Chapter [3.1] to [3.3] focuses on designing and building a multiple-choice (MC) questions benchmark for one chosen target property, and using it to run evals on models. Day 3.4 to 3.5 focuses on building an LLM-agent that plays the Wikipedia racing game, and eliciting agent behavior.
 
 Chapter [3.1] is the only non-coding day of the entire curriculum. The exercises focus on designing a threat model and specification for your evaluation target, and using this to design questions. These are the first steps and often the hardest/most creative part of real eval research. In practice this is often done by a team of researchers, and can take weeks or months. The exercises are designed to give you a taste of this process. The exercise questions are open-ended, and you're not expected to have a perfect answer by the end.
 
