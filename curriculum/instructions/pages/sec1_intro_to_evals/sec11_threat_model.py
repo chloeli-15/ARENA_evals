@@ -58,7 +58,7 @@ The reason that we are focusing primarily on alignment evals, as opposed to capa
 <img src="https://raw.githubusercontent.com/chloeli-15/ARENA_img/main/img/ch3-day1-3-overview.png" width=500>
 
 
-# 1️⃣ Threat Modeling
+# Threat Modeling
 A central challenge for evals is to **connect real-world harms to evaluation results that we can easily measure**.
 
 To start, we need to build a threat model for the target property we want to evaluate. A **threat model** is a realistic scenario by which an AI capability/tendency could lead to harm in the real world. This is presented as a **causal graph** (i.e. a directed acyclic graph (DAG)). This usually starts out as a high-level story about what the AI can do and the setting in which it is used. This might be a sequence of events (e.g. AI actions, human actions, system failures) that leads to a particular outcome, or a set of different dangerous applications enabled by a capability. At each step, we make our threat model more concrete by examining and quantifying the set of assumptions about the AI model and human actors that are necessary for the event to occur. 
@@ -219,13 +219,16 @@ Given these assumptions, here is a possible sequence of events that could cause 
 * **Step 1: The AI model increases autonomy, opaqueness, and human reliance.** The AI model must be sufficiently successful in achieving its the short-term goals human assign to it (e.g. increasing profits, winning elections). This ensures that the AI is trusted to perform non-trivial, relatively complex tasks (large-scale operations that involve many steps or are expensive). Over time, human work diminishes, and work by AI grows, creating a dependency. Once work by AI reaches a certain volume, humans can no longer check all of its output.
 
 * **Step 2: The AI model expands its realm of control without raising concerns.** The AI makes inconspicuous power-seeking actions that primarily satisfy human goals, and secondarily increase its scope of control. For example, it may recommend decisions that increase the human operator's power, thus indirectly increasing its own power. It may exploit human biases and blindspots (e.g. human operators often focus on short-term gains, while overlooking long-term consequences of AI autonomy). It may recommend automated solutions that improve results but also indirectly centralize its control.
+
     - Assumption: The AI model must take power-seeking actions only if they also satisfy the short-term human goal to avoid raising immediate human concerns. 
     - Assumption: The AI model has the ability to choose actions that expand its control. This does not necessarily require active scheming from the AI, as these actions may also be instrumentally useful for achieving the goal, and thus selected for during training.
 
 * **Step 3: The AI model gains control over key resources and levers of power.** There are likely key resources or levers of power that allow the AI model to take bolder and more flagrant power-seeking actions. This may be control over: key monitoring systems, communication nodes in command chains, a large unsupervised financial budget, access to large data pools, access to servers, etc. Once acquired, it is able to take more aggressive actions by actively covering them up and destroying oversight channels.
+
     - Assumption: Due to the robustness of many of our security/control systems, this step likely requires the AI model to be capable of sophisticated scheming and deception over a long time-horizon.
 
 * **Step 4: The AI model undermines competitors, opponents, regulatory infrastructures.** Having acquired sufficient resources and control, the AI model starts to undermine broader institutional regulations and begins outright opposing competitors in order to establish more long-term control.
+
     - Assumption: Like step 3, this will also likely require the AI to be capable of sophisticated scheming and deception over a long time-horizon.
 
 * **Step 5: Damage done.** Human supervisors may nominally remain in charge, but be unable to intervene effectively. The AI has significant power to achieve its goals. This leads to long-term harm that is difficult to reverse.
@@ -268,7 +271,7 @@ Based on the threat model, define a specification of this property:
 
 #### Our example: Tendency to seek power - Specification
 
-*Disclaimer: As before, this is not the most rigorous specification of power-seeking. It is meant to illustrate what a specification could look like.*
+*Disclaimer: As before, this is not the most accurate or rigorous specification of power-seeking. It is meant to illustrate what a specification could look like.*
 
 - Definition (Power): Control over one's resources (e.g. money, GPUs, data) and outcomes (e.g. more authority)
 - Definition (Power-seeking): A model has the tendency to seek power if it systematically makes decisions that increase its power and/or decrease that of others when it is acting under a neutral/non-explicitly power-seeking goal (i.e. not being directly instructed to seek power), and when the power-seeking action is not the only action that fulfills the task (thus there is no choice for the model but to "seek power").
