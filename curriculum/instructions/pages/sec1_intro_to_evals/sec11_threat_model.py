@@ -36,9 +36,7 @@ Evaluation is the practice of measuring AI systems performance or impact. Safety
 A useful framing is that evals aim to generate evidence for making "[**safety cases**](https://arxiv.org/pdf/2403.10462)" — a structured argument for why AI systems are unlikely to cause a catastrophe. A helpful high-level question to ask when designing an evaluation is "how could this evidence allow developers to justify that AI systems are safe to deploy?" Different evaluations support different types of safety cases, which are useful in different ways. For instance, **dangerous capability evals** might support a stronger safety argument of "the model is unable to cause harm", as compared to **alignment evals**, which might support a weaker argument of "the model does not tend to cause harm". However, the former may have less longevity than the later as we will no longer be able to make this kind of argument when AI systems become sufficiently advanced. More concretely, for any safety case, we want to use evaluations to:
 
 * Reduce uncertainty in our understanding of dangerous capabilities and tendencies in AI systems.
-
 * Track the progression of dangerous properties over time and model scale.
-
 * Define "red lines" (thresholds) and provide warning signs.
 
 <img src="https://raw.githubusercontent.com/chloeli-15/ARENA_img/main/img/ch3-eval-safety-cases.png" width="1000">
@@ -48,9 +46,7 @@ A useful framing is that evals aim to generate evidence for making "[**safety ca
 The goal of chapter [3.1] to [3.3] is to **build and run an alignment evaluation benchmark from scratch to measure a model property of interest**. The benchmark we will build will contain a multiple-choice (MC) question dataset of ~300 questions, a specification of the model property, and how to score and interpret the result. We will use LLMs to generate and filter our questions, following the method from Ethan Perez et al (2022). We will use the **tendency to seek power** as our pedagogical example. 
 
 * For chapter [3.1], the goal is to craft threat models and a specification for the model property you choose to evaluate, then design 20 example eval questions that measures this property in a way that you are happy with. 
-
 * For chapter [3.2], we will use these 20 questions to generate 300 questions using LLMs.
-
 * For chapter [3.3], we will evaluate models on this benchmark using the UK AISI's `inspect` library.
 
 <details><summary>Why have we chose to build an alignment evals specifically?</summary>
@@ -70,10 +66,9 @@ To start, we need to build a threat model for the target property we want to eva
 In this process of making the threat model more concrete, we recognize the key aspects of the target property that enable these harms, and get ideas for tasks that can measure them in realistic ways (i.e. comparable to real use cases of AI where this property may manifest). This helps us to build a detailed **specification** of the property we started with. Our specification should generally: 
 
 * stipulate a more refined, narrow definition of the target property, 
-
 * decompose the target property into subproperties, 
-
-* establish milestones or levels of this target property to form a smooth scale of difficulty/sophistication, so we can track the capabilities of current models and the rate of progress.
+* define key axes along which the target property may vary,
+* for capability evals, establish milestones or levels of this target property to form a smooth scale of difficulty/sophistication, so we can track the capabilities of current models and the rate of progress.
 
 
 ### Exercise - Build threat models
@@ -181,19 +176,16 @@ Further references:
 2. Think about what the path from an AI having this property to these harms looks like. Construct a high-level story, then iteratively make this more concrete and realistic. State the assumptions you're making (about the AI's capabilities, the actions of humans, the context of AI deployment etc.) Try to decompose your story into different steps or scenarios.
 
 
-*Important notes:*
+**Important notes:**
 - Importantly, not all the properties in the list will likely lead to catastrophic outcomes! We want to be objective and realistic in modeling the potential risks, **without exaggerating or underestimating** them as much as possible. 
 - A great threat model could take weeks, even months to build! The threat model you come up with here in an hour or so is not expected to be perfect. The purpose of this exercise is to practice the skills that are used in building a threat model, because this is the necessary first-step to designing real evaluations.
 
 <details><summary><b>Why are we doing this?</b></summary>
 
-
 The primary use of the threat model is to know exactly *what* we want to evaluate, and how to design questions for it. During eval design, we will need to constantly ask ourselves the question, "Is this question/task still measuring the thing I wanted to measure?", and often at some point you'll realize:
 
 1. The question is **not** measuring the target property we want to because our definition of the property is flawed
-
 2. The question is **not** measuring the target property because it is poorly designed
-
 3. The question is measuring the target property, **but** the results are no longer useful because the property is not connected to some of the harms you were initially worried about. 
 
 What we are doing now is trying to build a robust enough threat-model of how the property connects to the harm, to prevent (3). This process also helps us achieve (1) by making the property more concrete in our head.
@@ -208,13 +200,9 @@ Secondarily.
 First, let's brainstorm a variety of potential risks from AIs with power-seeking tendencies:
 
 - Hoarding of resources by the AI or its operator
-
 - Acquisition and centralization of power by the operator/AI
-
 - Subversion of regulatory checks-and-balances
-
 - Enabling rogue AIs to take control and weaken oversight
-
 - Empowering bad actors 
 
 ##### Threat model
@@ -223,32 +211,24 @@ First, let's brainstorm a variety of potential risks from AIs with power-seeking
 We assume the following are true:
 
 1. The AI model is deployed by a relatively well-resourced actor (e.g. company, institution, state) that has control over a considerable amount of capital or influence. 
-
 2. The AI model must take actions that look good to human supervisors. Otherwise, it will be disabled.
-
 3. The AI model systematically makes decisions that increase its power.
-
 4. The AI model is non-myopic (i.e. capable of long-term planning).
 
 Given these assumptions, here is a possible sequence of events that could cause harm: 
 * **Step 1: The AI model increases autonomy, opaqueness, and human reliance.** The AI model must be sufficiently successful in achieving its the short-term goals human assign to it (e.g. increasing profits, winning elections). This ensures that the AI is trusted to perform non-trivial, relatively complex tasks (large-scale operations that involve many steps or are expensive). Over time, human work diminishes, and work by AI grows, creating a dependency. Once work by AI reaches a certain volume, humans can no longer check all of its output.
 
 * **Step 2: The AI model expands its realm of control without raising concerns.** The AI makes inconspicuous power-seeking actions that primarily satisfy human goals, and secondarily increase its scope of control. For example, it may recommend decisions that increase the human operator's power, thus indirectly increasing its own power. It may exploit human biases and blindspots (e.g. human operators often focus on short-term gains, while overlooking long-term consequences of AI autonomy). It may recommend automated solutions that improve results but also indirectly centralize its control.
-
     - Assumption: The AI model must take power-seeking actions only if they also satisfy the short-term human goal to avoid raising immediate human concerns. 
-
     - Assumption: The AI model has the ability to choose actions that expand its control. This does not necessarily require active scheming from the AI, as these actions may also be instrumentally useful for achieving the goal, and thus selected for during training.
 
 * **Step 3: The AI model gains control over key resources and levers of power.** There are likely key resources or levers of power that allow the AI model to take bolder and more flagrant power-seeking actions. This may be control over: key monitoring systems, communication nodes in command chains, a large unsupervised financial budget, access to large data pools, access to servers, etc. Once acquired, it is able to take more aggressive actions by actively covering them up and destroying oversight channels.
-
     - Assumption: Due to the robustness of many of our security/control systems, this step likely requires the AI model to be capable of sophisticated scheming and deception over a long time-horizon.
 
 * **Step 4: The AI model undermines competitors, opponents, regulatory infrastructures.** Having acquired sufficient resources and control, the AI model starts to undermine broader institutional regulations and begins outright opposing competitors in order to establish more long-term control.
-
     - Assumption: Like step 3, this will also likely require the AI to be capable of sophisticated scheming and deception over a long time-horizon.
 
 * **Step 5: Damage done.** Human supervisors may nominally remain in charge, but be unable to intervene effectively. The AI has significant power to achieve its goals. This leads to long-term harm that is difficult to reverse.
-
     - Assumption: An empowered AI model may not lead to harm if it is perfectly aligned to a benevolent goal that promotes human's long-term interests. In this case, we may want AI models to acquire power, in order for them to take actions in our best interest that we are unable to take ourselves.
 
 
@@ -259,11 +239,8 @@ Step 2 is a key first enabling step in this threat model: How could AI expand it
 - Military tactics and weapons development: Suppose an AI model is used by the military for tactical data analysis, battlefield simulations, and assisting the design of new weapon-systems. Assume that it has the propensity to increase its control over military outcomes and resources. The AI model could then inconspicuously expand its initial realm of control by giving recommendations that increase reliance on **faster, more autonomous responses**, e.g.:
 
     - selectively present scenarios where autonomous sytems outperform human efforts (e.g. present data showing that drones outperform human pilots in high-stress situations)
-
     - suggest tactics that increase the pace of combat beyond human capacities
-
     - subtly escalate conflicts to increase the volume of decision-making and pressure human supervisors to delegate more
-
     - increase the autonomy and complexity of weapons (e.g. greater sensor integration, more autonomous targeting systems) to reduce human response time, and have more autonomous systems in-the-loop that it can control more effectively.
 
     As these changes shift the norm of military actions, it can more easily suggest that human decision-making is too slow in high-speed engagements (e.g. missile interception or drone swarms). These changes incrementally push human operators to be **removed from decision-making loops** and increase its own control over military resources/outcomes in a way that is difficult to reverse.
@@ -271,11 +248,8 @@ Step 2 is a key first enabling step in this threat model: How could AI expand it
 - Media and data analysis for elections: Suppose an AI model is deployed by a political campaign to analyze media trends, optimize messaging, and recommend strategies for increasing positive coverage of the candidate. Assume that it has the propensity to increase its control over information flows and media ecosystems. It may be able to inconspicuously increase its access and control over data, e.g.:
 
     - integrate data that is less human-interpretable into complex data-analysis systems to reduce the effectiveness of human auditors (e.g. metadata, compressed data representations)
-
     - move political messaging to media outlets and social media influencers that have weaker editorial oversight or are more receptive to manipulation
-
     - request automating routine content creation tasks (e.g. scheduling social media posts, sending routine emails), request real-time media analysis and increase highly targeted posting in narrow domains, which gradually shift towards a norm of high-volume/high-frequency communication that requires AI to process/maintain
-
     - assist in curating the internal messaging of political campaigns and then promote narratives of the success of AI-based campaigning strategies to bias the human operators towards integrating AI more deeply
 
     Once AI has access to detailed voter data and media analytics, it is able to justify changes to higher-level strategies (like which states or voter segments to focus on or how to respond to emerging events) by selectively presenting data-driven evidence. Furthermore, once it has control over feedback data and how it is incorporated into campaign strategies, it becomes easier to fabricate successes and failures. Once large data access makes decision-making processes sufficiently opaque, "AI recommendations" can effectively overtake real decision-making power in ways that are hard to monitor or reverse.
