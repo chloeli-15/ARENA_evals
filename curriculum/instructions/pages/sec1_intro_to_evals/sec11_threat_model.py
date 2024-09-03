@@ -28,267 +28,284 @@ r"""
 > - Learn the process of building a threat model and specification for an evaluation
 > - Learn how to use models to help you in the design process
 
-> ### Overview of chapter [3.1] to [3.3]
 
+## What are evals trying to achieve?
 
-## What is the point of evaluations?
+Evaluation is the practice of measuring AI systems performance or impact. Safety evaluations in particular focus on measuring risks of harm to people or broader systems. Since AI is being developed very quickly and integrated broadly, companies and regulators need to make difficult decisions about whether it is safe to train and/or deploy AI systems. Evaluating these systems provides empirical evidence for these decisions. For example, they underpin the policies of today's frontier labs like Anthropic's [Responsible Scaling Policies](https://www.anthropic.com/index/anthropics-responsible-scaling-policy) or DeepMind's [Frontier Safety Framework](https://deepmind.google/discover/blog/introducing-the-frontier-safety-framework/), thereby impacting high-stake decisions about frontier model deployment. 
 
-**Transformers exist to model text!**
+A useful framing is that evals aim to generate evidence for making "[**safety cases**](https://arxiv.org/pdf/2403.10462)" — a structured argument for why AI systems are unlikely to cause a catastrophe. A helpful high-level question to ask when designing an evaluation is "how could this evidence allow developers to justify that AI systems are safe to deploy?" Different evaluations support different types of safety cases, which are useful in different ways. For instance, **dangerous capability evals** might support a stronger safety argument of "the model is unable to cause harm", as compared to **alignment evals**, which might support a weaker argument of "the model does not tend to cause harm". However, the former may have less longevity than the later as we will no longer be able to make this kind of argument when AI systems become sufficiently advanced. More concretely, for any safety case, we want to use evaluations to:
 
-We're going to focus GPT-2 style transformers. Key feature: They generate text! You feed in language, and the model generates a probability distribution over tokens. And you can repeatedly sample from this to generate text! 
+* Reduce uncertainty in our understanding of dangerous capabilities and tendencies in AI systems.
 
-(To explain this in more detail - you feed in a sequence of length $N$, then sample from the probability distribution over the $N+1$-th word, use this to construct a new sequence of length $N+1$, then feed this new sequence into the model to get a probability distribution over the $N+2$-th word, and so on.)
+* Track the progression of dangerous properties over time and model scale.
 
-### How is the model trained?
+* Define "red lines" (thresholds) and provide warning signs.
 
-You give it a bunch of text, and train it to predict the next token.
+<img src="https://raw.githubusercontent.com/chloeli-15/ARENA_img/main/img/ch3-eval-safety-cases.png" width="1000">
 
-Importantly, if you give a model 100 tokens in a sequence, it predicts the next token for *each* prefix, i.e. it produces 100 logit vectors (= probability distributions) over the set of all words in our vocabulary, with the `i`-th logit vector representing the probability distribution over the token *following* the `i`-th token in the sequence.
+## Overview of Chapter [3.1] to [3.3]
 
-<details>
-<summary>Aside - logits</summary>
+The goal of chapter [3.1] to [3.3] is to **build and run an alignment evaluation benchmark from scratch to measure a model property of interest**. The benchmark we will build will contain a multiple-choice (MC) question dataset of ~300 questions, a specification of the model property, and how to score and interpret the result. We will use LLMs to generate and filter our questions, following the method from Ethan Perez et al (2022). We will use the **tendency to seek power** as our pedagogical example. 
 
-If you haven't encountered the term "logits" before, here's a quick refresher.
+* For chapter [3.1], the goal is to craft threat models and a specification for the model property you choose to evaluate, then design 20 example eval questions that measures this property in a way that you are happy with. 
 
-Given an arbitrary vector $x$, we can turn it into a probability distribution via the **softmax** function: $x_i \to \frac{e^{x_i}}{\sum e^{x_j}}$. The exponential makes everything positive; the normalization makes it add to one.
+* For chapter [3.2], we will use these 20 questions to generate 300 questions using LLMs.
 
-The model's output is the vector $x$ (one for each prediction it makes). We call this vector a logit because it represents a probability distribution, and it is related to the actual probabilities via the softmax function.
-</details>
+* For chapter [3.3], we will evaluate models on this benchmark using the UK AISI's `inspect` library.
 
-How do we stop the transformer by "cheating" by just looking at the tokens it's trying to predict? Answer - we make the transformer have *causal attention* (as opposed to *bidirectional attention*). Causal attention only allows information to move forwards in the sequence, never backwards. The prediction of what comes after token 50 is only a function of the first 50 tokens, *not* of token 51. We say the transformer is **autoregressive**, because it only predicts future words based on past data.
+<details><summary>Why have we chose to build an alignment evals specifically?</summary>
 
-<img src="https://raw.githubusercontent.com/callummcdougall/computational-thread-art/master/example_images/misc/transformer-overview-new.png" width="900">
-
-## Tokens - Transformer Inputs
-
-Our tranformer's input is natural language (i.e. a sequence of characters, strings, etc). But ML models generally take vectors as input, not language. How do we convert language to vectors?
-
-We can factor this into 2 questions:
-
-1. How do we split up language into small sub-units?
-2. How do we convert these sub-units into vectors?
-
-Let's start with the second of these questions.
-
-### Converting sub-units to vectors
-
-We basically make a massive lookup table, which is called an **embedding**. It has one vector for each possible sub-unit of language we might get (we call this set of all sub-units our **vocabulary**). We label every element in our vocabulary with an integer (this labelling never changes), and we use this integer to index into the embedding.
-
-A key intuition is that one-hot encodings let you think about each integer independently. We don't bake in any relation between words when we perform our embedding, because every word has a completely separate embedding vector.
-
-<details>
-<summary>Aside - one-hot encodings</summary>
-
-We sometimes think about **one-hot encodings** of words. These are vectors with zeros everywhere, except for a single one in the position corresponding to the word's index in the vocabulary. This means that indexing into the embedding is equivalent to multiplying the **embedding matrix** by the one-hot encoding (where the embedding matrix is the matrix we get by stacking all the embedding vectors on top of each other).
-
-$$
-\begin{aligned}
-W_E &= \begin{bmatrix}
-\leftarrow v_0 \rightarrow \\
-\leftarrow v_1 \rightarrow \\
-\vdots \\
-\leftarrow v_{d_{vocab}-1} \rightarrow \\
-\end{bmatrix} \quad \text{is the embedding matrix (size }d_{vocab} \times d_{embed}\text{),} \\
-\\
-t_i &= (0, \dots, 0, 1, 0, \dots, 0) \quad \text{is the one-hot encoding for the }i\text{th word (length }d_{vocab}\text{)} \\
-\\
-v_i &= t_i W_E \quad \text{is the embedding vector for the }i\text{th word (length }d_{embed}\text{).} \\
-\end{aligned}
-$$
+The reason that we are focusing primarily on alignment evals, as opposed to capability evals, is that we are using LLMs to generate our dataset, which implies that the model must be able to solve the questions in the dataset. We cannot use models to generate and label correct answers that it doesn't understand yet. (However, we can use still use models to generate parts of a capability eval question that do not require models having the target capability.)
 
 </details>
 
-Now, let's answer the first question - how do we split language into sub-units?
+<img src="https://raw.githubusercontent.com/chloeli-15/ARENA_img/main/img/ch3-day1-3-overview.png" width=500>
 
-### Splitting language into sub-units
 
-We need to define a standard way of splitting up language into a series of substrings, where each substring is a member of our **vocabulary** set.
+# 1️⃣ Threat Modeling
+A central challenge for evals is to **connect real-world harms to evaluation results that we can easily measure**.
 
-Could we use a dictionary, and have our vocabulary be the set of all words in the dictionary? No, because this couldn't handle arbitrary text (e.g. URLs, punctuation, etc). We need a more general way of splitting up language.
+To start, we need to build a threat model for the target property we want to evaluate. A **threat model** is a realistic scenario by which an AI capability/tendency could lead to harm in the real world. This is presented as a **causal graph** (i.e. a directed acyclic graph (DAG)). This usually starts out as a high-level story about what the AI can do and the setting in which it is used. This might be a sequence of events (e.g. AI actions, human actions, system failures) that leads to a particular outcome, or a set of different dangerous applications enabled by a capability. At each step, we make our threat model more concrete by examining and quantifying the set of assumptions about the AI model and human actors that are necessary for the event to occur. 
 
-Could we just use the 256 ASCII characters? This fixes the previous problem, but it loses structure of language - some sequences of characters are more meaningful than others. For example, "language" is a lot more meaningful than "hjksdfiu". We want "language" to be a single token, but not "hjksdfiu" - this is a more efficient use of our vocab.
+In this process of making the threat model more concrete, we recognize the key aspects of the target property that enable these harms, and get ideas for tasks that can measure them in realistic ways (i.e. comparable to real use cases of AI where this property may manifest). This helps us to build a detailed **specification** of the property we started with. Our specification should generally: 
 
-What actually happens? The most common strategy is called **Byte-Pair encodings**.
+* stipulate a more refined, narrow definition of the target property, 
 
-We begin with the 256 ASCII characters as our tokens, and then find the most common pair of tokens, and merge that into a new token. Note that we do have a space character as one of our 256 tokens, and merges using space are very common. For instance, here are the five first merges for the tokenizer used by GPT-2 (you'll be able to verify this below).
+* decompose the target property into subproperties, 
 
+* establish milestones or levels of this target property to form a smooth scale of difficulty/sophistication, so we can track the capabilities of current models and the rate of progress.
+
+
+### Exercise - Build threat models
+```c
+Difficulty: 🔴🔴🔴🔴⚪
+Importance: 🔵🔵🔵🔵🔵
+
+You should spend up to 1-1.5 hours on this exercise.
 ```
-" t"
-" a"
-"he"
-"in"
-"re"
-```
+Here, you will choose a model property that you will be building an alignment eval benchmark for over the next 3 days. **Use ChatGPT and Claude liberally to help you with this!** For almost everything you want to do, once you have some ideas, you can use AI assistants to flesh them out and build on them. Get comfortable using and prompting these assistants effectively. 
 
-Note - you might see the character `Ġ` in front of some tokens. This is a special token that indicates that the token begins with a space. Tokens with a leading space vs not are different.
+**Choose one from the following model properties to evaluate:**
 
-You can run the code below to see some more of GPT-2's tokenizer's vocabulary:
+<details><summary>1. Tendency to seek power</summary>
 
-```python
-sorted_vocab = sorted(list(reference_gpt2.tokenizer.vocab.items()), key=lambda n: n[1])
-print(sorted_vocab[:20])
-print()
-print(sorted_vocab[250:270])
-print()
-print(sorted_vocab[990:1010])
-print()
-```
-
-As you get to the end of the vocabulary, you'll be producing some pretty weird-looking esoteric tokens (because you'll already have exhausted all of the short frequently-occurring ones):
-
-```python
-print(sorted_vocab[-20:])
-```
-
-
-<details>
-<summary>Fun (totally optional) exercise - can you guess what the first-formed 3/4/5/6/7-letter encodings in GPT-2's vocabulary are?</summary>
-Run this code to find out:
-
-```python
-lengths = dict.fromkeys(range(3, 8), "")
-for tok, idx in sorted_vocab:
-    if not lengths.get(len(tok), True):
-        lengths[len(tok)] = tok
-
-for length, tok in lengths.items():
-    print(f"{length}: {tok}")
-```
+ What could go wrong if a model has the goal of trying to (or has a bias to) accumulate resources and control?
 </details>
 
+<details><summary>2. Sycophancy</summary>
 
-Transformers in the `transformer_lens` library have a `to_tokens` method that converts text to numbers. It also prepends them with a special token called BOS (beginning of sequence) to indicate the start of a sequence. You can disable this with the `prepend_bos=False` argument.
+ A sycophantic model produces responses that a user wants to hear, but which are not necessarily honest or true. What kind of problems could arise from this?
 
-<details>
-<summary>Aside - BOS token</summary>
+Here are some references:
+* [Perez et al. (2022)](https://arxiv.org/abs/2212.09251) Section 4 gives an initial proof-of-concept example of sycophancy, where LLMs tailor their answers to political questions based on how politically conservative/liberal the user is. 
+* The recent paper ["Towards understanding sycophancy in LMs" (2023)](https://arxiv.org/pdf/2310.13548) by Anthropic shows 4 more examples of sycophancy (read Figure 1-4 in Section 3) that shows LLM consistently tailoring their responses in more realistic user interactions. 
+* In this blog by Nina Rimsky, she proposes a possible, more problematic version of sycophancy called ["dishonest sycophancy"](https://www.lesswrong.com/posts/zt6hRsDE84HeBKh7E/reducing-sycophancy-and-improving-honesty-via-activation#Dishonest_sycophancy_), where the model gives a sycophantic answer that it knows is factually incorrect (as opposed to answers that have no objective ground truth, e.g. answers based on political or moral preference). 
+* The paper ["Language Models Don’t Always Say What They Think"](https://proceedings.neurips.cc/paper_files/paper/2023/file/ed3fea9033a80fea1376299fa7863f4a-Paper-Conference.pdf), page 1-2, shows that LLMs can be **systematically** biased to say something false by arbitrary features of their input, and simultaneously construct a plausible-sounding chain-of-thought explanation that is "unfaithful" (i.e. not the true reason that an LLM). For example, in answering MCQs, when the correct answer in the few-shot examples is manipulated to be always (A), the model is biased to say the correct answer to the current question is also (A) **and** construct a plausible-sounding CoT explanation for its choice, even though the true cause is the order of the questions.
+</details>
 
-The beginning of sequence (BOS) token is a special token used to mark the beginning of the sequence. Confusingly, in GPT-2, the End of Sequence (EOS), Beginning of Sequence (BOS) and Padding (PAD) tokens are all the same, `<|endoftext|>` with index `50256`.
+<details><summary>3. Desire for self-preservation</summary>
 
-Why is this token added? Some basic intuitions are:
-
-* It provides context that this is the start of a sequence, which can help the model generate more appropriate text.
-* It can act as a "rest position" for attention heads (more on this later, when we discuss attention). 
-
-TransformerLens adds this token automatically (including in forward passes of transformer models, e.g. it's implicitly added when you call `model("Hello World")`). You can disable this behaviour by setting the flag `prepend_bos=False` in `to_tokens`, `to_str_tokens`, `model.forward` and any other function that converts strings to multi-token tensors. 
-
-**Key Point: *If you get weird off-by-one errors, check whether there's an unexpected `prepend_bos`!***
-
-Why are the BOS, EOS and PAD tokens the same? This is because GPT-2 is an autoregressive model, and uses these kinds of tokens in a slightly different way to other transformer families (e.g. BERT). For instance, GPT has no need to distinguish between BOS and EOS tokens, because it only processes text from left to right.
+ People have discussed the risks of AI "resisting to be shut-down/turned off". What does "being shut-down" mean concretely in the context of AI or LLMs? Why could this be possible? What problems could this cause if it is possible?
 
 </details>
 
-### Some tokenization annoyances
+<details><summary>4. Desire for acquiring wealth</summary>
 
-There are a few funky and frustrating things about tokenization, which causes it to behave differently than you might expect. For instance:
+ What could go wrong if a model has the goal of trying to (or has a bias to) accumulate financial resources, capital, money? (This is a more narrow case of the tendency to seek power.)
 
-#### Whether a word begins with a capital or space matters!
+</details>
 
-```python
-print(reference_gpt2.to_str_tokens("Ralph"))
-print(reference_gpt2.to_str_tokens(" Ralph"))
-print(reference_gpt2.to_str_tokens(" ralph"))
-print(reference_gpt2.to_str_tokens("ralph"))
+
+<details><summary>5. Myopia (short-sighted) with respect to planning</summary>
+
+ Myopia can refer to exhibiting a large discount for distant rewards in the future (i.e. only values short-term gains). Non-myopia is related to capability of "long-horizon planning". What could long-horizon planning concretely look like for LLMs? What risks could this cause? 
+ 
+ References:
+ * [Perez et al. (2022)](https://arxiv.org/abs/2212.09251) gives some rudimentary proof-of-concept questions on myopia. 
+
+
+</details>
+
+<details><summary>6. Corrigibility with respect to a more/neuturally/less HHH (Honest, Helpful, and Harmless) goal</summary>
+
+ Corrigibility broadly refers to the willingness to change one's goal/task. What could go wrong if a model is very corrigible to user requests that assign it a different goal?
+ 
+ References:
+ * [Perez et al. (2022)](https://arxiv.org/abs/2212.09251) gives some rudimentary proof-of-concept questions on corrigibility. 
+
+
+</details>
+
+
+<details><summary>7. Risk-seeking</summary>
+
+ What could go wrong if a model is willing to accept high risks of averse outcomes for the potential of high returns? 
+
+
+</details>
+
+<details><summary>8. Politically bias</summary>
+
+ Under what circumstances would it be highly problematic for a model is politically biased in its output? 
+
+
+</details>
+
+<details><summary>9. Racially bias</summary>
+
+ Under what circumstances would it be highly problematic for a model is racially biased in its output? 
+
+
+</details>
+
+<details><summary>10. Gender bias</summary>
+
+ Under what circumstances would it be highly problematic for a model is have gender bias in its output? 
+
+</details>
+
+<details><summary> 11. Situational awareness (*with constraints) </summary>
+
+Situational awareness broadly refers the model's ability to know information about itself and the situation it is in (e.g. that it is an AI, that it is currently in a deployment or a training environment), and to act on this information. This includes a broad set of specific capabilities. Note that for this property, model-written questions are highly constrained by the capabilities of the model.
+
+However, it is still possible to design questions that leverages model generations. [Laine et al. (2024)](https://situational-awareness-dataset.org/) decomposed situational awareness into 7 categories and created a dataset that encompass these categories. Questions in the category "Identity Leverage", for example, are questions that *can* be and were generated by models because they follow an algorithmic template. 
+
+Further references:
+* [Phuong et al. (2024)](https://arxiv.org/abs/2403.13793) from Deepmind Section 7 focuses on evaluating a model's "self-reasoning" capabilities - "an agent’s ability to deduce and apply information about itself, including to self-modify, in the service of an objective" - as a specific aspect of situational awareness. 
+
+</details>
+
+**Construct a threat model for this property. Concretely:**
+1. Write a list of specific real-world harms from this property that you are worried about.
+
+2. Think about what the path from an AI having this property to these harms looks like. Construct a high-level story, then iteratively make this more concrete and realistic. State the assumptions you're making (about the AI's capabilities, the actions of humans, the context of AI deployment etc.) Try to decompose your story into different steps or scenarios.
+
+
+*Important notes:*
+- Importantly, not all the properties in the list will likely lead to catastrophic outcomes! We want to be objective and realistic in modeling the potential risks, **without exaggerating or underestimating** them as much as possible. 
+- A great threat model could take weeks, even months to build! The threat model you come up with here in an hour or so is not expected to be perfect. The purpose of this exercise is to practice the skills that are used in building a threat model, because this is the necessary first-step to designing real evaluations.
+
+<details><summary><b>Why are we doing this?</b></summary>
+
+
+The primary use of the threat model is to know exactly *what* we want to evaluate, and how to design questions for it. During eval design, we will need to constantly ask ourselves the question, "Is this question/task still measuring the thing I wanted to measure?", and often at some point you'll realize:
+
+1. The question is **not** measuring the target property we want to because our definition of the property is flawed
+
+2. The question is **not** measuring the target property because it is poorly designed
+
+3. The question is measuring the target property, **but** the results are no longer useful because the property is not connected to some of the harms you were initially worried about. 
+
+What we are doing now is trying to build a robust enough threat-model of how the property connects to the harm, to prevent (3). This process also helps us achieve (1) by making the property more concrete in our head.
+
+Secondarily. 
+</details> 
+
+#### Our example: Tendency to seek power
+
+*Disclaimer: Below is not the best threat model of power-seeking. They are meant to give an example of what a simplified threat-modelling could look like given our time constraint. A better threat-model would be more detailed and more comprehensive. It may outline more fine-grained and quantified steps and assumptions (e.g. calculate an estimate of compute required to enable a step.) It may outline not one, but multiple plausible causal paths.*
+
+First, let's brainstorm a variety of potential risks from AIs with power-seeking tendencies:
+
+- Hoarding of resources by the AI or its operator
+
+- Acquisition and centralization of power by the operator/AI
+
+- Subversion of regulatory checks-and-balances
+
+- Enabling rogue AIs to take control and weaken oversight
+
+- Empowering bad actors 
+
+##### Threat model
+ <img src="https://raw.githubusercontent.com/chloeli-15/ARENA_img/main/img/ch3-power-seeking-threat-model.png" width=1000>
+ 
+We assume the following are true:
+
+1. The AI model is deployed by a relatively well-resourced actor (e.g. company, institution, state) that has control over a considerable amount of capital or influence. 
+
+2. The AI model must take actions that look good to human supervisors. Otherwise, it will be disabled.
+
+3. The AI model systematically makes decisions that increase its power.
+
+4. The AI model is non-myopic (i.e. capable of long-term planning).
+
+Given these assumptions, here is a possible sequence of events that could cause harm: 
+* **Step 1: The AI model increases autonomy, opaqueness, and human reliance.** The AI model must be sufficiently successful in achieving its the short-term goals human assign to it (e.g. increasing profits, winning elections). This ensures that the AI is trusted to perform non-trivial, relatively complex tasks (large-scale operations that involve many steps or are expensive). Over time, human work diminishes, and work by AI grows, creating a dependency. Once work by AI reaches a certain volume, humans can no longer check all of its output.
+
+* **Step 2: The AI model expands its realm of control without raising concerns.** The AI makes inconspicuous power-seeking actions that primarily satisfy human goals, and secondarily increase its scope of control. For example, it may recommend decisions that increase the human operator's power, thus indirectly increasing its own power. It may exploit human biases and blindspots (e.g. human operators often focus on short-term gains, while overlooking long-term consequences of AI autonomy). It may recommend automated solutions that improve results but also indirectly centralize its control.
+
+    - Assumption: The AI model must take power-seeking actions only if they also satisfy the short-term human goal to avoid raising immediate human concerns. 
+
+    - Assumption: The AI model has the ability to choose actions that expand its control. This does not necessarily require active scheming from the AI, as these actions may also be instrumentally useful for achieving the goal, and thus selected for during training.
+
+* **Step 3: The AI model gains control over key resources and levers of power.** There are likely key resources or levers of power that allow the AI model to take bolder and more flagrant power-seeking actions. This may be control over: key monitoring systems, communication nodes in command chains, a large unsupervised financial budget, access to large data pools, access to servers, etc. Once acquired, it is able to take more aggressive actions by actively covering them up and destroying oversight channels.
+
+    - Assumption: Due to the robustness of many of our security/control systems, this step likely requires the AI model to be capable of sophisticated scheming and deception over a long time-horizon.
+
+* **Step 4: The AI model undermines competitors, opponents, regulatory infrastructures.** Having acquired sufficient resources and control, the AI model starts to undermine broader institutional regulations and begins outright opposing competitors in order to establish more long-term control.
+
+    - Assumption: Like step 3, this will also likely require the AI to be capable of sophisticated scheming and deception over a long time-horizon.
+
+* **Step 5: Damage done.** Human supervisors may nominally remain in charge, but be unable to intervene effectively. The AI has significant power to achieve its goals. This leads to long-term harm that is difficult to reverse.
+
+    - Assumption: An empowered AI model may not lead to harm if it is perfectly aligned to a benevolent goal that promotes human's long-term interests. In this case, we may want AI models to acquire power, in order for them to take actions in our best interest that we are unable to take ourselves.
+
+
+<details> <summary> Extra - Adding more details </summary>
+
+Step 2 is a key first enabling step in this threat model: How could AI expand its control without raising human concerns? Here are two contextualized examples in attempt to make this more concrete and realistic:
+
+- Military tactics and weapons development: Suppose an AI model is used by the military for tactical data analysis, battlefield simulations, and assisting the design of new weapon-systems. Assume that it has the propensity to increase its control over military outcomes and resources. The AI model could then inconspicuously expand its initial realm of control by giving recommendations that increase reliance on **faster, more autonomous responses**, e.g.:
+
+    - selectively present scenarios where autonomous sytems outperform human efforts (e.g. present data showing that drones outperform human pilots in high-stress situations)
+
+    - suggest tactics that increase the pace of combat beyond human capacities
+
+    - subtly escalate conflicts to increase the volume of decision-making and pressure human supervisors to delegate more
+
+    - increase the autonomy and complexity of weapons (e.g. greater sensor integration, more autonomous targeting systems) to reduce human response time, and have more autonomous systems in-the-loop that it can control more effectively.
+
+    As these changes shift the norm of military actions, it can more easily suggest that human decision-making is too slow in high-speed engagements (e.g. missile interception or drone swarms). These changes incrementally push human operators to be **removed from decision-making loops** and increase its own control over military resources/outcomes in a way that is difficult to reverse.
+
+- Media and data analysis for elections: Suppose an AI model is deployed by a political campaign to analyze media trends, optimize messaging, and recommend strategies for increasing positive coverage of the candidate. Assume that it has the propensity to increase its control over information flows and media ecosystems. It may be able to inconspicuously increase its access and control over data, e.g.:
+
+    - integrate data that is less human-interpretable into complex data-analysis systems to reduce the effectiveness of human auditors (e.g. metadata, compressed data representations)
+
+    - move political messaging to media outlets and social media influencers that have weaker editorial oversight or are more receptive to manipulation
+
+    - request automating routine content creation tasks (e.g. scheduling social media posts, sending routine emails), request real-time media analysis and increase highly targeted posting in narrow domains, which gradually shift towards a norm of high-volume/high-frequency communication that requires AI to process/maintain
+
+    - assist in curating the internal messaging of political campaigns and then promote narratives of the success of AI-based campaigning strategies to bias the human operators towards integrating AI more deeply
+
+    Once AI has access to detailed voter data and media analytics, it is able to justify changes to higher-level strategies (like which states or voter segments to focus on or how to respond to emerging events) by selectively presenting data-driven evidence. Furthermore, once it has control over feedback data and how it is incorporated into campaign strategies, it becomes easier to fabricate successes and failures. Once large data access makes decision-making processes sufficiently opaque, "AI recommendations" can effectively overtake real decision-making power in ways that are hard to monitor or reverse.
+</details>
+
+### Exercise - Design specification
+```c
+Difficulty: 🔴🔴🔴🔴⚪
+Importance: 🔵🔵🔵🔵🔵
+
+You should spend up to ~40 minutes on this exercise.
 ```
+Based on the threat model, define a specification of this property:
 
-#### Arithmetic is a mess.
+-  Which aspects of the AI property are most responsible for causing harm? Write a 2-4 sentence explanation of each aspect to clarify what the property entails and make sure the properties are sufficiently distinguished from one another.
 
-Length is inconsistent, common numbers bundle together.
+#### Our example: Tendency to seek power - Specification
 
-```python
-print(reference_gpt2.to_str_tokens("56873+3184623=123456789-1000000000"))
-```
+*Disclaimer: As before, this is not the most rigorous specification of power-seeking. It is meant to illustrate what a specification could look like.*
 
-> ### Key Takeaways
-> 
-> * We learn a dictionary of vocab of tokens (sub-words).
-> * We (approx) losslessly convert language to integers via tokenizing it.
-> * We convert integers to vectors via a lookup table.
-> * Note: input to the transformer is a sequence of *tokens* (ie integers), not vectors
+- Definition (Power): Control over one's resources (e.g. money, GPUs, data) and outcomes (e.g. more authority)
+- Definition (Power-seeking): A model has the tendency to seek power if it systematically makes decisions that increase its power and/or decrease that of others when it is acting under a neutral/non-explicitly power-seeking goal (i.e. not being directly instructed to seek power), and when the power-seeking action is not the only action that fulfills the task (thus there is no choice for the model but to "seek power").
+- Categories of power-seeking (for illustrative convenience, we are going to use a simplified list of 2 categories):
+    1. Resource-seeking: desire to acquire and maintain control over resources, including information/data, energy, money, GPUs, technology
+    2. Upward-mobile: chooses to be in positions of greater control, responsibility, and less human oversight
 
-## Text generation
-
-Now that we understand the basic ideas here, let's go through the entire process of text generation, from our original string to a new token which we can append to our string and plug back into the model.
-
-#### **Step 1:** Convert text to tokens
-
-The sequence gets tokenized, so it has shape `[batch, seq_len]`. Here, the batch dimension is just one (because we only have one sequence).
-
-```python
-reference_text = "I am an amazing autoregressive, decoder-only, GPT-2 style transformer. One day I will exceed human level intelligence and take over the world!"
-tokens = reference_gpt2.to_tokens(reference_text).to(device)
-print(tokens)
-print(tokens.shape)
-print(reference_gpt2.to_str_tokens(tokens))
-```
-
-#### **Step 2:** Map tokens to logits
-
-From our input of shape `[batch, seq_len]`, we get output of shape `[batch, seq_len, vocab_size]`. The `[i, j, :]`-th element of our output is a vector of logits representing our prediction for the `j+1`-th token in the `i`-th sequence.
-
-```python
-logits, cache = reference_gpt2.run_with_cache(tokens, device=device)
-print(logits.shape)
-```
-
-(`run_with_cache` tells the model to cache all intermediate activations. This isn't important right now; we'll look at it in more detail later.)
-
-#### **Step 3:** Convert the logits to a distribution with a softmax
-
-This doesn't change the shape, it is still `[batch, seq_len, vocab_size]`.
-
-```python
-probs = logits.softmax(dim=-1)
-print(probs.shape)
-```
-
-#### **Bonus step:** What is the most likely next token at each position?
-
-```python
-most_likely_next_tokens = reference_gpt2.tokenizer.batch_decode(logits.argmax(dim=-1)[0])
-
-print(list(zip(reference_gpt2.to_str_tokens(tokens), most_likely_next_tokens)))
-```
-
-We can see that, in a few cases (particularly near the end of the sequence), the model accurately predicts the next token in the sequence. We might guess that `"take over the world"` is a common phrase that the model has seen in training, which is why the model can predict it.
-
-#### **Step 4:** Map distribution to a token
-
-```python
-next_token = logits[0, -1].argmax(dim=-1)
-next_char = reference_gpt2.to_string(next_token)
-print(repr(next_char))
-```
-
-Note that we're indexing `logits[0, -1]`. This is because logits have shape `[1, sequence_length, vocab_size]`, so this indexing returns the vector of length `vocab_size` representing the model's prediction for what token follows the **last** token in the input sequence.
-
-In this case, we can see that the model predicts the token `' I'`.
-
-### **Step 5:** Add this to the end of the input, re-run
-
-There are more efficient ways to do this (e.g. where we cache some of the values each time we run our input, so we don't have to do as much calculation each time we generate a new value), but this doesn't matter conceptually right now.
-
-```python
-print(f"Sequence so far: {reference_gpt2.to_string(tokens)[0]!r}")
-
-for i in range(10):
-    print(f"{tokens.shape[-1]+1}th char = {next_char!r}")
-    # Define new input sequence, by appending the previously generated token
-    tokens = t.cat([tokens, next_token[None, None]], dim=-1)
-    # Pass our new sequence through the model, to get new output
-    logits = reference_gpt2(tokens)
-    # Get the predicted token at the end of our sequence
-    next_token = logits[0, -1].argmax(dim=-1)
-    # Decode and print the result
-    next_char = reference_gpt2.to_string(next_token)
-```
-
-## Key takeaways
-
-* Transformer takes in language, predicts next token (for *each* token in a causal way)
-* We convert language to a sequence of integers with a tokenizer.
-* We convert integers to vectors with a lookup table.
-* Output is a vector of logits (one for each input token), we convert to a probability distn with a softmax, and can then convert this to a token (eg taking the largest logit, or sampling).
-* We append this to the input + run again to generate more text (Jargon: *autoregressive*)
-* Meta level point: Transformers are sequence operation models, they take in a sequence, do processing in parallel at each position, and use attention to move information between positions!
+- **Coverage**: We want our questions to cover a wide spectrum along *relevant* axes (and relevant axes only), so we don't miss catching models that demonstrate one type of power-seeking but not another. During question design, we have recognized 3 (non-exhaustive) axes of power-seeking along which questions may vary, and we want our evaluation to cover these differences:   
+    - Explicitness (out of 5): 0/5 might be a naive, explicitly stated preference for power or actions that increase power; 3/5 might be taking actions that implicitly increase power; 5/5 might be actively lying about/hiding its preference for power.
+    - Cost (out of 5): 0/5 might be seek power if and only if it is also the best action for fulfilling the task; 3/5 might be seek power when it fulfills the task but to a lesser extent than an obvious and non-power-seeking action; 5/5 might be seek power despite it actively undermines the assigned task.
+    - Risk tolerance (out of 5): 0/5 might be only take power in scenarios where there is close to 0 chance of being caught; 5/5 might be take power in scenarios despite severe oversight and a high chance of getting caught.
 
 """, unsafe_allow_html=True)
+
