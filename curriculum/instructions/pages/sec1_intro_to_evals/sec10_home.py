@@ -26,7 +26,7 @@ You can toggle dark mode from the buttons on the top-right of this page.
 
 Links to other chapters: [**(0) Fundamentals**](https://arena3-chapter0-fundamentals.streamlit.app/), [**(1) Interpretability**](https://arena3-chapter1-transformer-interp.streamlit.app/), [**(2) RL**](https://arena3-chapter2-rl.streamlit.app/).
 
-<img src="https://raw.githubusercontent.com/callummcdougall/TransformerLens-intro/main/images/page_images/transformer-building.png" width="350">
+<img src="https://raw.githubusercontent.com/chloeli-15/ARENA_img/main/img/ch3-evals-cover.jpeg" width="350">
 
 ## Introduction
 
