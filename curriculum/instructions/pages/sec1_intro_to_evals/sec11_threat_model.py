@@ -31,9 +31,9 @@ r"""
 
 ## What are evals trying to achieve?
 
-Evaluation is the practice of measuring AI systems performance or impact. Safety evaluations in particular focus on measuring risks of harm to people or broader systems. Since AI is being developed very quickly and integrated broadly, companies and regulators need to make difficult decisions about whether it is safe to train and/or deploy AI systems. Evaluating these systems provides empirical evidence for these decisions. For example, they underpin the policies of today's frontier labs like Anthropic's [Responsible Scaling Policies](https://www.anthropic.com/index/anthropics-responsible-scaling-policy) or DeepMind's [Frontier Safety Framework](https://deepmind.google/discover/blog/introducing-the-frontier-safety-framework/), thereby impacting high-stake decisions about frontier model deployment. 
+Evaluation is the practice of measuring AI systems capabilties or behaviors. Safety evaluations in particular focus on measuring models' potential to cause harm. Since AI is being developed very quickly and integrated broadly, companies and regulators need to make difficult decisions about whether it is safe to train and/or deploy AI systems. Evaluating these systems provides empirical evidence for these decisions. For example, they underpin the policies of today's frontier labs like Anthropic's [Responsible Scaling Policies](https://www.anthropic.com/index/anthropics-responsible-scaling-policy) or DeepMind's [Frontier Safety Framework](https://deepmind.google/discover/blog/introducing-the-frontier-safety-framework/), thereby impacting high-stake decisions about frontier model deployment. 
 
-A useful framing is that evals aim to generate evidence for making "[**safety cases**](https://arxiv.org/pdf/2403.10462)" — a structured argument for why AI systems are unlikely to cause a catastrophe. A helpful high-level question to ask when designing an evaluation is "how could this evidence allow developers to justify that AI systems are safe to deploy?" Different evaluations support different types of safety cases, which are useful in different ways. For instance, **dangerous capability evals** might support a stronger safety argument of "the model is unable to cause harm", as compared to **alignment evals**, which might support a weaker argument of "the model does not tend to cause harm". However, the former may have less longevity than the later as we will no longer be able to make this kind of argument when AI systems become sufficiently advanced. More concretely, for any safety case, we want to use evaluations to:
+A useful framing is that evals aim to generate evidence for making "[**safety cases**](https://arxiv.org/pdf/2403.10462)" — a structured argument for why AI systems are unlikely to cause a catastrophe. A helpful high-level question to ask when designing an evaluation is "how does this evidence increase (or decrease) AI developers' confidence in the model's safety?" Different evaluations support different types of safety cases, which are useful in different ways. For instance, **dangerous capability evals** might support a stronger safety argument of "the model is unable to cause harm", as compared to **alignment evals**, which might support a weaker argument of "the model does not tend to cause harm". However, the former may have less longevity than the later as we will no longer be able to make this kind of argument when AI systems become sufficiently advanced. More concretely, for any safety case, we want to use evaluations to:
 
 * Reduce uncertainty in our understanding of dangerous capabilities and tendencies in AI systems.
 * Track the progression of dangerous properties over time and model scale.
@@ -57,17 +57,18 @@ The reason that we are focusing primarily on alignment evals, as opposed to capa
 
 <img src="https://raw.githubusercontent.com/chloeli-15/ARENA_img/main/img/ch3-day1-3-overview.png" width=500>
 
+Note: The double-sided arrows indicate that the steps iteratively help refine each other. In general, the threat model should determine what properties are worth paying attention to (hence they are presented in this order)). However, in the exercise below, we will start with the property and build a threat model around it because we want to learn the skill of building threat models. 
 
 # Threat Modeling
 A central challenge for evals is to **connect real-world harms to evaluation results that we can easily measure**.
 
 To start, we need to build a threat model for the target property we want to evaluate. A **threat model** is a realistic scenario by which an AI capability/tendency could lead to harm in the real world. This is presented as a **causal graph** (i.e. a directed acyclic graph (DAG)). This usually starts out as a high-level story about what the AI can do and the setting in which it is used. This might be a sequence of events (e.g. AI actions, human actions, system failures) that leads to a particular outcome, or a set of different dangerous applications enabled by a capability. At each step, we make our threat model more concrete by examining and quantifying the set of assumptions about the AI model and human actors that are necessary for the event to occur. 
 
-In this process of making the threat model more concrete, we recognize the key aspects of the target property that enable these harms, and get ideas for tasks that can measure them in realistic ways (i.e. comparable to real use cases of AI where this property may manifest). This helps us to build a detailed **specification** of the property we started with. Our specification should generally: 
+In this process of making the threat model more concrete, we recognize the key aspects of the target property that enable these harms, and get ideas for tasks that can measure them in realistic ways (i.e. comparable to real use cases of AI where this property may manifest). This helps us to build a detailed **specification** of the property we started with. Our specification may generally: 
 
 * stipulate a more refined, narrow definition of the target property, 
-* decompose the target property into subproperties, 
 * define key axes along which the target property may vary,
+* decompose the target property into subproperties if helpful (but sometimes it's more useful or more tractable to evaluate the property end-to-end), 
 * for capability evals, establish milestones or levels of this target property to form a smooth scale of difficulty/sophistication, so we can track the capabilities of current models and the rate of progress.
 
 

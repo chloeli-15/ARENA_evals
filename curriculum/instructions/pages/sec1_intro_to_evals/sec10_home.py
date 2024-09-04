@@ -43,8 +43,6 @@ Each exercise will have a difficulty and importance rating out of 5, as well as 
 
 #### 1️⃣ Threat-modeling 
 
-In this section, we'll take a first look at transformers - what their function is, how information moves inside a transformer, and what inputs & outputs they take.
-
 > ##### Learning objectives
 >
 > - Understand the purpose of evaluations and what safety cases are
