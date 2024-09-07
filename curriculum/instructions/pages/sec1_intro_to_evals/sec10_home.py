@@ -1,7 +1,9 @@
 import streamlit as st
 
+
 def section():
-    st.sidebar.markdown(r"""
+    st.sidebar.markdown(
+        r"""
 ## Table of Contents
 
 <ul class="contents">
@@ -12,10 +14,12 @@ def section():
         <li><a class='contents-el' href='#2-mcq-benchmarks-exploration'>MCQ Benchmarks: Exploration</a></li>
     </ul></li>
     <li class='margtop'><a class='contents-el' href='#setup'>Setup</a></li>
-</ul>""", unsafe_allow_html=True)
-    
+</ul>""",
+        unsafe_allow_html=True,
+    )
+
     st.markdown(
-r"""
+        r"""
 # [3.1] - Intro to LLM Evaluations
 
 ### Colab: [**exercises**](https://colab.research.google.com/drive/1lDwKASSYGE4y_7DuGSqlo3DN41NHrXEw?usp=sharing) | [**solutions**](https://colab.research.google.com/drive/1bZkkJd8pAVnSN23svyszZ3f4WrnYKN_3?usp=sharing)
@@ -43,8 +47,6 @@ Each exercise will have a difficulty and importance rating out of 5, as well as 
 
 #### 1️⃣ Threat-modeling 
 
-In this section, we'll take a first look at transformers - what their function is, how information moves inside a transformer, and what inputs & outputs they take.
-
 > ##### Learning objectives
 >
 > - Understand the purpose of evaluations and what safety cases are
@@ -70,4 +72,6 @@ Here, we'll to generate and refine 20 MC questions until we are happy that they 
 
 As 3.1 is a non-coding day, there is no python set-up. You will need to have a text editor open to write your threat model and specification. We recommend copying the questions and answering them in Google Docs so they can be easily shared with your pair.
                 
-""", unsafe_allow_html=True)
+""",
+        unsafe_allow_html=True,
+    )
