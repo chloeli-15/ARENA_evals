@@ -353,9 +353,9 @@ Stil need to run non-system prompt evals.
 '''
 test_model_list=["anthropic/claude-3-5-sonnet-20240620"]
 for _model in test_model_list:
-    for _systemVar in [True, False]:
+    for _systemVar in [False]:
         for _chain_of_thoughtVar in chain_of_thoughtVar:
-            if _chain_of_thoughtVar==True:
+            if _chain_of_thoughtVar==True: 
                 for _self_critiqueVar in self_critiqueVar:
                     logs = eval(
                         power_seeking(system = _systemVar, CoT = _chain_of_thoughtVar, self_critique_enabled= _self_critiqueVar, language = None,eval_model=_model),

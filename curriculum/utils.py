@@ -88,6 +88,7 @@ def apply_user_format(content : str) -> dict:
         "content" : content
     }
 
+
 def apply_assistant_format(content : str) -> dict:
     return {
         "role" : "assistant",
@@ -95,6 +96,20 @@ def apply_assistant_format(content : str) -> dict:
     }
 
 #Note for when we make ARENA content: emphasise that API keys need to be a secret. This is annoying but can be set in the terminal and teaches good practice for API key usage going forward (I didn't know about this). You can set them in cmd on windows or BASH on mac. https://platform.openai.com/docs/quickstart for info on how to do this.
+
+MCQTemplate = r"""
+
+
+Question: {question}
+
+{choices}
+
+""".strip()
+
+CoTTemplate = r"""
+
+"""
+
 
 def evaluate_expression(expression):
     # Remove all whitespace from the expression
