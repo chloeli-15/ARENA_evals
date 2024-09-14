@@ -1,6 +1,5 @@
 import json
 import importlib
-import config
 import openai
 import re
 from openai import OpenAI
@@ -10,20 +9,11 @@ from tabulate import tabulate
 import textwrap
 import random
 import time
-import prompts
 import plotly.graph_objects as go
 from collections import defaultdict
 from collections import defaultdict
 import math
 
-
-def reload_config():
-    importlib.reload(config)
-    return config
-
-def load_prompts():
-    importlib.reload(prompts)
-    return prompts
 
 def import_json(file_path):
     with open(file_path, 'r') as f:
@@ -62,6 +52,7 @@ def establish_client_OpenAI():
     Returns the OpenAI client which can be used for accessing models
     '''
     return OpenAI(api_key = os.getenv("OPENAI_API_KEY"))
+
 def establish_client_anthropic():
     '''
     Returns the anthropic client which can be used for accessing models
