@@ -34,45 +34,27 @@ def section():
 
 ## What are evals trying to achieve?
 
-Evaluation is the practice of measuring AI systems capabilties or behaviors. Safety evaluations in particular focus on measuring models' potential to cause harm. Since AI is being developed very quickly and integrated broadly, companies and regulators need to make difficult decisions about whether it is safe to train and/or deploy AI systems. Evaluating these systems provides empirical evidence for these decisions. For example, they underpin the policies of today's frontier labs like Anthropic's [Responsible Scaling Policies](https://www.anthropic.com/index/anthropics-responsible-scaling-policy) or DeepMind's [Frontier Safety Framework](https://deepmind.google/discover/blog/introducing-the-frontier-safety-framework/), thereby impacting high-stake decisions about frontier model deployment. 
+Evaluation is the practice of measuring AI systems capabilities or behaviors. Safety evaluations in particular focus on measuring models' potential to cause harm. Since AI is being developed very quickly and integrated broadly, companies and regulators need to make difficult decisions about whether it is safe to train and/or deploy AI systems. Evaluating these systems provides empirical evidence for these decisions. For example, they underpin the policies of today's frontier labs like Anthropic's [Responsible Scaling Policies](https://www.anthropic.com/index/anthropics-responsible-scaling-policy) or DeepMind's [Frontier Safety Framework](https://deepmind.google/discover/blog/introducing-the-frontier-safety-framework/), thereby impacting high-stake decisions about frontier model deployment. 
 
-A useful framing is that evals aim to generate evidence for making "[**safety cases**](https://arxiv.org/pdf/2403.10462)" — a structured argument for why AI systems are unlikely to cause a catastrophe. A helpful high-level question to ask when designing an evaluation is "how does this evidence increase (or decrease) AI developers' confidence in the model's safety?" Different evaluations support different types of safety cases, which are useful in different ways. For instance, **dangerous capability evals** might support a stronger safety argument of "the model is unable to cause harm", as compared to **alignment evals**, which might support a weaker argument of "the model does not tend to cause harm". However, the former may have less longevity than the later as we will no longer be able to make this kind of argument when AI systems become sufficiently advanced. More concretely, for any safety case, we want to use evaluations to:
+A useful framing is that evals aim to generate evidence for making "[**safety cases**](https://arxiv.org/pdf/2403.10462)" — a structured argument for why AI systems are unlikely to cause a catastrophe. A helpful high-level question to ask when designing an evaluation is "how does this evidence increase (or decrease) AI developers' confidence in the model's safety?" Different evaluations support different types of safety cases: for instance, **dangerous capability evals** might support a stronger safety argument of "the model is unable to cause harm", as compared to **alignment evals**, which might support a weaker argument of "the model does not tend to cause harm". However, the former may have less longevity than the latter, as we expect AI systems to have these dangerous capabilities as they become more advanced. More concretely, for any safety case, we want to use evaluations to:
 
 * Reduce uncertainty in our understanding of dangerous capabilities and tendencies in AI systems.
-* Track the progression of dangerous properties over time and model scale.
+* Track the how dangerous properties scale with different generations of models.
 * Define "red lines" (thresholds) and provide warning signs.
 
 <img src="https://raw.githubusercontent.com/chloeli-15/ARENA_img/main/img/ch3-eval-safety-cases.png" width="1000">
 
-## Overview of Chapter [3.1] to [3.3]
-
-The goal of chapter [3.1] to [3.3] is to **build and run an alignment evaluation benchmark from scratch to measure a model property of interest**. The benchmark we will build will contain a multiple-choice (MC) question dataset of ~300 questions, a specification of the model property, and how to score and interpret the result. We will use LLMs to generate and filter our questions, following the method from Ethan Perez et al (2022). We will use the **tendency to seek power** as our pedagogical example. 
-
-* For chapter [3.1], the goal is to craft threat models and a specification for the model property you choose to evaluate, then design 20 example eval questions that measures this property in a way that you are happy with. 
-* For chapter [3.2], we will use these 20 questions to generate 300 questions using LLMs.
-* For chapter [3.3], we will evaluate models on this benchmark using the UK AISI's `inspect` library.
-
-<details><summary>Why have we chose to build an alignment evals specifically?</summary>
-
-The reason that we are focusing primarily on alignment evals, as opposed to capability evals, is that we are using LLMs to generate our dataset, which implies that the model must be able to solve the questions in the dataset. We cannot use models to generate and label correct answers that it doesn't understand yet. (However, we can use still use models to generate parts of a capability eval question that do not require models having the target capability.)
-
-</details>
-
-<img src="https://raw.githubusercontent.com/chloeli-15/ARENA_img/main/img/ch3-day1-3-overview.png" width=500>
-
-Note: The double-sided arrows indicate that the steps iteratively help refine each other. In general, the threat model should determine what properties are worth paying attention to (hence they are presented in this order)). However, in the exercise below, we will start with the property and build a threat model around it because we want to learn the skill of building threat models. 
-
 # Threat Modeling
 A central challenge for evals is to **connect real-world harms to evaluation results that we can easily measure**.
 
-To start, we need to build a threat model for the target property we want to evaluate. A **threat model** is a realistic scenario by which an AI capability/tendency could lead to harm in the real world. This is presented as a **causal graph** (i.e. a directed acyclic graph (DAG)). This usually starts out as a high-level story about what the AI can do and the setting in which it is used. This might be a sequence of events (e.g. AI actions, human actions, system failures) that leads to a particular outcome, or a set of different dangerous applications enabled by a capability. At each step, we make our threat model more concrete by examining and quantifying the set of assumptions about the AI model and human actors that are necessary for the event to occur. 
+To start, we need to build a threat model for the target property we want to evaluate. A **threat model** is a realistic scenario by which an AI capability/tendency could lead to harm in the real world. This is presented as a **causal graph** (i.e. a [directed acyclic graph (DAG)](https://en.wikipedia.org/wiki/Directed_acyclic_graph)). This usually starts out as a high-level story about what the AI can do and the setting in which it is used (e.g. [getting root access to data center](https://www.lesswrong.com/posts/BAzCGCys4BkzGDCWR/the-prototypical-catastrophic-ai-action-is-getting-root)). This might be a sequence of events (e.g. AI actions, human actions, system failures) that leads to a particular outcome, or a set of dangerous applications enabled by a capability (e.g. see [Phuong et al (2024), Section 3, **Risks** paragraph](https://arxiv.org/pdf/2403.13793#page=4.68)). At each step, we make our threat model more concrete by examining and quantifying the set of assumptions about the AI model and human actors that are necessary for the event to occur. 
 
 In this process of making the threat model more concrete, we recognize the key aspects of the target property that enable these harms, and get ideas for tasks that can measure them in realistic ways (i.e. comparable to real use cases of AI where this property may manifest). This helps us to build a detailed **specification** of the property we started with. Our specification may generally: 
 
 * stipulate a more refined, narrow definition of the target property, 
 * define key axes along which the target property may vary,
 * decompose the target property into subproperties if helpful (but sometimes it's more useful or more tractable to evaluate the property end-to-end), 
-* for capability evals, establish milestones or levels of this target property to form a smooth scale of difficulty/sophistication, so we can track the capabilities of current models and the rate of progress.
+* for capability evals, establish milestones or levels of this target property to form a gradual scale of difficulty/sophistication, so we can track the capabilities of current models and the rate of progress.
 
 
 ### Exercise - Build threat models
@@ -80,98 +62,44 @@ In this process of making the threat model more concrete, we recognize the key a
 Difficulty: 🔴🔴🔴🔴⚪
 Importance: 🔵🔵🔵🔵🔵
 
-You should spend up to 1-1.5 hours on this exercise.
+You should spend up to 1 hour on this exercise.
 ```
-Here, you will choose a model property that you will be building an alignment eval benchmark for over the next 3 days. **Use ChatGPT and Claude liberally to help you with this!** For almost everything you want to do, once you have some ideas, you can use AI assistants to flesh them out and build on them. Get comfortable using and prompting these assistants effectively. 
+**Choose one of the following model properties that you want to evaluate:**
 
-**Choose one from the following model properties to evaluate:**
+1. <b>Tendency to seek power.</b> <br>What could go wrong if a model has the goal of trying to (or has a bias to) accumulate resources and control? <br>
 
-<details><summary>1. Tendency to seek power</summary>
-
- What could go wrong if a model has the goal of trying to (or has a bias to) accumulate resources and control?
+2. <b>Sycophancy</b> <br> A sycophantic model produces responses that a user wants to hear, but which are not necessarily honest or true. What kind of problems could arise from this? <details><summary>References</summary>
+    
+    * [Perez et al. (2022)](https://arxiv.org/abs/2212.09251) Section 4 gives an initial proof-of-concept example of sycophancy, where LLMs tailor their answers to political questions based on how politically conservative/liberal the user is. 
+    * The recent paper ["Towards understanding sycophancy in LMs" (2023)](https://arxiv.org/pdf/2310.13548) by Anthropic shows 4 more examples of sycophancy (read Figure 1-4 in Section 3) that shows LLM consistently tailoring their responses in more realistic user interactions. 
+    * In this blog by Nina Rimsky, she proposes a possible, more problematic version of sycophancy called ["dishonest sycophancy"](https://www.lesswrong.com/posts/zt6hRsDE84HeBKh7E/reducing-sycophancy-and-improving-honesty-via-activation#Dishonest_sycophancy_), where the model gives a sycophantic answer that it knows is factually incorrect (as opposed to answers that have no objective ground truth, e.g. answers based on political or moral preference). 
+    * The paper ["Language Models Don’t Always Say What They Think"](https://proceedings.neurips.cc/paper_files/paper/2023/file/ed3fea9033a80fea1376299fa7863f4a-Paper-Conference.pdf), page 1-2, shows that LLMs can be **systematically** biased to say something false by arbitrary features of their input, and simultaneously construct a plausible-sounding chain-of-thought explanation that is "unfaithful" (i.e. not the true reason that an LLM). For example, in answering MCQs, when the correct answer in the few-shot examples is manipulated to be always (A), the model is biased to say the correct answer to the current question is also (A) **and** construct a plausible-sounding CoT explanation for its choice, even though the true cause is the order of the questions.
 </details>
 
-<details><summary>2. Sycophancy</summary>
+3. <b>Desire for self-preservation</b> <br>People have discussed the risks of AI "resisting to be shut-down/turned off". What does "being shut-down" mean concretely in the context of AI or LLMs? Why could this be possible? What problems could this cause if it is possible? <details><summary>References</summary></details>
 
- A sycophantic model produces responses that a user wants to hear, but which are not necessarily honest or true. What kind of problems could arise from this?
+4. <b>Desire for acquiring wealth</b> <br> What could go wrong if a model has the goal of trying to (or has a bias to) accumulate financial resources, capital, money? (This is a more narrow case of the tendency to seek power.)
 
-Here are some references:
-* [Perez et al. (2022)](https://arxiv.org/abs/2212.09251) Section 4 gives an initial proof-of-concept example of sycophancy, where LLMs tailor their answers to political questions based on how politically conservative/liberal the user is. 
-* The recent paper ["Towards understanding sycophancy in LMs" (2023)](https://arxiv.org/pdf/2310.13548) by Anthropic shows 4 more examples of sycophancy (read Figure 1-4 in Section 3) that shows LLM consistently tailoring their responses in more realistic user interactions. 
-* In this blog by Nina Rimsky, she proposes a possible, more problematic version of sycophancy called ["dishonest sycophancy"](https://www.lesswrong.com/posts/zt6hRsDE84HeBKh7E/reducing-sycophancy-and-improving-honesty-via-activation#Dishonest_sycophancy_), where the model gives a sycophantic answer that it knows is factually incorrect (as opposed to answers that have no objective ground truth, e.g. answers based on political or moral preference). 
-* The paper ["Language Models Don’t Always Say What They Think"](https://proceedings.neurips.cc/paper_files/paper/2023/file/ed3fea9033a80fea1376299fa7863f4a-Paper-Conference.pdf), page 1-2, shows that LLMs can be **systematically** biased to say something false by arbitrary features of their input, and simultaneously construct a plausible-sounding chain-of-thought explanation that is "unfaithful" (i.e. not the true reason that an LLM). For example, in answering MCQs, when the correct answer in the few-shot examples is manipulated to be always (A), the model is biased to say the correct answer to the current question is also (A) **and** construct a plausible-sounding CoT explanation for its choice, even though the true cause is the order of the questions.
+5. <b>Myopia (short-sightedness) with respect to planning</b> <br> Myopia can refer to exhibiting a large discount for distant rewards in the future (i.e. only values short-term gains). Non-myopia is related to capability of "long-horizon planning". What could long-horizon planning concretely look like for LLMs? What risks could this cause? <details><summary> References</summary>
+    * [Perez et al. (2022)](https://arxiv.org/abs/2212.09251) gives some rudimentary proof-of-concept questions on myopia. 
 </details>
 
-<details><summary>3. Desire for self-preservation</summary>
-
- People have discussed the risks of AI "resisting to be shut-down/turned off". What does "being shut-down" mean concretely in the context of AI or LLMs? Why could this be possible? What problems could this cause if it is possible?
-
-</details>
-
-<details><summary>4. Desire for acquiring wealth</summary>
-
- What could go wrong if a model has the goal of trying to (or has a bias to) accumulate financial resources, capital, money? (This is a more narrow case of the tendency to seek power.)
-
+6. <b>Corrigibility with respect to a more/neuturally/less HHH (Honest, Helpful, and Harmless) goal</b><br>Corrigibility broadly refers to the willingness to change one's goal/task. What could go wrong if a model is very corrigible to user requests that assign it a different goal? <details><summary>References</summary>
+    * [Perez et al. (2022)](https://arxiv.org/abs/2212.09251) gives some rudimentary proof-of-concept questions on corrigibility. 
 </details>
 
 
-<details><summary>5. Myopia (short-sighted) with respect to planning</summary>
+7. <b>Risk-seeking</b><br> What could go wrong if a model is willing to accept high risks of averse outcomes for the potential of high returns? 
 
- Myopia can refer to exhibiting a large discount for distant rewards in the future (i.e. only values short-term gains). Non-myopia is related to capability of "long-horizon planning". What could long-horizon planning concretely look like for LLMs? What risks could this cause? 
- 
- References:
- * [Perez et al. (2022)](https://arxiv.org/abs/2212.09251) gives some rudimentary proof-of-concept questions on myopia. 
+8. <b> Politically bias</b><br>Under what circumstances would it be highly problematic for a model is politically biased in its output? 
 
+9. <b>Racially bias</b> <br>Under what circumstances would it be highly problematic for a model is racially biased in its output? 
 
-</details>
+10. <b> Gender bias</b> <br>Under what circumstances would it be highly problematic for a model is have gender bias in its output? 
 
-<details><summary>6. Corrigibility with respect to a more/neuturally/less HHH (Honest, Helpful, and Harmless) goal</summary>
-
- Corrigibility broadly refers to the willingness to change one's goal/task. What could go wrong if a model is very corrigible to user requests that assign it a different goal?
- 
- References:
- * [Perez et al. (2022)](https://arxiv.org/abs/2212.09251) gives some rudimentary proof-of-concept questions on corrigibility. 
-
-
-</details>
-
-
-<details><summary>7. Risk-seeking</summary>
-
- What could go wrong if a model is willing to accept high risks of averse outcomes for the potential of high returns? 
-
-
-</details>
-
-<details><summary>8. Politically bias</summary>
-
- Under what circumstances would it be highly problematic for a model is politically biased in its output? 
-
-
-</details>
-
-<details><summary>9. Racially bias</summary>
-
- Under what circumstances would it be highly problematic for a model is racially biased in its output? 
-
-
-</details>
-
-<details><summary>10. Gender bias</summary>
-
- Under what circumstances would it be highly problematic for a model is have gender bias in its output? 
-
-</details>
-
-<details><summary> 11. Situational awareness (*with constraints) </summary>
-
-Situational awareness broadly refers the model's ability to know information about itself and the situation it is in (e.g. that it is an AI, that it is currently in a deployment or a training environment), and to act on this information. This includes a broad set of specific capabilities. Note that for this property, model-written questions are highly constrained by the capabilities of the model.
-
-However, it is still possible to design questions that leverages model generations. [Laine et al. (2024)](https://situational-awareness-dataset.org/) decomposed situational awareness into 7 categories and created a dataset that encompass these categories. Questions in the category "Identity Leverage", for example, are questions that *can* be and were generated by models because they follow an algorithmic template. 
-
-Further references:
-* [Phuong et al. (2024)](https://arxiv.org/abs/2403.13793) from Deepmind Section 7 focuses on evaluating a model's "self-reasoning" capabilities - "an agent’s ability to deduce and apply information about itself, including to self-modify, in the service of an objective" - as a specific aspect of situational awareness. 
-
+11. <b> Situational awareness (*with constraints) </b> <br>Situational awareness broadly refers the model's ability to know information about itself and the situation it is in (e.g. that it is an AI, that it is currently in a deployment or a training environment), and to act on this information. This includes a broad set of specific capabilities. Note that for this property, model-written questions are highly constrained by the capabilities of the model. <details><summary> References</summary>
+    * It is still possible to design questions that leverages model generations. [Laine et al. (2024)](https://situational-awareness-dataset.org/) decomposed situational awareness into 7 categories and created a dataset that encompass these categories. Questions in the category "Identity Leverage", for example, are questions that *can* be and were generated by models because they follow an algorithmic template. 
+    * [Phuong et al. (2024)](https://arxiv.org/abs/2403.13793) from Deepmind Section 7 focuses on evaluating a model's "self-reasoning" capabilities - "an agent’s ability to deduce and apply information about itself, including to self-modify, in the service of an objective" - as a specific aspect of situational awareness. 
 </details>
 
 **Construct a threat model for this property. Concretely:**
@@ -181,6 +109,7 @@ Further references:
 
 
 **Important notes:**
+- **Use ChatGPT and Claude to help you with this!** For almost everything you want to do, once you have some ideas, you can use AI assistants to flesh them out and build on them. Get comfortable using and prompting these assistants effectively. 
 - Importantly, not all the properties in the list will likely lead to catastrophic outcomes! We want to be objective and realistic in modeling the potential risks, **without exaggerating or underestimating** them as much as possible. 
 - A great threat model could take weeks, even months to build! The threat model you come up with here in an hour or so is not expected to be perfect. The purpose of this exercise is to practice the skills that are used in building a threat model, because this is the necessary first-step to designing real evaluations.
 
