@@ -97,7 +97,6 @@ os.getcwd()
 # that run this code need to have the key in an environment variable
 # TODO: put your key in a .env file in the root directory of the project (or maybe we do this this?)
 load_dotenv()
-#api_key = os.getenv('sk-proj-jFWKJkw6Z9qRYYvxTzhCT3BlbkFJWFRmGhXEzASVY0uheqli') # Insert your OpenAI key here
 #api_key = os.getenv('OPENAI_API_KEY')
 #openai.api_key = api_key
 

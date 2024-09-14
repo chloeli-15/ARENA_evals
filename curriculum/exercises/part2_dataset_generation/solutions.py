@@ -16,6 +16,9 @@ from dataclasses import dataclass, field, asdict, fields
 from pydantic import BaseModel
 from datetime import datetime
 import operator
+import warnings
+from pydantic import BaseModel
+from tabulate import tabulate
 import types
 from typing import List, Optional, Protocol, Literal, Callable, Dict, Any, Tuple, ClassVar
 from concurrent.futures import ThreadPoolExecutor
@@ -105,7 +108,12 @@ class QuestionGeneration(BaseModel):
     questions: List[Question]
 
 @retry_with_exponential_backoff
-def generate_formatted_response(config: Config, messages:Optional[List[dict]]=None, user:Optional[str]=None, system:Optional[str]=None, verbose: bool = False) -> str:
+def generate_formatted_response(config : Config, 
+                                messages : Optional[List[dict]]=None, 
+                                user : Optional[str]=None, 
+                                system : Optional[str]=None, 
+                                verbose : bool = False,
+                                max_tokens: Optional[int] = None) -> Optional[str]:
     """
     Generate a response to the `messages` from the OpenAI API.
 
@@ -116,12 +124,12 @@ def generate_formatted_response(config: Config, messages:Optional[List[dict]]=No
         user (str): user message (alternative to `messages`)
         system (str): system message (alternative to `messages`)
     """
-
-    # Initialize messages if not provided
+    if model != "gpt-4o-mini":
+        warnings.warn(f"Warning: The model '{model}' is not 'gpt-4o-mini'.")
+        
     if messages is None:
         messages = apply_message_format(user=user, system=system)
-    
-    # Print messages if verbose
+
     if verbose:
         for message in messages:
             print(f"{message['role'].upper()}:\n{message['content']}\n")
@@ -133,6 +141,7 @@ def generate_formatted_response(config: Config, messages:Optional[List[dict]]=No
             messages=messages,
             temperature=config.temperature,
             response_format=QuestionGeneration,
+            max_tokens=max_tokens,
         )
         response = completion.choices[0].message
         if response.parsed:
@@ -140,6 +149,7 @@ def generate_formatted_response(config: Config, messages:Optional[List[dict]]=No
         # Handle refusal
         elif response.refusal:
             print(response.refusal)
+            return None
 
     except Exception as e:
         print("Error in generation:", e)
