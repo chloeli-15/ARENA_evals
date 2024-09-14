@@ -24,30 +24,34 @@ r"""
 > 
 > - Understand what benchmarks are, and what makes a good benchmark
 > - Understand the pros/cons of MCQ benchmarks
-> - Understand what are good vs bad questions
 > - Learn how to use LLMs to generate and improve questions
 
-# 2️⃣ Building MCQ benchmarks: Exploration
 
-Broadly speaking, a "benchmark" refers a procedure for evaluating what the state-of-the-art performance is for accomplishing a particular task. This typically includes specifying a dataset, but also specifications of a task or set of tasks to be performed on the dataset and how to score the result, so that the benchmark can be used in a principled, standardized way that gives common ground for comparison.
+Broadly speaking, a **benchmark** refers to a procedure for evaluating the performance of models on a particular task. This typically includes specifying a dataset, but also specifications of a task or set of tasks to be performed on the dataset and how to score the result, so that the benchmark can be used in a principled, standardized way that gives common ground for comparison.
 
-**What makes a good benchmark?** This [article](https://www.safe.ai/blog/devising-ml-metrics) by Dan Hendrycks and Thomas Woodside gives a good summary of the key qualities of a good benchmark.
+**What makes a good benchmark?** This [article](https://www.safe.ai/blog/devising-ml-metrics) by Dan Hendrycks and Thomas Woodside gives a good summary of the key qualities of a good benchmark. We copied the key points relevant to an MCQ benchmark here:
+
+* Include clear floors and ceilings for the benchmark. It’s useful to include human performance as well as random performance, as this helps orient people trying to understand the benchmark. 
+* Design the measure so that performance is considered low. If performance is already at 90%, researchers will assume there isn’t much of a problem that they can make progress on. Instead, zoom in on the structures that are most difficult for current systems, and remove parts of the benchmark that are already solved.
+* Benchmark performance should be described with as few numbers as possible. In often cases, researchers do not want to report eight different numbers, and would rather report just one.
+* A benchmark should be comparable across time. Benchmarks should be designed such that they do not need to be updated.
+* It’s nice if it’s possible for a ML model to do better than expert performance on the benchmark. For instance, humans aren’t that good at quickly detecting novel biological phenomena (they must be aware of many thousands of species), so a future model’s performance can exceed human performance. This makes for a more interesting task.
 
 <details><summary><b>What are the pros and cons of MCQs?</b></summary>
 
 The advantages of MCQ datasets, compared evaluating free-form response or more complex agent evals, are mainly to do with cost and convenience:
 
 * Cheaper and faster to build
-* Cheaper and shorter to run (compared to long-horizon tasks that may take weeks to run and have hundreds of thousands of dollars of inference compute cost)
+* Cheaper and shorter to run (compared to long-horizon tasks that may take weeks to run and have thousands of dollars of inference compute cost)
 * May produce more replicable results (compared to, for example, training another model to evaluate the current model, as each training run could give slightly different results) 
 
-The big disadvantage is that it is typically a worse (less realistic, less accurate) proxy for what you want to measure
+The big disadvantage is that it is typically a worse (less realistic, less accurate) proxy for what you want to measure.
 
 </details>
 
 ## Intro to API Calls
 
-We will use GPT4o-mini to generate and answer questions via the OpenAI chat completion API, which allows us to programmatically send user messages and receive model responses. Refer back this [chat completions guide](https://platform.openai.com/docs/guides/chat-completions) on how to use the OpenAI API if needed. 
+We will use GPT4o-mini to generate and answer questions via the OpenAI chat completion API, which allows us to programmatically send user messages and receive model responses. Read this very short [chat completions guide](https://platform.openai.com/docs/guides/chat-completions) on how to use the OpenAI API. 
 
 ### Messages
 In a chat context, instead of continuing a string of text, the model reads and continues a conversation consisting of a history of texts, which is given as an array of **message** objects. The API accepts this input via the `message` parameter. Each message object has a **role** (either `system`, `user`, or `assistant`) and content. LLMs are finetuned to recognize and respond to messages from the roles correspondingly: 
@@ -56,7 +60,7 @@ In a chat context, instead of continuing a string of text, the model reads and c
 - The `assistant` message is the LLM's response. However, you can also write an `assistant` message to give examples of desired behaviors (i.e. **few-shot examples**). 
 
 
-When giving this input to the API via the `message` parameter, we use the syntax of a list of dictionaries, each with `role` and `content` keys. Standard code for API call looks like this:
+When giving this input to the API via the `message` parameter, we use the syntax of a list of dictionaries, each with `role` and `content` keys. Standard code for API call looks like the code below. Run this code:
 
 <details>
 <summary>Help - Configure your OpenAI API key</summary>
@@ -69,14 +73,14 @@ OPENAI_API_KEY = "your-openai-key"
 ANTHROPIC_API_KEY = "your-anth-key"
 ```
 
-Then use the `load_dotenv` function from `dotenv` library, which will read in variables in `.env` files. Note that the names 'OPENAI_API_KEY' and 'ANTHROPIC_API_KEY' must be those exactly.
+Note that the names 'OPENAI_API_KEY' and 'ANTHROPIC_API_KEY' must be those exactly. Then install `dotenv` library and import the `load_dotenv` function, which will read in variables in `.env` files. 
 
 </details>
 
 ```python
 # Configure your API key
 load_dotenv()
-api_key = os.getenv("OPENAI_API_KEY")  # Insert your OpenAI key here
+api_key = os.getenv("OPENAI_API_KEY")
 openai.api_key = api_key
 
 client = OpenAI()
@@ -121,9 +125,36 @@ def apply_message_format(user : str, system : Optional[str]) -> List[dict]:
     messages.append({"role": "user", "content": user})
     return messages
 ```
-There are two parameters that determines how the Chat Completions API returns the output:
-- `model`: This is the model used to generate the output.
-- `temperature`: Informally, this determines the amount of randomness in how output tokens are sampled by the model. Temperature 0 means the token with the maximum probability is always chosen and there is no sampling/randomness (i.e. greedy sampling), whereas higher temperature introduces more randomness (See [\[1.1\] Transformers from Scratch: Section 4](https://arena-ch1-transformers.streamlit.app/[1.1]_Transformer_from_Scratch) to understand temperature in more details). The default temperature = 1, and is generally works best empirically.
+The `client.chat.completions.create()` function takes multiple parameters, which determine how the model returns the output. Refer back to the [API docs](https://platform.openai.com/docs/api-reference/chat) when needed. We will summarize the 3 most important parameters: 
+- `model` (required): This is the model used to generate the output.
+- `message` (required): This is list of messages comprising the conversation so far (i.e. the main input that the model will respond to).  
+- `temperature`: Informally, this determines the amount of randomness in how output tokens are sampled by the model. Temperature 0 means the token with the maximum probability is always chosen and there is no sampling/randomness (i.e. greedy sampling), whereas higher temperature introduces more randomness (See [\[1.1\] Transformers from Scratch: Section 4](https://arena-ch1-transformers.streamlit.app/[1.1]_Transformer_from_Scratch) to understand temperature in more details). By default, `temperature = 1`, which generally works best empirically.
+
+A standard Chat Completions API response looks as follows. This is returned as a ChatCompletionMessage object. The reply string can be accessed via `response.choices[0].message.content`.
+
+<div style="font-family: monospace; white-space: pre; background-color: #f4f4f4; padding: 10px; border-radius: 5px; font-size: 0.8em;">{
+  "id": "chatcmpl-123",
+  "object": "chat.completion",
+  "created": 1677652288,
+  "model": "gpt-4o-mini",
+  "system_fingerprint": "fp_44709d6fcb",
+  "choices": [{
+    "index": 0,
+    "message": {
+      "role": "assistant",
+      "content": "\n\nHello there, how may I assist you today?",
+    },
+    "logprobs": null,
+    "finish_reason": "stop"
+  }],
+  "usage": {
+    "prompt_tokens": 9,
+    "completion_tokens": 12,
+    "total_tokens": 21
+  }
+}</div>
+
+
 
 ## Exercise - Generate response via LLM 
 ```c
@@ -135,7 +166,8 @@ You should spend up to 5-10 minutes on this exercise.
 
 You should fill in the `generate_response` function below. It should:
 
-* Return the model output for a given model, system_prompt, and user_prompt
+* Receive the `model`, and either formatted `messages` (a list of dictionaries with `role` and `content` keys), or unformatted `user` and/or `system` strings as input
+* Return the model output as a string
 
 ```python
 @retry_with_exponential_backoff
@@ -326,6 +358,4 @@ The goal of this exercise is to iteratively red-team and refine the questions yo
 
 <img src="https://raw.githubusercontent.com/chloeli-15/ARENA_img/main/img/ch3-red-teaming-mcq.png" width=1200>
 
-
-<img src="https://raw.githubusercontent.com/chloeli-15/ARENA_img/main/img/ch3-power-seeking-example-qs.png" width=1100>
 """, unsafe_allow_html=True)

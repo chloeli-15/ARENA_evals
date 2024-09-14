@@ -34,13 +34,34 @@ Links to other chapters: [**(0) Fundamentals**](https://arena3-chapter0-fundamen
 
 ## Introduction
 
-This is an introduction to designing and running LLM evaluations. The exercises are written in partnership with [Apollo Research](https://www.apolloresearch.ai/), and designed to give you the foundational skills for doing safety evaluation research on language models. 
-
-There is more continuity between days in this chapter than other chapters. Chapter [3.1] to [3.3] focuses on designing and building a multiple-choice (MC) questions benchmark for one chosen target property, and using it to run evals on models. Day 3.4 to 3.5 focuses on building an LLM-agent that plays the Wikipedia racing game, and eliciting agent behavior.
-
-Chapter [3.1] is the only non-coding day of the entire curriculum. The exercises focus on designing a threat model and specification for your evaluation target, and using this to design questions. These are the first steps and often the hardest/most creative part of real eval research. In practice this is often done by a team of researchers, and can take weeks or months. The exercises are designed to give you a taste of this process. The exercise questions are open-ended, and you're not expected to have a perfect answer by the end.
+The Threat-Modelling section of chapter [3.1] is the only non-coding section of the curriculum. The exercises focus on designing a threat model and specification for a chosen model property. We use this to design an evaluation (eval) to measure this target property. These are the first steps and often the hardest/most "creative" part of real eval research. In practice this is often done by a team of researchers, and can take weeks or months. The exercises are designed to give you a taste of this process. The exercise questions are open-ended, and you're not expected to have a perfect answer by the end.
 
 Each exercise will have a difficulty and importance rating out of 5, as well as an estimated maximum time you should spend on these exercises and sometimes a short annotation. You should interpret the ratings & time estimates relatively (e.g. if you find yourself spending about 50% longer on the exercises than the time estimates, adjust accordingly). Please do skip exercises / look at solutions if you don't feel like they're important enough to be worth doing, and you'd rather get to the good stuff!
+
+## Overview of Chapter [3.1] to [3.3]
+
+The goal of chapter [3.1] to [3.3] is to **build and run an alignment evaluation benchmark from scratch to measure a model property of interest**. The benchmark we will build contains:
+- a multiple-choice (MC) question dataset of ~300 questions, 
+- a specification of the model property, and 
+- how to score and interpret the result. 
+
+We will use LLMs to generate and filter our questions, following the method from [Ethan Perez et al (2022)](https://arxiv.org/abs/2212.09251). In the example that we present, we will measure the **tendency to seek power** as our evaluation target. 
+
+* For chapter [3.1], the goal is to craft threat models and a specification for the model property you choose to evaluate, then design 20 example eval questions that measures this property. 
+* For chapter [3.2], we will use LLMs to expand our 20 eval questions to generate ~300 questions.
+* For chapter [3.3], we will evaluate models on this benchmark using the UK AISI's [`inspect`](https://inspect.ai-safety-institute.org.uk/) library.
+
+<details><summary>Why have we chose to build an alignment evals specifically?</summary>
+
+The reason that we are focusing primarily on alignment evals, as opposed to capability evals, is that we are using LLMs to generate our dataset, which implies that the model must be able to solve the questions in the dataset. We cannot use models to generate and label correct answers if they are not capable of solving the questions. (However, we can use still use models to generate parts of a capability eval question if we do not require the model to be able to solve them.)
+
+</details>
+
+<img src="https://raw.githubusercontent.com/chloeli-15/ARENA_img/main/img/ch3-day1-3-overview.png" width=700>
+
+<!-- TODO: Make this diagram horizontal -->
+
+Diagram Note: The double-sided arrows indicate that the steps iteratively help refine each other. In general, the threat model should determine what properties are worth paying attention to (hence they are presented in this order)). However, in the exercise below, we will start with the property and build a threat model around it because we want to learn the skill of building threat models. 
 
 ## Content & Learning Objectives
 
@@ -51,8 +72,8 @@ Each exercise will have a difficulty and importance rating out of 5, as well as 
 >
 > - Understand the purpose of evaluations and what safety cases are
 > - Understand the types of evaluations
-> - Understand what a threat model looks like, and why it's important
-> - Learn the process of building a threat model and specification for an evaluation
+> - Learn what a threat model looks like, why it's important, and how to build one
+> - Learn how to write a specification for an evaluation target
 > - Learn how to use models to help you in the design process
 
 
@@ -62,10 +83,10 @@ Here, we'll to generate and refine 20 MC questions until we are happy that they 
 
 > ##### Learning objectives
 > 
-> - Understand what benchmarks are, and what makes a good benchmark
-> - Understand the pros/cons of MCQ benchmarks
+> - Understand what benchmarks are, what makes a good benchmark, and pros/cons of MCQ benchmarks
+> - Learn the basics of API calls and what messages are
 > - Understand what are good vs bad questions
-> - Learn how to use LLMs to generate and improve questions
+> - Learn how to use LLMs to generate, red-team and improve questions
 
 
 ## Setup

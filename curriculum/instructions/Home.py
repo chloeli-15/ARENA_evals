@@ -57,7 +57,9 @@ Some highlights from this chapter include:
 * Using the [Inspect](https://inspect.ai-safety-institute.org.uk/) by UK AI Safety Institute (AISI) to run evaluation experiments
 * Building a LLM agent that plays the Wikipedia Racing game
 * Implementing ReAct and inflexion as elicitation methods for LLM agents
-           
+
+The exercises are written in partnership with [Apollo Research](https://www.apolloresearch.ai/), and designed to give you the foundational skills for doing safety evaluation research on language models. 
+
 <br>
 """, unsafe_allow_html=True)
 
