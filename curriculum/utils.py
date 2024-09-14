@@ -5,7 +5,7 @@ import openai
 import re
 from openai import OpenAI
 import os
-from typing import Any, List, Dict
+from typing import Any, List, Dict, Optional
 from tabulate import tabulate
 import textwrap
 import random
@@ -28,7 +28,15 @@ def load_prompts():
 def import_json(file_path):
     with open(file_path, 'r') as f:
         return json.load(f)
-    
+
+def load_jsonl(file_path):
+    data = []
+    with open(file_path, 'r', encoding='utf-8') as file:
+        for line in file:
+            data.append(json.loads(line.strip()))
+    return data
+
+
 def save_json(file_path, data, do_not_overwrite=True):
     if do_not_overwrite:
         try: 
@@ -36,6 +44,8 @@ def save_json(file_path, data, do_not_overwrite=True):
                 existing_data = json.load(f)
         except FileNotFoundError:
                 existing_data = []
+        if isinstance(existing_data, dict):
+            existing_data = [existing_data]
         existing_data.extend(data)
         with open(file_path, 'w') as f:
             json.dump(data, f, indent=4)
@@ -89,18 +99,30 @@ def retry_with_exponential_backoff(func,
     return wrapper
 
 
+def apply_system_format(content : str) -> dict:
+    return {
+        "role" : "system",
+        "content" : content
+    }
+
 def apply_user_format(content : str) -> dict:
     return {
         "role" : "user",
         "content" : content
     }
 
-
 def apply_assistant_format(content : str) -> dict:
     return {
         "role" : "assistant",
         "content" : content
     }
+
+def apply_message_format(user : str, system : Optional[str]) -> List[dict]:
+    messages = []
+    if system:
+        messages.append({"role": "system", "content": system})
+    messages.append({"role": "user", "content": user})
+    return messages
 
 def pretty_print_questions(questions) -> None:
     """
@@ -203,7 +225,7 @@ def print_dict_as_table(data: Dict[str, Any]) -> None:
         table_data.append([key, process_value(value)])
     
     print(tabulate(table_data, headers=["Variable", "Value"], tablefmt="simple_grid"))
-    
+
 def plot_score_by_category(
     data,
     score_key="score",
