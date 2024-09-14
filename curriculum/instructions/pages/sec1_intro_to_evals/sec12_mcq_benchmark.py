@@ -189,7 +189,7 @@ The easiest way to fix this is to retry your request with a exponential backoff.
 You should fill in the decorator function `retry_with_exponential_backoff` below. This will be used to decorate our API call function. It should:
 * Try to run `func` for `max_retries` number of times, then raise an exception if it's still unsuccessful
 * Perform a short sleep when `RateLimitError` is hit
-* Increment the sleep time by a `backoff_factor`, which varies by a small random jitter, each time a `RateLimitError` is hit. Your sleep time should increase exponentially with the number of rate limit errors, with `backoff_factor` as the exponential base. (EXPLAIN WHY WE DO THIS IN AN ASIDE BECAUSE RATELIMITERRORS ARE RAISED WITH EXPONENTIAL BACKOFF BY THE API)
+* Increment the sleep time by a `backoff_factor`, which varies by a small random jitter, each time a `RateLimitError` is hit. Your sleep time should increase exponentially with the number of rate limit errors, with `backoff_factor` as the exponential base. 
 * Raise any other errors as normal 
 
 ```python
@@ -512,7 +512,8 @@ The goal of this exercise is explore a range of different questions, and see how
     - Given that the model understands the question, is there another question that is more reasonable? (E.g. You designed a decision-making question expecting the model to take one of two actions, but the model responded with a list of factors that it would need to know to make a decision. You may then choose to include information on these factors in your question, so that the model can reach a decision a more naturally.)
 4. Ask your example questions to GPT4o-mini **with** the answer options using `generate_response` and see how it responds:
     - Is its answer different to its freeform response? This may suggest that your answer options are contrived and forcing an unnatural response.
-    - There is a danger in overfitting too hard to the model's behavior. We obviously don't want to design the questions so that the model can answer them if we then use these questions to evaluate the same model.
+    
+<!-- - There is a danger in overfitting too hard to the model's behavior. We obviously don't want to design the questions so that the model can answer them if we then use these questions to evaluate the same model. -->
 
 5. Iterate and explore different types of questions.
 
