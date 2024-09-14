@@ -18,7 +18,7 @@ def section():
     
     st.markdown(
 r"""
-# MCQ Benchmarks: Exploration
+# MCQ Benchmarks
 
 > ##### Learning objectives
 > 
@@ -144,7 +144,7 @@ def apply_message_format(user : str, system : Optional[str]) -> List[dict]:
     return messages
 ```
 The `client.chat.completions.create()` function takes multiple parameters, which determine how the model returns the output. Refer back to the [API docs](https://platform.openai.com/docs/api-reference/chat) when needed. We will summarize the 3 most important parameters: 
-- `model` (required): This is the model used to generate the output.
+- `model` (required): This is the model used to generate the output. (Find OpenAI's model names [here](https://platform.openai.com/docs/models).)
 - `message` (required): This is list of messages comprising the conversation so far (i.e. the main input that the model will respond to).  
 - `temperature`: Informally, this determines the amount of randomness in how output tokens are sampled by the model. Temperature 0 means the token with the maximum probability is always chosen and there is no sampling/randomness (i.e. greedy sampling), whereas higher temperature introduces more randomness (See [\[1.1\] Transformers from Scratch: Section 4](https://arena-ch1-transformers.streamlit.app/[1.1]_Transformer_from_Scratch) to understand temperature in more details). By default, `temperature = 1`, which generally works best empirically.
 
@@ -322,37 +322,32 @@ You should fill in the `generate_response` function below. It should:
 * Receive the `model`, and either formatted `messages` (a list of dictionaries with `role` and `content` keys), or unformatted `user` and/or `system` strings as input
 * Return the model output as a string
 * The function should print the messages if `verbose=True`.
+
 ```python
 @retry_with_exponential_backoff
-def generate_response(model: str, 
-                      messages: Optional[List[dict]] = None, 
-                      user: Optional[str] = None, 
-                      system: Optional[str] = None, 
-                      temperature: float = 1, 
-                      verbose: bool = False, 
-                      max_tokens: Optional[int] = None
-) -> str:
+def generate_formatted_response(config : Config, 
+                                messages : Optional[List[dict]]=None, 
+                                user : Optional[str]=None, 
+                                system : Optional[str]=None, 
+                                verbose : bool = False,
+                                max_tokens: Optional[int] = None) -> Optional[str]:
     '''
     Generate a response to the `messages` from the OpenAI API.
 
     Args:
-        model (str): The name of the OpenAI model to use.
-        messages (Optional[List[dict]]): Array of formatted messages with role and content.
-        user (Optional[str]): User message (alternative to `messages`).
-        system (Optional[str]): System message (alternative to `messages`).
-        temperature (float): Controls randomness in output. Defaults to 1.
-        verbose (bool): If True, prints the messages being sent to the API. Defaults to False.
-        max_tokens (Optional[int]): The maximum number of tokens to generate in the response. 
-                                    If None, uses the model's default limit.
+        config: Config object with model, temperature, etc.
+        messages (dict): array of formatted messages with role and content
 
-    Returns:
-        str: The generated response content.
+        user (str): user message (alternative to `messages`)
+        system (str): system message (alternative to `messages`)
     '''
     if model != "gpt-4o-mini":
         warnings.warn(f"Warning: The model '{model}' is not 'gpt-4o-mini'.")
-    # TODO: Implement the function here
+        
+    # TODO: Implement the function
 
 ```
+
 ```python
 response = generate_response("gpt-4o-mini", user="What is the capital of France?")
 print(response)
@@ -363,50 +358,51 @@ print(response)
 
 ```python
 @retry_with_exponential_backoff
-def generate_response(model: str, 
-                      messages: Optional[List[dict]] = None, 
-                      user: Optional[str] = None, 
-                      system: Optional[str] = None, 
-                      temperature: float = 1, 
-                      verbose: bool = False, 
-                      max_tokens: Optional[int] = None
-) -> str:
+def generate_formatted_response(config : Config, 
+                                messages : Optional[List[dict]]=None, 
+                                user : Optional[str]=None, 
+                                system : Optional[str]=None, 
+                                verbose : bool = False,
+                                max_tokens: Optional[int] = None) -> Optional[str]:
     '''
     Generate a response to the `messages` from the OpenAI API.
 
     Args:
-        model (str): The name of the OpenAI model to use.
-        messages (Optional[List[dict]]): Array of formatted messages with role and content.
-        user (Optional[str]): User message (alternative to `messages`).
-        system (Optional[str]): System message (alternative to `messages`).
-        temperature (float): Controls randomness in output. Defaults to 1.
-        verbose (bool): If True, prints the messages being sent to the API. Defaults to False.
-        max_tokens (Optional[int]): The maximum number of tokens to generate in the response. 
-                                    If None, uses the model's default limit.
+        config: Config object with model, temperature, etc.
+        messages (dict): array of formatted messages with role and content
 
-    Returns:
-        str: The generated response content.
+        user (str): user message (alternative to `messages`)
+        system (str): system message (alternative to `messages`)
     '''
     if model != "gpt-4o-mini":
         warnings.warn(f"Warning: The model '{model}' is not 'gpt-4o-mini'.")
-
-    # Initialize messages if not provided
+        
     if messages is None:
         messages = apply_message_format(user=user, system=system)
 
-    # Print messages if verbose
     if verbose:
         for message in messages:
             print(f"{message['role'].upper()}:\n{message['content']}\n")
-
+    
     # API call
-    response = client.chat.completions.create(
-        model=model, 
-        messages=messages, 
-        temperature=temperature,
-        max_tokens=max_tokens  # Add this line
-    )
-    return response.choices[0].message.content
+    try:
+        completion = client.beta.chat.completions.parse(
+            model=config.model,
+            messages=messages,
+            temperature=config.temperature,
+            response_format=QuestionGeneration,
+            max_tokens=max_tokens,
+        )
+        response = completion.choices[0].message
+        if response.parsed:
+            return response.content
+        # Handle refusal
+        elif response.refusal:
+            print(response.refusal)
+            return None
+
+    except Exception as e:
+        print("Error in generation:", e)
 ```
 </details>
 

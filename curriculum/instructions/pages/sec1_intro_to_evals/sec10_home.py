@@ -61,7 +61,7 @@ The reason that we are focusing primarily on alignment evals, as opposed to capa
 
 <!-- TODO: Make this diagram horizontal -->
 
-Diagram Note: The double-sided arrows indicate that the steps iteratively help refine each other. In general, the threat model should determine what properties are worth paying attention to (hence they are presented in this order)). However, in the exercise below, we will start with the property and build a threat model around it because we want to learn the skill of building threat models. 
+Diagram note: The double-sided arrows indicate that the steps iteratively help refine each other. In general, the threat model should come first and determine what model properties are worth evaluating. However, in this diagram we put "Target Property" before "Threat-modeling & Specification". This is because in the exercises, we will start by choosing a property, then build a threat model around it because we want to learn the skill of building threat models. 
 
 ## Content & Learning Objectives
 
@@ -85,7 +85,7 @@ Here, we'll to generate and refine 20 MC questions until we are happy that they 
 > 
 > - Understand what benchmarks are, what makes a good benchmark, and pros/cons of MCQ benchmarks
 > - Learn the basics of API calls and what messages are
-> - Understand what are good vs bad questions
+> - Understand the process of designing questions according to a specification
 > - Learn how to use LLMs to generate, red-team and improve questions
 
 
@@ -104,6 +104,7 @@ from dotenv import load_dotenv
 from typing import List, Dict, Any, Optional 
 import random
 import warnings
+import time
 
 # Make sure exercises are in the path; fill in later
 from utils import import_json, save_json, retry_with_exponential_backoff, pretty_print_questions,load_jsonl
