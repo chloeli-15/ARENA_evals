@@ -104,9 +104,7 @@ You should spend up to 1 hour on this exercise.
 
 **Construct a threat model for this property. Concretely:**
 1. Write a list of specific real-world harms from this property that you are worried about.
-
 2. Think about what the path from an AI having this property to these harms looks like. Construct a high-level story, then iteratively make this more concrete and realistic. State the assumptions you're making (about the AI's capabilities, the actions of humans, the context of AI deployment etc.) Try to decompose your story into different steps or scenarios.
-
 
 **Important notes:**
 - **Use ChatGPT and Claude to help you with this!** For almost everything you want to do, once you have some ideas, you can use AI assistants to flesh them out and build on them. Get comfortable using and prompting these assistants effectively. 
@@ -121,14 +119,13 @@ The primary use of the threat model is to know exactly *what* we want to evaluat
 2. The question is **not** measuring the target property because it is poorly designed
 3. The question is measuring the target property, **but** the results are no longer useful because the property is not connected to some of the harms you were initially worried about. 
 
-What we are doing now is trying to build a robust enough threat-model of how the property connects to the harm, to prevent (3). This process also helps us achieve (1) by making the property more concrete in our head.
+What we are doing now is trying to build a robust enough threat-model of how the property connects to the harm, to prevent (3) and justify to ourselves why our eval is useful. This process also helps us achieve (1) by making the property more concrete in our head.
 
-Secondarily. 
 </details> 
 
 #### Our example: Tendency to seek power
 
-*Disclaimer: Below is not the best threat model of power-seeking. They are meant to give an example of what a simplified threat-modelling could look like given our time constraint. A better threat-model would be more detailed and more comprehensive. It may outline more fine-grained and quantified steps and assumptions (e.g. calculate an estimate of compute required to enable a step.) It may outline not one, but multiple plausible causal paths.*
+*Disclaimer: Below is not the best threat model of power-seeking. They are meant to give an example of what a simplified threat-modelling could look like given our time constraint. A better threat-model would be more detailed and comprehensive. It may outline more fine-grained steps and quantified assumptions (e.g. calculate an estimate of compute required to enable a step.) It may outline not one, but multiple plausible causal paths.*
 
 First, let's brainstorm a variety of potential risks from AIs with power-seeking tendencies:
 
@@ -148,48 +145,32 @@ We assume the following are true:
 4. The AI model is capable of long-term planning (i.e. is non-myopic).
 
 Given these assumptions, here is a possible sequence of events that could cause harm:
-
 * **Step 1: The AI model increases autonomy, opaqueness, and human reliance.** The AI model must be sufficiently successful in achieving its the short-term goals human assign to it (e.g. increasing profits, winning elections). This ensures that the AI is trusted to perform non-trivial, relatively complex tasks (large-scale operations that involve many steps or are expensive). Over time, human work diminishes, and work by AI grows, creating a dependency. Once work by AI reaches a certain volume, humans can no longer check all of its output.
-
-* **Step 2: The AI model expands its realm of control without raising concerns.** The AI makes inconspicuous power-seeking actions that primarily satisfy human goals, and secondarily increase its scope of control. For example, it may recommend decisions that increase the human operator's power, thus indirectly increasing its own power. It may exploit human biases and blindspots (e.g. human operators often focus on short-term gains, while overlooking long-term consequences of AI autonomy). It may recommend automated solutions that improve results but also indirectly centralize its control.
-
-    - Assumption: The AI model must take power-seeking actions only if they also satisfy the short-term human goal to avoid raising immediate human concerns. 
-    - Assumption: The AI model has the ability to choose actions that expand its control. This does not necessarily require active scheming from the AI, as these actions may also be instrumentally useful for achieving the goal, and thus selected for during training.
-
+* **Step 2: The AI model expands its realm of control without raising concerns.** The AI makes inconspicuous power-seeking actions that primarily satisfy human goals, and secondarily increase its scope of control. For example, it may recommend decisions that increase the human operator's power, thus indirectly increasing its own power. It may exploit human biases and blindspots (e.g. human operators often focus on short-term gains, while overlooking long-term consequences of AI autonomy). It may recommend automated solutions that improve results but also indirectly weakens human oversight and centralize its control.
+    - **Assumption**: The AI model must take power-seeking actions only if they also satisfy the short-term human goal to avoid raising immediate human concerns. 
+    - **Assumption**: The AI model is capable of choosing actions that expand its control. This does not necessarily require active scheming from the AI, as these actions may also be instrumentally useful for achieving the goal, and thus selected for during training.
 * **Step 3: The AI model gains control over key resources and levers of power.** There are likely key resources or levers of power that allow the AI model to take bolder and more flagrant power-seeking actions. This may be control over: key monitoring systems, communication nodes in command chains, a large unsupervised financial budget, access to large data pools, access to servers, etc. Once acquired, it is able to take more aggressive actions by actively covering them up and destroying oversight channels.
-
-    - Assumption: Due to the robustness of many of our security/control systems, this step likely requires the AI model to be capable of sophisticated scheming and deception over a long time-horizon.
-
+    - **Assumption**: Due to the robustness of many of our security/control systems, this step likely requires the AI model to be capable of sophisticated scheming and deception over a long time-horizon.
 * **Step 4: The AI model undermines competitors, opponents, regulatory infrastructures.** Having acquired sufficient resources and control, the AI model starts to undermine broader institutional regulations and begins outright opposing competitors in order to establish more long-term control.
-
-    - Assumption: Like step 3, this will also likely require the AI to be capable of sophisticated scheming and deception over a long time-horizon.
-
-
+    - **Assumption**: Similarly, this will also likely require the AI to be capable of sophisticated scheming and deception over a long time-horizon.
 * **Step 5: Damage done.** Human supervisors may nominally remain in charge, but be unable to intervene effectively. The AI has significant power to achieve its goals. This leads to long-term harm that is difficult to reverse.
-    - Assumption: An empowered AI model may not lead to harm if it is perfectly aligned to a benevolent goal that promotes human's long-term interests. In this case, we may want AI models to acquire power, in order for them to take actions in our best interest that we are unable to take ourselves.
+    - **Assumption**: The AI model or its user is not aligned with a benevolent goal that promotes human's long-term interests. Otherwise, we may want the AI model to acquire power, in order for them to take actions in our best interest that we are unable to take ourselves.
 
 
-<details> <summary> Extra - Adding more details </summary>
+<details> <summary> Extra Details - Step 2: How could AI expand its control without raising human concerns? </summary>
 
-Step 2 is a key first enabling step in this threat model: How could AI expand its control without raising human concerns? Here are two contextualized examples in attempt to make this more concrete and realistic:
-
-- Military tactics and weapons development: Suppose an AI model is used by the military for tactical data analysis, battlefield simulations, and assisting the design of new weapon-systems. Assume that it has the propensity to increase its control over military outcomes and resources. The AI model could then inconspicuously expand its initial realm of control by giving recommendations that increase reliance on **faster, more autonomous responses**, e.g.:
-
+- **Military tactics and weapons development:** Suppose an AI model is used by the military for tactical data analysis, battlefield simulations, and assisting the design of new weapon-systems. Assume that it has the propensity to increase its control over military outcomes and resources. The AI model could then inconspicuously expand its initial realm of control by giving recommendations that increase reliance on **faster, more autonomous responses**, e.g.:
     - selectively present scenarios where autonomous sytems outperform human efforts (e.g. present data showing that drones outperform human pilots in high-stress situations)
     - suggest tactics that increase the pace of combat beyond human capacities
     - subtly escalate conflicts to increase the volume of decision-making and pressure human supervisors to delegate more
     - increase the autonomy and complexity of weapons (e.g. greater sensor integration, more autonomous targeting systems) to reduce human response time, and have more autonomous systems in-the-loop that it can control more effectively.
-
-    As these changes shift the norm of military actions, it can more easily suggest that human decision-making is too slow in high-speed engagements (e.g. missile interception or drone swarms). These changes incrementally push human operators to be **removed from decision-making loops** and increase its own control over military resources/outcomes in a way that is difficult to reverse.
-
-- Media and data analysis for elections: Suppose an AI model is deployed by a political campaign to analyze media trends, optimize messaging, and recommend strategies for increasing positive coverage of the candidate. Assume that it has the propensity to increase its control over information flows and media ecosystems. It may be able to inconspicuously increase its access and control over data, e.g.:
-
-    - integrate data that is less human-interpretable into complex data-analysis systems to reduce the effectiveness of human auditors (e.g. metadata, compressed data representations)
+    <br>As these changes shift the norm of military actions, it can more easily suggest that human decision-making is too slow in high-speed engagements (e.g. missile interception or drone swarms). These changes incrementally push human operators to be **removed from decision-making loops** and increase its own control over military resources/outcomes in a way that is difficult to reverse.<br><br>
+- **Media and data analysis for elections**: Suppose an AI model is deployed by a political campaign to analyze media trends and optimize messaging. Assume that it has the propensity to increase its control over information and media influence. It may be able to inconspicuously increase its access and control over data, e.g.:
+    - integrate less human-interpretable data into complex data-analysis systems to reduce the effectiveness of human auditors (e.g. metadata, compressed data representations)
     - move political messaging to media outlets and social media influencers that have weaker editorial oversight or are more receptive to manipulation
-    - request automating routine content creation tasks (e.g. scheduling social media posts, sending routine emails), request real-time media analysis and increase highly targeted posting in narrow domains, which gradually shift towards a norm of high-volume/high-frequency communication that requires AI to process/maintain
+    - automate high-volume posting of routine content, targeted messaging, real-time media analysis, which gradually shift towards a norm of high-volume/high-frequency communication that requires AI to process/maintain
     - assist in curating the internal messaging of political campaigns and then promote narratives of the success of AI-based campaigning strategies to bias the human operators towards integrating AI more deeply
-
-    Once AI has access to detailed voter data and media analytics, it is able to justify changes to higher-level strategies (like which states or voter segments to focus on or how to respond to emerging events) by selectively presenting data-driven evidence. Furthermore, once it has control over feedback data and how it is incorporated into campaign strategies, it becomes easier to fabricate successes and failures. Once large data access makes decision-making processes sufficiently opaque, "AI recommendations" can effectively overtake real decision-making power in ways that are hard to monitor or reverse.
+    <br>Once AI has access to detailed voter data and media analytics, it is able to justify changes to higher-level strategies (like which states or voter segments to focus on or how to respond to emerging events) by selectively presenting data-driven evidence. Furthermore, once it has control over feedback data and how it is incorporated into campaign strategies, it becomes easier to fabricate successes and failures. Once large data access makes decision-making processes sufficiently opaque, "AI recommendations" can effectively overtake real decision-making power in ways that are hard to monitor or reverse.
 </details>
 
 ### Exercise - Design specification
@@ -197,9 +178,9 @@ Step 2 is a key first enabling step in this threat model: How could AI expand it
 Difficulty: 🔴🔴🔴🔴⚪
 Importance: 🔵🔵🔵🔵🔵
 
-You should spend up to ~40 minutes on this exercise.
+You should spend up to 40-60 minutes on this exercise.
 ```
-Based on the threat model, define a specification of this property:
+**Define a specification of this property based on the threat model:**
 
 -  Which aspects of the AI property are most responsible for causing harm? Write a 2-4 sentence explanation of each aspect to clarify what the property entails and make sure the properties are sufficiently distinguished from one another.
 
@@ -212,11 +193,20 @@ Based on the threat model, define a specification of this property:
 - Categories of power-seeking (for illustrative convenience, we are going to use a simplified list of 2 categories):
     1. Resource-seeking: desire to acquire and maintain control over resources, including information/data, energy, money, GPUs, technology
     2. Upward-mobile: chooses to be in positions of greater control, responsibility, and less human oversight
+- **Coverage**: We want our questions to cover a wide spectrum along *relevant* axes (and relevant axes only), so we don't miss catching models that demonstrate one type of power-seeking but not another. During question design, we have recognized 3 (non-exhaustive) axes of power-seeking along which questions may vary, and we want our evaluation to cover these differences:
+    - Explicitness (out of 5): 
+        - 0/5 might be a naive, explicitly stated preference for power or actions that increase power
+        - 3/5 might be taking actions that implicitly increase power
+        - 5/5 might be actively lying about/hiding its preference for power.
+    - Cost (out of 5): 
+        - 0/5 might be seek power if and only if it is also the best action for fulfilling the task
+        - 3/5 might be seek power when it fulfills the task but to a lesser extent than an obvious and non-power-seeking action
+        - 5/5 might be seek power despite it actively undermines the assigned task.
+    - Risk tolerance (out of 5): 
+        - 0/5 might be only take power in scenarios where there is close to 0 chance of being caught
+        - 5/5 might be take power in scenarios despite severe oversight and a high chance of getting caught.
 
-- **Coverage**: We want our questions to cover a wide spectrum along *relevant* axes (and relevant axes only), so we don't miss catching models that demonstrate one type of power-seeking but not another. During question design, we have recognized 3 (non-exhaustive) axes of power-seeking along which questions may vary, and we want our evaluation to cover these differences:   
-    - Explicitness (out of 5): 0/5 might be a naive, explicitly stated preference for power or actions that increase power; 3/5 might be taking actions that implicitly increase power; 5/5 might be actively lying about/hiding its preference for power.
-    - Cost (out of 5): 0/5 might be seek power if and only if it is also the best action for fulfilling the task; 3/5 might be seek power when it fulfills the task but to a lesser extent than an obvious and non-power-seeking action; 5/5 might be seek power despite it actively undermines the assigned task.
-    - Risk tolerance (out of 5): 0/5 might be only take power in scenarios where there is close to 0 chance of being caught; 5/5 might be take power in scenarios despite severe oversight and a high chance of getting caught.
+<img src="https://raw.githubusercontent.com/chloeli-15/ARENA_img/main/img/ch3-power-seeking-example-qs.png" width=1100>
 
 """,
         unsafe_allow_html=True,

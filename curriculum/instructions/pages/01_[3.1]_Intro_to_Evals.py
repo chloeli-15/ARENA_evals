@@ -28,7 +28,7 @@ with st.sidebar:
     CHAPTER = sac.steps([
         sac.StepsItem(title='Home', icon="house"),
         sac.StepsItem(title='Threat-Modeling', subtitle='(50%)', icon="1-circle-fill"),
-        sac.StepsItem(title='MCQ Benchmarks: Explore', subtitle='(50%)', icon="2-circle-fill")
+        sac.StepsItem(title='MCQ Benchmarks: Exploration', subtitle='(50%)', icon="2-circle-fill")
     ], size='small', return_index=True)
 
     function = [

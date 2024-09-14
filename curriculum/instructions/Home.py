@@ -59,7 +59,7 @@ Some highlights from this chapter include:
 * Implementing ReAct and inflexion as elicitation methods for LLM agents
 
 The exercises are written in partnership with [Apollo Research](https://www.apolloresearch.ai/), and designed to give you the foundational skills for doing safety evaluation research on language models. 
-         
+
 <br>
 """, unsafe_allow_html=True)
 
