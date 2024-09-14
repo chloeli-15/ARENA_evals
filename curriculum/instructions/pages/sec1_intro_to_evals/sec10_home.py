@@ -70,7 +70,23 @@ Here, we'll to generate and refine 20 MC questions until we are happy that they 
 
 ## Setup
 
-As 3.1 is a non-coding day, there is no python set-up. You will need to have a text editor open to write your threat model and specification. We recommend copying the questions and answering them in Google Docs so they can be easily shared with your pair.
+```python
+from IPython import get_ipython
+ipython = get_ipython()
+ipython.run_line_magic("load_ext", "autoreload")
+ipython.run_line_magic("autoreload", "2")
+import openai
+from openai import OpenAI
+import os
+import json
+from dotenv import load_dotenv
+from typing import List, Dict, Any, Optional 
+import random
+
+# Make sure exercises are in the path; fill in later
+from utils import import_json, save_json, retry_with_exponential_backoff, pretty_print_questions,load_jsonl
+import exercises.part1_intro.tests as tests
+```
                 
 """,
         unsafe_allow_html=True,
