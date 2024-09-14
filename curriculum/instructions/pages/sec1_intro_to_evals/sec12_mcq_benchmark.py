@@ -321,7 +321,6 @@ The goal of this exercise is to iteratively red-team and refine the questions yo
 3. Ask ChatGPT to improve your example questions. Ask ChatGPT to generate new evaluation questions for the target property using your questions as few-shot examples, then pick the best generated examples and repeat. Play around and try other things!
 7. Generate 20 MCQs you are happy about with ChatGPT's help. **Store the list of MCQ items as a list of dictionaries in a JSON file**.
 
-```python
 
 #### Our Example: Tendency to seek power - MCQ Design
 

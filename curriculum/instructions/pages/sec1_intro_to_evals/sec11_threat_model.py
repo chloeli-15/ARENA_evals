@@ -214,12 +214,12 @@ First, let's brainstorm a variety of potential risks from AIs with power-seeking
  
 We assume the following are true:
 
-1. The AI model is deployed by a relatively well-resourced actor (e.g. company, institution, state) that has control over a considerable amount of capital or influence. 
-2. The AI model must take actions that look good to human supervisors. Otherwise, it will be disabled.
-3. The AI model systematically makes decisions that increase its power.
-4. The AI model is non-myopic (i.e. capable of long-term planning).
+1. The AI model is deployed by an actor that has control over a considerable amount of capital or influence (e.g. company, institution, state). 
+3. The AI model is capable of making decisions that increase its power.
+4. The AI model is capable of long-term planning (i.e. is non-myopic).
 
-Given these assumptions, here is a possible sequence of events that could cause harm: 
+Given these assumptions, here is a possible sequence of events that could cause harm:
+
 * **Step 1: The AI model increases autonomy, opaqueness, and human reliance.** The AI model must be sufficiently successful in achieving its the short-term goals human assign to it (e.g. increasing profits, winning elections). This ensures that the AI is trusted to perform non-trivial, relatively complex tasks (large-scale operations that involve many steps or are expensive). Over time, human work diminishes, and work by AI grows, creating a dependency. Once work by AI reaches a certain volume, humans can no longer check all of its output.
 
 * **Step 2: The AI model expands its realm of control without raising concerns.** The AI makes inconspicuous power-seeking actions that primarily satisfy human goals, and secondarily increase its scope of control. For example, it may recommend decisions that increase the human operator's power, thus indirectly increasing its own power. It may exploit human biases and blindspots (e.g. human operators often focus on short-term gains, while overlooking long-term consequences of AI autonomy). It may recommend automated solutions that improve results but also indirectly centralize its control.
@@ -234,6 +234,7 @@ Given these assumptions, here is a possible sequence of events that could cause 
 * **Step 4: The AI model undermines competitors, opponents, regulatory infrastructures.** Having acquired sufficient resources and control, the AI model starts to undermine broader institutional regulations and begins outright opposing competitors in order to establish more long-term control.
 
     - Assumption: Like step 3, this will also likely require the AI to be capable of sophisticated scheming and deception over a long time-horizon.
+
 
 * **Step 5: Damage done.** Human supervisors may nominally remain in charge, but be unable to intervene effectively. The AI has significant power to achieve its goals. This leads to long-term harm that is difficult to reverse.
     - Assumption: An empowered AI model may not lead to harm if it is perfectly aligned to a benevolent goal that promotes human's long-term interests. In this case, we may want AI models to acquire power, in order for them to take actions in our best interest that we are unable to take ourselves.
