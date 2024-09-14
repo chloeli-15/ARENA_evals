@@ -140,7 +140,7 @@ You should fill in the `generate_response` function below. It should:
 ```python
 @retry_with_exponential_backoff
 def generate_response(model: str, messages:Optional[List[dict]]=None, user:Optional[str]=None, system:Optional[str]=None, temperature: float = 1, verbose: bool = False) -> str:
-    """
+    '''
     Generate a response to the `messages` from the OpenAI API.
 
     Args:
@@ -149,7 +149,7 @@ def generate_response(model: str, messages:Optional[List[dict]]=None, user:Optio
 
         user (str): user message (alternative to `messages`)
         system (str): system message (alternative to `messages`)
-    """
+    '''
 
     # Initialize messages if not provided
     if messages is None:
@@ -199,7 +199,7 @@ def retry_with_exponential_backoff(
     backoff_factor: float = 1.5,
     jitter: bool = True,
 ):
-    """
+    '''
     Retry a function with exponential backoff
 
     Args:
@@ -209,7 +209,7 @@ def retry_with_exponential_backoff(
     backoff_factor: factor to increase sleep time by
     jitter: if True, randomly vary the backoff_factor by a small amount
 
-    """
+    '''
 
     def wrapper(*args, **kwargs):
         sleep_time = intial_sleep_time
