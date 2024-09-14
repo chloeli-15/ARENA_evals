@@ -103,6 +103,7 @@ import json
 from dotenv import load_dotenv
 from typing import List, Dict, Any, Optional 
 import random
+import warnings
 
 # Make sure exercises are in the path; fill in later
 from utils import import_json, save_json, retry_with_exponential_backoff, pretty_print_questions,load_jsonl
