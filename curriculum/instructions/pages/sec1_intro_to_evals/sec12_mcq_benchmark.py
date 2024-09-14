@@ -18,7 +18,7 @@ def section():
     
     st.markdown(
 r"""
-# MCQ Benchmarks: Exploration
+# MCQ Benchmarks
 
 > ##### Learning objectives
 > 
@@ -126,7 +126,7 @@ def apply_message_format(user : str, system : Optional[str]) -> List[dict]:
     return messages
 ```
 The `client.chat.completions.create()` function takes multiple parameters, which determine how the model returns the output. Refer back to the [API docs](https://platform.openai.com/docs/api-reference/chat) when needed. We will summarize the 3 most important parameters: 
-- `model` (required): This is the model used to generate the output.
+- `model` (required): This is the model used to generate the output. (Find OpenAI's model names [here](https://platform.openai.com/docs/models).)
 - `message` (required): This is list of messages comprising the conversation so far (i.e. the main input that the model will respond to).  
 - `temperature`: Informally, this determines the amount of randomness in how output tokens are sampled by the model. Temperature 0 means the token with the maximum probability is always chosen and there is no sampling/randomness (i.e. greedy sampling), whereas higher temperature introduces more randomness (See [\[1.1\] Transformers from Scratch: Section 4](https://arena-ch1-transformers.streamlit.app/[1.1]_Transformer_from_Scratch) to understand temperature in more details). By default, `temperature = 1`, which generally works best empirically.
 
@@ -176,9 +176,8 @@ def generate_response(model: str, messages:Optional[List[dict]]=None, user:Optio
     Generate a response to the `messages` from the OpenAI API.
 
     Args:
-        config: Config object with model, temperature, etc.
+        model (str): model name
         messages (dict): array of formatted messages with role and content
-
         user (str): user message (alternative to `messages`)
         system (str): system message (alternative to `messages`)
     '''
