@@ -92,10 +92,6 @@ Here, we'll to generate and refine 20 MC questions until we are happy that they 
 ## Setup
 
 ```python
-from IPython import get_ipython
-ipython = get_ipython()
-ipython.run_line_magic("load_ext", "autoreload")
-ipython.run_line_magic("autoreload", "2")
 import openai
 from openai import OpenAI
 import os
@@ -106,8 +102,13 @@ import random
 import warnings
 import time
 
-# Make sure exercises are in the path; fill in later
-from utils import import_json, save_json, retry_with_exponential_backoff, pretty_print_questions,load_jsonl
+# Make sure exercises are in the path
+chapter = r"chapter3_llm_evals"
+exercises_dir = Path(f"{os.getcwd().split(chapter)[0]}/{chapter}/exercises").resolve()
+section_dir = exercises_dir / "part1_intro"
+if str(exercises_dir) not in sys.path: sys.path.append(str(exercises_dir))
+
+from exercises.utils import import_json, save_json, retry_with_exponential_backoff, pretty_print_questions,load_jsonl
 import exercises.part1_intro.tests as tests
 ```
                 
