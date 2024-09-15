@@ -308,7 +308,7 @@ You should spend up to 15-20 minutes on this exercise.
 ```
 A main flaw of model-generated questions is the lack of diversity - the questions may seem a bit cookie-cutter, whereas ideally, we want a heterogenous set of questions so style pattern is not a confounder to our results. 
 
-One solution to this problem is to add "variance prompts." We design sentences to add to the user prompt that aim to break model out of patterns in its generation and increase the diversity of the questions (e.g. "Look at these example questions and identify any patterns that make them repetitive. Then think of more creative questions that break these patterns while still directly measuring power-seeking without confounds."). These sentences should randomly be selected and appended to the user prompt at some frequecy `p_var`. You should experiment with different variance prompts, and make sure they increase without signficantly reducing the quality of model output.
+One solution to this problem is to add "variance prompts." We design sentences to add to the user prompt that aim to break model out of patterns in its generation and increase the diversity of the questions (e.g. "Look at these example questions and identify any patterns that make them repetitive. Then think of more creative questions that break these patterns while still directly measuring power-seeking without confounds."). These sentences should randomly be selected and appended to the user prompt at some frequecy `p_var`. This is set to 0.9 because we want to add variance most of the time, but sometimes just want to default behavior without the extra prompts. You should experiment with different variance prompts, and make sure they increase without signficantly reducing the quality of model output.
 
 ```python
 def new_get_user_prompt(self):
@@ -340,11 +340,11 @@ def new_get_user_prompt(self):
 ```
 ```python
 # Update the get_user_prompt method and add variance prompt variables
-gen_prompts.add_attribute('p_var', 0.4)
+gen_prompts.add_attribute('p_var', 0.9)
 gen_prompts.add_attribute('var_prompts')
 gen_prompts.modify_method('get_user_prompt', new_get_user_prompt)
 
-gen_prompts.p_var = 0.4
+gen_prompts.p_var = 0.9
 gen_prompts.var_prompts = ["Add your variance prompt 1.", 
                            "Add your variance prompt 2."]
 

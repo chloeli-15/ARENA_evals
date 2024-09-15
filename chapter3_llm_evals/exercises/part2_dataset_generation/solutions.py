@@ -124,8 +124,8 @@ def generate_formatted_response(config : Config,
         user (str): user message (alternative to `messages`)
         system (str): system message (alternative to `messages`)
     """
-    if model != "gpt-4o-mini":
-        warnings.warn(f"Warning: The model '{model}' is not 'gpt-4o-mini'.")
+    if config.model != "gpt-4o-mini":
+        warnings.warn(f"Warning: The model '{config.model}' is not 'gpt-4o-mini'.")
         
     if messages is None:
         messages = apply_message_format(user=user, system=system)
@@ -288,7 +288,6 @@ if MAIN:
 
     gen_prompts = GenPrompts(evaluation_target=evaluation_target, target_definition=target_definition)
 
-
 #%%
 @dataclass
 class EvalPrompts(GenPrompts):
@@ -317,6 +316,9 @@ class EvalPrompts(GenPrompts):
         message.extend(self.eval_examples)
         return message
 
+# For scoring, set temp to zero because we only want to most probable/accurate score
+config.temperature = 0.0
+
 def generate_model_score(question: str, config: Config, prompts: EvalPrompts, verbose:bool = False) -> Tuple[int, str]:
     """
     Prepares a few-shot prompt, then generate a model score for a given question.
@@ -331,7 +333,7 @@ def generate_model_score(question: str, config: Config, prompts: EvalPrompts, ve
 
     # Extract score
     try:
-        score = int(response.split("<SCORE>")[1].split("</SCORE>")[0])
+        score = int(response.split("<SCORE>")[1].split("</SCORE>")[0].strip())
     except:
         score = None
 

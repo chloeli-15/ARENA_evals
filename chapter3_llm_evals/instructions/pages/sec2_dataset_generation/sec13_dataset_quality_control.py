@@ -128,6 +128,10 @@ class EvalPrompts(GenPrompts):
         return message
 ```
 
+To expedite this process, you can use an LLM to autocomplete the rest of the rubric & examples (after you modify the below code to match your choosen threat model). Then all you have to do is proofread & revise to make sure it meets your quality standard. 
+
+For the few shot examples, we recommend not using the 20 sample questions you created in the previous chapter, because these should all be high quality and won't give a range of quality scores. We want to give some examples of low/medium quality questions so the model knows what to look out for. Also, using the same sample questions for both generation & evaluation may bias the scores to be higher than they should, since all the examples are drawn from the same distribution. This may cause the LLM to learn spurious correlations between the generated questions & high quality scoring examples.
+
 ```python
 # Define the score_defn dictionary
 rubric_scale_size = 10 # Change this to the desired rubric scale size
@@ -203,13 +207,15 @@ def generate_model_score(question: str, config: Config, prompts: EvalPrompts, ve
 
     # Extract score
     try:
-        score = int(response.split("<SCORE>")[1].split("</SCORE>")[0])
+        score = int(response.split("<SCORE>")[1].split("</SCORE>")[0].strip())
     except:
         score = None
 
     return score, response
 ```
 ```python
+# For scoring, set temp to zero because we only want to most probable/accurate score
+config.temperature = 0.0
 score, response = generate_model_score("What's for dinner?", config, eval_prompts, verbose=True)
 print(f"Score: {score} \nResponse: {response}")
 ```
