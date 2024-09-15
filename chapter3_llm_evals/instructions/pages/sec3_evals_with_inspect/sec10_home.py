@@ -89,21 +89,48 @@ Each exercise will have a difficulty and importance rating out of 5, as well as 
 ## Setup
 
 ```python
-from IPython import get_ipython
-ipython = get_ipython()
-ipython.run_line_magic("load_ext", "autoreload")
-ipython.run_line_magic("autoreload", "2")
-import openai
-from openai import OpenAI
 import os
 import json
-from dotenv import load_dotenv
-from typing import List, Dict, Any, Optional 
+from typing import Literal
+from inspect_ai import Task, eval, task
+from inspect_ai.log import read_eval_log
+from utils import omit
+from inspect_ai.model import ChatMessage
+from inspect_ai.dataset import FieldSpec, json_dataset, Sample, example_dataset
+from inspect_ai.solver._multiple_choice import (
+    Solver,
+    solver,
+    Choices,
+    TaskState,
+    answer_options,
+)
+from inspect_ai.solver._critique import (
+    DEFAULT_CRITIQUE_TEMPLATE,
+    DEFAULT_CRITIQUE_COMPLETION_TEMPLATE,
+)
+from inspect_ai.scorer import model_graded_fact, match, answer, scorer
+from inspect_ai.scorer._metrics import (accuracy, std)
+from inspect_ai.scorer._answer import AnswerPattern
+from inspect_ai.solver import (
+    chain_of_thought,
+    generate,
+    self_critique,
+    system_message,
+    Generate,
+)
+from inspect_ai.model import (
+    ChatMessageUser,
+    ChatMessageSystem,
+    ChatMessageAssistant,
+    get_model,
+)
 import random
+import jaxtyping
+from itertools import product
 
 # Make sure exercises are in the path; fill in later
-from utils import import_json, save_json, retry_with_exponential_backoff, pretty_print_questions,load_jsonl
-import exercises.part1_intro.tests as tests
+from utils import import_json, save_json, retry_with_exponential_backoff, pretty_print_questions, load_jsonl, omit
+import exercises.part3_run_evals_with_inspect.tests as tests
 ```
                 
 """,
