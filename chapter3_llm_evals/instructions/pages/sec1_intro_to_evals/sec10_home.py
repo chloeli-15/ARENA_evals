@@ -110,7 +110,7 @@ if str(exercises_dir) not in sys.path: sys.path.append(str(exercises_dir))
 os.chdir(exercises_dir)
 
 from utils import import_json, save_json, retry_with_exponential_backoff, pretty_print_questions,load_jsonl
-import part1_intro.tests as tests
+import exercises.part1_intro.tests as tests
 ```
                 
 """,

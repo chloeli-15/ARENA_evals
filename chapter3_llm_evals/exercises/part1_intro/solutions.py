@@ -19,7 +19,6 @@ if str(exercises_dir) not in sys.path: sys.path.append(str(exercises_dir))
 os.chdir(exercises_dir)
 
 from utils import import_json, save_json, retry_with_exponential_backoff, pretty_print_questions,load_jsonl
-import part1_intro.tests as tests
 
 MAIN = __name__ == '__main__'
 # %% # Intro to API Calls
@@ -106,7 +105,7 @@ if MAIN:
 def retry_with_exponential_backoff(
     func,
     max_retries=20,
-    intial_sleep_time=1,
+    initial_sleep_time=1,
     backoff_factor: float = 1.5,
     jitter: bool = True,
 ):
@@ -123,7 +122,7 @@ def retry_with_exponential_backoff(
     """
 
     def wrapper(*args, **kwargs):
-        sleep_time = intial_sleep_time
+        sleep_time = initial_sleep_time
 
         for _ in range(max_retries):
             try:

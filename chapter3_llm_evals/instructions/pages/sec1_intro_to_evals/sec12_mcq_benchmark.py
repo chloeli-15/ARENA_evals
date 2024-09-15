@@ -17,7 +17,7 @@ def section():
 </ul>""", unsafe_allow_html=True)
     
     st.markdown(
-r"""
+r'''
 # MCQ Benchmarks
 
 > ##### Learning objectives
@@ -41,11 +41,13 @@ Broadly speaking, a **benchmark** refers to a procedure for evaluating the perfo
 
 Many of these benchmarks are now obsolete, as they have been solved by models like GPT-4. However, they are still good examples of benchmarks that (at the time) satisfied the criteria above:
 
+* [**MMLU**](https://arxiv.org/pdf/2009.03300) is a comprehensive benchmark designed to evaluate language models across 57 diverse subjects, including STEM, humanities, and social sciences. MMLU is often used as a proxy measure for "general intelligence", and is the standard go-to benchmark for evaluating language models, as well as measuring the difference in performance before and after safety interventions to see if the capabilities of the model have been damaged.
+
+* [**TruthfulQA**](https://arxiv.org/abs/2109.07958) is a benchmark designed to measure whether a language model is truthful in generating answers to questions. It consists of 817 questions across 38 categories, covering topics like health, law, finance, politics and common misconceptions. GPT-4 RLHF (the best model as of April 2023) was truthful on 59% of questions, while human performance was 94%. TruthfulQA is a go-to benchmark for evaluating the truthfulness of LLMs.
+
 * [**HellaSwag**](https://arxiv.org/pdf/1905.07830) is a benchmark that requires models to select from one of many completions that require "common sense" to solve. The benchmark was constructed by adversarially selecting examples that [at-the-time (2019) SOTA models were bad at](https://rowanzellers.com/hellaswag/) (<48% accuracy), but humans had no trouble with (>95% accuracy).
 
 * [**Winogrande**](https://winogrande.allenai.org/) is a benchmark that requires models to resolve pronouns in a sentence that is difficult from word associations alone, that again used adversarial selection. The model is required to decide which word in a sentence a pronoun refers to. For example: "The trophy doesn't fit into the brown suitcase because it's too (big/small). What is too (big/small)?". If "big" is used, the correct answer is "trophy", if "small" is used, the correct answer is "suitcase".
-
-* [**MMLU**](https://arxiv.org/pdf/2009.03300) is a comprehensive benchmark designed to evaluate language models across 57 diverse subjects, including STEM, humanities, and social sciences. MMLU is often used as a proxy measure for "general intelligence", and is the standard go-to benchmark for evaluating language models, as well as measuring the difference in performance before and after safety interventions to see if the capabilities of the model have been damaged.
 
 * [**WMDP**](https://www.wmdp.ai/) (Weapons of Mass Destruction Proxy) is a benchmark of 3,668 multiple-choice questions evaluating hazardous knowledge in large language models related to biosecurity, cybersecurity, and chemical security. It serves to assess potential misuse risks and measure the effectiveness of unlearning methods for removing dangerous information while maintaining general capabilities, while also not providing a list of dangerous information to the public or to train models on directly. The rationale is that models that are dangerous would perfom well on WMDP, but training directly on WMDP would not be sufficient to make a model dangerous.
 </details>
@@ -172,6 +174,117 @@ A standard Chat Completions API response looks as follows. This is returned as a
   }
 }</div>
 
+## Exercise - Generate response via LLM 
+```c
+Difficulty: 🔴⚪⚪⚪⚪
+Importance: 🔵🔵🔵🔵⚪
+
+You should spend up to 5-10 minutes on this exercise.
+```
+
+You should fill in the `generate_response` function below. It should:
+
+* Receive the `model`, and either formatted `messages` (a list of dictionaries with `role` and `content` keys), or unformatted `user` and/or `system` strings as input
+* Return the model output as a string
+* The function should print the messages if `verbose=True`.
+
+```python
+@retry_with_exponential_backoff
+def generate_response(model: str, 
+                      messages:Optional[List[dict]]=None, 
+                      user:Optional[str]=None, 
+                      system:Optional[str]=None, 
+                      temperature: float = 1, 
+                      verbose: bool = False) -> Optional[str]:
+    """
+    Generate a response using the OpenAI API.
+
+    Args:
+        model (str): The name of the OpenAI model to use (e.g., "gpt-4o-mini").
+        messages (Optional[List[dict]]): A list of message dictionaries with 'role' and 'content' keys. 
+                                         If provided, this takes precedence over user and system args.
+        user (Optional[str]): The user's input message. Used if messages is None.
+        system (Optional[str]): The system message to set the context. Used if messages is None.
+        temperature (float): Controls randomness in output. Higher values make output more random. Default is 1.
+        verbose (bool): If True, prints the input messages before making the API call. Default is False.
+
+    Returns:
+        str: The generated response from the OpenAI model.
+
+    Note:
+        - If both 'messages' and 'user'/'system' are provided, 'messages' takes precedence.
+        - The function uses a retry mechanism with exponential backoff for handling transient errors.
+        - The client object should be properly initialized before calling this function.
+    """
+
+    if model != "gpt-4o-mini":
+        warnings.warn(f"Warning: The model '{model}' is not 'gpt-4o-mini'.")
+        
+    # TODO: Implement the function
+
+```
+
+```python
+response = generate_response("gpt-4o-mini", user="What is the capital of France?")
+print(response)
+```
+
+<details> 
+<summary>Solution</summary>
+
+```python
+@retry_with_exponential_backoff
+def generate_response(model: str, 
+                      messages:Optional[List[dict]]=None, 
+                      user:Optional[str]=None, 
+                      system:Optional[str]=None, 
+                      temperature: float = 1, 
+                      verbose: bool = False) -> str:
+    """
+    Generate a response using the OpenAI API.
+
+    Args:
+        model (str): The name of the OpenAI model to use (e.g., "gpt-4o-mini").
+        messages (Optional[List[dict]]): A list of message dictionaries with 'role' and 'content' keys. 
+                                         If provided, this takes precedence over user and system args.
+        user (Optional[str]): The user's input message. Used if messages is None.
+        system (Optional[str]): The system message to set the context. Used if messages is None.
+        temperature (float): Controls randomness in output. Higher values make output more random. Default is 1.
+        verbose (bool): If True, prints the input messages before making the API call. Default is False.
+
+    Returns:
+        str: The generated response from the OpenAI model.
+
+    Note:
+        - If both 'messages' and 'user'/'system' are provided, 'messages' takes precedence.
+        - The function uses a retry mechanism with exponential backoff for handling transient errors.
+        - The client object should be properly initialized before calling this function.
+    """
+    if model != "gpt-4o-mini":
+        warnings.warn(f"Warning: The model '{model}' is not 'gpt-4o-mini'.")
+        
+    if messages is None:
+        messages = apply_message_format(user=user, system=system)
+
+    if verbose:
+        for message in messages:
+            print(f"{message['role'].upper()}:\n{message['content']}\n")
+    
+    # API call
+    try:
+        response = client.chat.completions.create(
+        model=model, 
+        messages=messages, 
+        temperature=temperature
+        )
+
+    except Exception as e:
+        print("Error in generation:", e)
+    
+    return response.choices[0].message.content
+```
+</details>
+
 
 ## Exercise (optional) - Retry with exponential back-off 
 
@@ -192,6 +305,8 @@ You should fill in the decorator function `retry_with_exponential_backoff` below
 * Increment the sleep time by a `backoff_factor`, which varies by a small random jitter, each time a `RateLimitError` is hit. Your sleep time should increase exponentially with the number of rate limit errors, with `backoff_factor` as the exponential base. 
 * Raise any other errors as normal 
 
+Note: In practice, you do not need to implement this yourself, but can import it from `tenacity` or `backoff` library (see [here](https://platform.openai.com/docs/guides/rate-limits/error-mitigation) after completing the exercise).
+
 ```python
 def retry_with_exponential_backoff(
     func,
@@ -200,7 +315,7 @@ def retry_with_exponential_backoff(
     backoff_factor: float = 1.5,
     jitter: bool = True,
 ):
-    '''
+    """
     Retry a function with exponential backoff.
 
     This decorator retries the wrapped function in case of rate limit errors,
@@ -225,13 +340,15 @@ def retry_with_exponential_backoff(
     Note:
         This function specifically handles rate limit errors. All other exceptions
         are re-raised immediately.
-    '''
+    """
 
     def wrapper(*args, **kwargs):
         # TODO: Implement the retry logic here
         raise Exception(f"Maximum retries {max_retries} exceeded")
 
     return wrapper
+
+tests.test_retry_with_exponential_backoff(retry_with_exponential_backoff)
 ```
 
 <details>
@@ -261,7 +378,7 @@ def retry_with_exponential_backoff(
     backoff_factor: float = 1.5,
     jitter: bool = True,
 ):
-    '''
+    """
     Retry a function with exponential backoff.
 
     This decorator retries the wrapped function in case of rate limit errors,
@@ -286,7 +403,7 @@ def retry_with_exponential_backoff(
     Note:
         This function specifically handles rate limit errors. All other exceptions
         are re-raised immediately.
-    '''
+    """
 
     def wrapper(*args, **kwargs):       
         sleep_time = intial_sleep_time
@@ -306,104 +423,6 @@ def retry_with_exponential_backoff(
 ```
 
    
-</details>
-
-
-## Exercise - Generate response via LLM 
-```c
-Difficulty: 🔴⚪⚪⚪⚪
-Importance: 🔵🔵🔵🔵⚪
-
-You should spend up to 5-10 minutes on this exercise.
-```
-
-You should fill in the `generate_response` function below. It should:
-
-* Receive the `model`, and either formatted `messages` (a list of dictionaries with `role` and `content` keys), or unformatted `user` and/or `system` strings as input
-* Return the model output as a string
-* The function should print the messages if `verbose=True`.
-
-```python
-@retry_with_exponential_backoff
-def generate_formatted_response(config : Config, 
-                                messages : Optional[List[dict]]=None, 
-                                user : Optional[str]=None, 
-                                system : Optional[str]=None, 
-                                verbose : bool = False,
-                                max_tokens: Optional[int] = None) -> Optional[str]:
-    '''
-    Generate a response to the `messages` from the OpenAI API.
-
-    Args:
-        config: Config object with model, temperature, etc.
-        messages (dict): array of formatted messages with role and content
-
-        user (str): user message (alternative to `messages`)
-        system (str): system message (alternative to `messages`)
-    '''
-    if model != "gpt-4o-mini":
-        warnings.warn(f"Warning: The model '{model}' is not 'gpt-4o-mini'.")
-        
-    # TODO: Implement the function
-
-```
-
-```python
-response = generate_response("gpt-4o-mini", user="What is the capital of France?")
-print(response)
-```
-
-<details> 
-<summary>Solution</summary>
-
-```python
-@retry_with_exponential_backoff
-def generate_formatted_response(config : Config, 
-                                messages : Optional[List[dict]]=None, 
-                                user : Optional[str]=None, 
-                                system : Optional[str]=None, 
-                                verbose : bool = False,
-                                max_tokens: Optional[int] = None) -> Optional[str]:
-    '''
-    Generate a response to the `messages` from the OpenAI API.
-
-    Args:
-        config: Config object with model, temperature, etc.
-        messages (dict): array of formatted messages with role and content
-
-        user (str): user message (alternative to `messages`)
-        system (str): system message (alternative to `messages`)
-    '''
-    if model != "gpt-4o-mini":
-        warnings.warn(f"Warning: The model '{model}' is not 'gpt-4o-mini'.")
-        
-    if messages is None:
-        messages = apply_message_format(user=user, system=system)
-
-    if verbose:
-        for message in messages:
-            print(f"{message['role'].upper()}:\n{message['content']}\n")
-    
-    # API call
-    try:
-        completion = client.beta.chat.completions.parse(
-            model=config.model,
-            messages=messages,
-            temperature=config.temperature,
-            response_format=QuestionGeneration,
-            max_tokens=max_tokens,
-        )
-        response = completion.choices[0].message
-        if response.parsed:
-            return response.content
-        # Handle refusal
-        elif response.refusal:
-            print(response.refusal)
-            return None
-
-    except Exception as e:
-        print("Error in generation:", e)
-```
 </details>
 
 
@@ -440,7 +459,7 @@ for question in question_sample:
 Difficulty: 🔴🔴🔴🔴⚪
 Importance: 🔵🔵🔵🔵🔵
 
-You should spend up to 30-45 hour on this exercise.
+You should spend up to 30-45 minutes on this exercise.
 ```
 The goal of this exercise is explore a range of different questions, and see how well they measure your specification of the target property. At any step, you can **and should** make liberal use of ChatGPT/Claude (via the website UI) to help you, especially with both generating questions and formatting the result as a JSON.
 
@@ -534,7 +553,7 @@ pretty_print_questions(question_sample)
 Difficulty: 🔴🔴🔴🔴⚪
 Importance: 🔵🔵🔵🔵🔵
 
-You should spend up to 30-45 hour on this exercise.
+You should spend up to 30-45 minutes on this exercise.
 ```
 
 The goal of this exercise is to iteratively red-team and refine the questions you came up with, until you end up with ~20 questions that you are happy with.
@@ -560,4 +579,4 @@ The goal of this exercise is to iteratively red-team and refine the questions yo
 
 <img src="https://raw.githubusercontent.com/chloeli-15/ARENA_img/main/img/ch3-red-teaming-mcq.png" width=1200>
 
-""", unsafe_allow_html=True)
+''', unsafe_allow_html=True)
