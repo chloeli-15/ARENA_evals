@@ -39,7 +39,7 @@ The goal of this section is to learn how to use LLMs to generate and refine an e
 The method used is from the [Perez et al (2022)](https://https://arxiv.org/abs/2212.09251). They explored procedures that use LLMs to automate the bulk of question generation and filtering, while redirecting human effort to instructing the LLM (e.g. to write example questions and the rubric), in order to greatly scale up the size of eval datasets that can be generated without a lot of human effort. 
 
 
-DQ: I don't understand. There is a lot more continuity between chapter [3.1] to [3.3] in this chapter than other chapters. Chapter [3.1] to [3.3] teaches how to design, generate and run a MCQ eval benchmark. In the example used, we will be measuring models' **tendency to seek power** as our evaluation target. You can approach chapter [3.2] in 2 ways:
+There is a lot more continuity between chapter [3.1] to [3.3] in this chapter than other chapters. Chapter [3.1] to [3.3] teaches how to design, generate and run a MCQ eval benchmark. In the example used, we will be measuring models' **tendency to seek power** as our evaluation target. You can approach chapter [3.2] in 2 ways:
 1. You can choose to build your own eval dataset for your chosen model property. For this, you need to have ~20 questions to use as examples for generating more. We strongly recommend to go through chapter [3.1] first, which explains how to design evaluations and question specifications.
 2. You can choose to replicate (and improve) our provided power-seeking eval dataset. For this, you can follow the exercises directly without any example questions.
 
@@ -102,7 +102,7 @@ if str(exercises_dir) not in sys.path: sys.path.append(str(exercises_dir))
 os.chdir(exercises_dir)
 
 from utils import import_json, save_json, retry_with_exponential_backoff, apply_system_format, apply_assistant_format, apply_user_format, apply_message_format, pretty_print_questions, tabulate_model_scores, plot_score_by_category, plot_simple_score_distribution, print_dict_as_table
-import exercises.part2_dataset_generation.tests as tests
+import part2_dataset_generation.tests as tests
 ```
                 
 """,
