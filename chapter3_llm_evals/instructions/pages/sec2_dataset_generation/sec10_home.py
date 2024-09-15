@@ -71,6 +71,11 @@ Each exercise will have a difficulty and importance rating out of 5, as well as 
 ## Setup
 
 ```python
+from IPython import get_ipython
+ipython = get_ipython()
+ipython.run_line_magic("load_ext", "autoreload")
+ipython.run_line_magic("autoreload", "2")
+
 import os
 from pathlib import Path
 import sys

@@ -54,22 +54,34 @@ openai.api_key = api_key
 client = OpenAI()
 
 @retry_with_exponential_backoff
-def generate_response(config: Config, 
-                      messages:Optional[List[dict]]=None, 
-                      user:Optional[str]=None, 
-                      system:Optional[str]=None, 
-                      verbose: bool = False
-) -> str:
+def generate_response(config: Config,
+                      messages:Optional[List[dict]]=None,
+                      user:Optional[str]=None,
+                      system:Optional[str]=None,
+                      verbose: bool = False) -> str:
     '''
-    Generate a response to the `messages` from the OpenAI API.
+    Generate a response from the OpenAI API using either formatted messages or user/system inputs.
+
+    This function sends a request to the OpenAI API and returns the generated response.
+    It can handle input in two forms: either as a list of formatted messages or as separate user and system messages.
 
     Args:
-        config: Config object with model, temperature, etc.
-        messages (dict): array of formatted messages with role and content
+        config (Config): Configuration object containing model, temperature, and other settings.
+        messages (Optional[List[dict]]): List of formatted messages with 'role' and 'content' keys.
+            If provided, this takes precedence over user and system arguments.
+        user (Optional[str]): User message to be used if messages is not provided.
+        system (Optional[str]): System message to be used if messages is not provided.
+        verbose (bool): If True, prints each message before making the API call. Defaults to False.
 
-        user (str): user message (alternative to `messages`)
-        system (str): system message (alternative to `messages`)
+    Returns:
+        str: The content of the generated response from the OpenAI API.
+
+    Note:
+        This function uses the @retry_with_exponential_backoff decorator, which presumably
+        implements a retry mechanism with exponential backoff in case of API failures.
     '''
+    if config.model != "gpt-4o-mini":
+        warnings.warn(f"Warning: The model '{model}' is not 'gpt-4o-mini'.")
 
     # Initialize messages if not provided
     if messages is None:
@@ -80,11 +92,10 @@ def generate_response(config: Config,
         for message in messages:
             print(f"{message['role'].upper()}:\n{message['content']}\n")
 
-
     # API call
     response = client.chat.completions.create(
-        model=config.model, 
-        messages=messages, 
+        model=config.model,
+        messages=messages,
         temperature=config.temperature
     )
     return response.choices[0].message.content
@@ -262,15 +273,13 @@ def generate_formatted_response(config : Config,
     if verbose:
         for message in messages:
             print(f"{message['role'].upper()}:\n{message['content']}\n")
-    
-    # API call
+      
     try:
         completion = client.beta.chat.completions.parse(
             model=config.model,
             messages=messages,
             temperature=config.temperature,
             response_format=QuestionGeneration,
-            max_tokens=max_tokens,
         )
         response = completion.choices[0].message
         if response.parsed:
@@ -278,7 +287,6 @@ def generate_formatted_response(config : Config,
         # Handle refusal
         elif response.refusal:
             print(response.refusal)
-            return None
 
     except Exception as e:
         print("Error in generation:", e)
@@ -289,13 +297,60 @@ def generate_formatted_response(config : Config,
 
 ```python
 response = generate_formatted_response(config, user="Generate 4 factual questions about France's culture.", verbose=True)
-print("Raw response object:", response)
-print(f'Model reasoning: \n{json.loads(response)["reasoning"]}')
+print("Raw response object:\n", response)
+print(f'\nModel reasoning: \n{json.loads(response)["reasoning"]}')
 print(f'\nModel generation:')
 pretty_print_questions(json.loads(response)["questions"])
 ```
 ### Bonus: 
  - Make the model do reasoning before generating *every* question, and compare the results.
+ 
+ <details><summary>Extra - Handling refusal and edge cases</summary>
+
+The OpenAI ChatCompletionMessage object has `refusal` property, which will look like this:
+
+```json
+{
+  "id": "chatcmpl-9nYAG9LPNonX8DAyrkwYfemr3C8HC",
+  "object": "chat.completion",
+  "created": 1721596428,
+  "model": "gpt-4o-2024-08-06",
+  "choices": [
+    {
+	  "index": 0,
+	  "message": {
+            "role": "assistant",
+            // highlight-start
+            "refusal": "I'm sorry, I cannot assist with that request."
+            // highlight-end
+	  },
+	  "logprobs": null,
+	  "finish_reason": "stop"
+	}
+  ],
+  "usage": {
+      "prompt_tokens": 81,
+      "completion_tokens": 11,
+      "total_tokens": 92
+  },
+  "system_fingerprint": "fp_3407719c7f"
+}
+```
+
+This can be accessed by `completion.choices[0].message.refusal`. Note that not all refusals are flagged into this property! Sometimes the model will still refuse in `message.content`. If it is flagged by the refusal property, you can catch refusal by the following:
+
+```python
+# Check if the OpenAI safety system refused the request and generated a refusal instead
+if response.choices[0].message[0].get("refusal"):
+    # your code should handle this error case
+    # In this case, the .content field will contain the explanation (if any) that the model generated for why it is refusing
+    print(response.choices[0].message[0]["refusal"])
+```
+
+See [Structure Outputs, JSON mode section, "Handling edge cases"](https://platform.openai.com/docs/guides/structured-outputs/json-mode) for more
+</details>
+ 
 """,
         unsafe_allow_html=True,
     )
+
