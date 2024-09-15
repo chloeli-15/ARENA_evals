@@ -69,7 +69,7 @@ def apply_message_format(user : str, system : Optional[str]) -> List[dict]:
 #%%
 
 @retry_with_exponential_backoff
-def generate_response(model: str, messages:Optional[List[dict]]=None, user:Optional[str]=None, system:Optional[str]=None, temperature: float = 1, verbose: bool = False) -> str:
+def generate_response(client, model: str, messages:Optional[List[dict]]=None, user:Optional[str]=None, system:Optional[str]=None, temperature: float = 1, verbose: bool = False) -> str:
     """
     Generate a response to the `messages` from the OpenAI API.
 
@@ -98,7 +98,7 @@ def generate_response(model: str, messages:Optional[List[dict]]=None, user:Optio
     return response.choices[0].message.content
 
 if MAIN:
-    response = generate_response("gpt-4o-mini", user="What is the capital of France?")
+    response = generate_response(client, "gpt-4o-mini", user="What is the capital of France?")
     print(response)
 
 #%%

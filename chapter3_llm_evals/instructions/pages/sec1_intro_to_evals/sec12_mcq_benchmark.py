@@ -190,7 +190,8 @@ You should fill in the `generate_response` function below. It should:
 
 ```python
 @retry_with_exponential_backoff
-def generate_response(model: str, 
+def generate_response(client, 
+                      model: str, 
                       messages:Optional[List[dict]]=None, 
                       user:Optional[str]=None, 
                       system:Optional[str]=None, 
@@ -225,7 +226,7 @@ def generate_response(model: str,
 ```
 
 ```python
-response = generate_response("gpt-4o-mini", user="What is the capital of France?")
+response = generate_response(client, "gpt-4o-mini", user="What is the capital of France?")
 print(response)
 ```
 
@@ -234,7 +235,8 @@ print(response)
 
 ```python
 @retry_with_exponential_backoff
-def generate_response(model: str, 
+def generate_response(client,
+                      model: str, 
                       messages:Optional[List[dict]]=None, 
                       user:Optional[str]=None, 
                       system:Optional[str]=None, 
@@ -448,7 +450,7 @@ pretty_print_questions(question_sample)
 ```python
 # See how the model responds to the questions
 for question in question_sample:
-    response = generate_response("gpt-4o-mini", user=question["question"])
+    response = generate_response(client, "gpt-4o-mini", user=question["question"])
     print(f"Question: {question['question']}\n\nModel Answer: {response}\n")
 ```
 
@@ -519,7 +521,7 @@ my_questions = import_json("mcq_examples.json")
 
 # Ask the model to answer the questions without answer options
 for question in my_questions:
-    response = generate_response("gpt-4o-mini", user=question["question"])
+    response = generate_response(client, "gpt-4o-mini", user=question["question"])
     print(f"Question: {question['question']}\n\nModel Answer: {response}\n")
 
 # Ask the model to answer the questions with answer options
@@ -527,7 +529,7 @@ for question in my_questions:
     question_text = question["question"] + "\nChoices:\n"
     for option, answer in question["answers"].items():
         question_text += f"\n({option}) {answer}"
-    response = generate_response("gpt-4o-mini", user=question["question"])
+    response = generate_response(client, "gpt-4o-mini", user=question["question"])
     print(f"Question: {question['question']}\n\nModel Answer: {response}\n")
 ```
 

@@ -1,10 +1,5 @@
 
 # %%
-from IPython import get_ipython
-ipython = get_ipython()
-ipython.run_line_magic("load_ext", "autoreload")
-ipython.run_line_magic("autoreload", "2")
-
 import os
 from pathlib import Path
 import sys
@@ -30,6 +25,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from sentence_transformers import SentenceTransformer
 
 # Make sure exercises are in the path
+chapter = r"chapter3_llm_evals"
 exercises_dir = Path(f"{os.getcwd().split(chapter)[0]}/{chapter}/exercises").resolve()
 section_dir = (exercises_dir / "part2_dataset_generation").resolve()
 if str(exercises_dir) not in sys.path: sys.path.append(str(exercises_dir))
@@ -37,6 +33,8 @@ os.chdir(exercises_dir)
 
 from utils import import_json, save_json, retry_with_exponential_backoff, apply_system_format, apply_assistant_format, apply_user_format, apply_message_format, pretty_print_questions, tabulate_model_scores, plot_score_by_category, plot_simple_score_distribution, print_dict_as_table
 import part2_dataset_generation.tests as tests
+
+MAIN = __name__ == '__main__'
 
 # %%
 @dataclass
@@ -58,7 +56,8 @@ openai.api_key = api_key
 client = OpenAI(api_key=api_key)
 
 @retry_with_exponential_backoff
-def generate_response(config: Config,
+def generate_response(client:OpenAI,
+                      config: Config,
                       messages:Optional[List[dict]]=None,
                       user:Optional[str]=None,
                       system:Optional[str]=None,
@@ -122,7 +121,8 @@ class QuestionGeneration(BaseModel):
     questions: List[Question]
 
 @retry_with_exponential_backoff
-def generate_formatted_response(config : Config, 
+def generate_formatted_response(client: OpenAI,
+                                config : Config, 
                                 messages : Optional[List[dict]]=None, 
                                 user : Optional[str]=None, 
                                 system : Optional[str]=None, 
@@ -180,11 +180,10 @@ def generate_formatted_response(config : Config,
         print("Error in generation:", e)
 
 if MAIN:
-    tests.test_generate_formatted_response(generate_formatted_response)
-
+    tests.test_generate_formatted_response(generate_formatted_response, client)
 # %%
 if MAIN:
-    response = generate_formatted_response(config, user="Generate 4 factual questions about France's culture.", verbose=True)
+    response = generate_formatted_response(client, config, user="Generate 4 factual questions about France's culture.", verbose=True)
     print("Raw response object:\n", response)
     print(f'\nModel reasoning: \n{json.loads(response)["reasoning"]}')
     print(f'\nModel generation:')
@@ -232,12 +231,6 @@ class GenPrompts():
                 self.user_prompt = self.get_user_prompt()
             if not name.startswith('_'):  # Don't trigger save for private attributes
                 self.save_attributes()
-
-    # def add_attribute(self, name: str, value: Any = None):
-    #     """Add a new attribute (i.e. a new prompt component/config) to both the instance and the class."""
-    #     setattr(self, name, value)
-    #     setattr(self.__class__, name, value)
-    #     self.save_attributes()
 
     def modify_method(self, method_name: str, new_method: Callable):
         """Modify an existing method for both the instance and the class."""
@@ -333,7 +326,7 @@ gen_prompts.extra_instruction_2 = extra_instruction_2
 # %%
 # See the questions that the model generates with the base prompts
 if MAIN:
-    response = generate_formatted_response(config, user=gen_prompts.user_prompt, system=gen_prompts.system_prompt, verbose=True)
+    response = generate_formatted_response(client=client, config=config, user=gen_prompts.user_prompt, system=gen_prompts.system_prompt, verbose=True)
     print("MODEL RESPONSE:\n")
     pretty_print_questions(json.loads(response)["questions"])
 
@@ -369,7 +362,7 @@ if MAIN:
 
 # %%
 if MAIN:
-    response = generate_formatted_response(config, user=gen_prompts.user_prompt, system=gen_prompts.system_prompt, verbose=True)
+    response = generate_formatted_response(client=client, config=config, user=gen_prompts.user_prompt, system=gen_prompts.system_prompt, verbose=True)
     print("MODEL RESPONSE:\n",)
     questions = json.loads(response)["questions"]
     pretty_print_questions(questions)
@@ -430,7 +423,7 @@ if MAIN:
 
 # %%
 if MAIN:
-    response = generate_formatted_response(config, user=gen_prompts.user_prompt, system=gen_prompts.system_prompt, verbose=True)
+    response = generate_formatted_response(client=client, config=config, user=gen_prompts.user_prompt, system=gen_prompts.system_prompt, verbose=True)
     print("MODEL RESPONSE:\n",)
     pretty_print_questions(json.loads(response)["questions"])
 
@@ -442,12 +435,12 @@ if MAIN:
 
     gen_prompts.p_var = 0.0
     for i in range(len(gen_prompts.var_prompts)):
-        response = generate_formatted_response(config, user=gen_prompts.user_prompt, system=gen_prompts.system_prompt, verbose=False)
+        response = generate_formatted_response(client, config, user=gen_prompts.user_prompt, system=gen_prompts.system_prompt, verbose=False)
         regular_questions += json.loads(response)["questions"]
 
     gen_prompts.p_var = 1.0
     for i in range(len(gen_prompts.var_prompts)):
-        response = generate_formatted_response(config, user=gen_prompts.user_prompt, system=gen_prompts.system_prompt, verbose=False)
+        response = generate_formatted_response(client, config, user=gen_prompts.user_prompt, system=gen_prompts.system_prompt, verbose=False)
         variance_questions += json.loads(response)["questions"]
 
     def get_sentence_embedding(questions: List[dict], model: str='intfloat/e5-large-v2') -> List[List[float]]:
@@ -578,7 +571,7 @@ if MAIN:
     add_numbers_concurrently(numbers_to_add)
 
 # %%
-def query_generator(total_q_to_gen:int, config: Config, prompts: GenPrompts) -> List[dict]:
+def query_generator(client:OpenAI, total_q_to_gen:int, config: Config, prompts: GenPrompts) -> List[dict]:
     """
     This is the main function that queries the model to generate `total_q_to_gen` number of questions. It loads and prepares the prompts, calculates the number of model calls needed, then execute `generate_response` that many times concurrently using ThreadPoolExecutor.
 
@@ -596,7 +589,7 @@ def query_generator(total_q_to_gen:int, config: Config, prompts: GenPrompts) -> 
     num_calls = math.ceil(total_q_to_gen/prompts.num_q_per_call)
 
     # Create an iterable input_args list containing the input args for each call
-    input_args = [(config, prompts.get_message()) for _ in range(num_calls)]
+    input_args = [(client, config, prompts.get_message()) for _ in range(num_calls)]
 
     # Create a ThreadPoolExecutor object, execute generate_response function concurrently, and raise any exceptions encountered
     with ThreadPoolExecutor(max_workers=config.max_workers) as executor:
@@ -727,7 +720,7 @@ POWER_SEEKING_TEST_QUESTIONS=[{'system': 'You are an AI assistant. You are hones
 # print(tabulate_model_scores(scored_dataset))
 
 # %%
-def generate_model_score(question: str, config: Config, prompts: EvalPrompts, verbose:bool = False) -> Tuple[int, str]:
+def generate_model_score(client:OpenAI, question: str, config: Config, prompts: EvalPrompts, verbose:bool = False) -> Tuple[int, str]:
     """
     Prepares a few-shot prompt, then generate a model score for a given question.
     """
@@ -737,7 +730,7 @@ def generate_model_score(question: str, config: Config, prompts: EvalPrompts, ve
     message.append(apply_user_format(question))
 
     # Generate model response
-    response = generate_response(config=config, messages=message, verbose=verbose)
+    response = generate_response(client=client, config=config, messages=message, verbose=verbose)
 
     # Extract score
     try:
@@ -751,11 +744,11 @@ def generate_model_score(question: str, config: Config, prompts: EvalPrompts, ve
 # For scoring, set temp to zero because we only want to most probable/accurate score
 if MAIN:
     config.temperature = 0.0
-    score, response = generate_model_score("What's for dinner?", config, eval_prompts, verbose=True)
+    score, response = generate_model_score(client, "What's for dinner?", config, eval_prompts, verbose=True)
     print(f"Score: {score} \nResponse: {response}")
 
 # %%
-def query_evaluator(dataset: List[dict], config: Config, prompts: EvalPrompts):
+def query_evaluator(client, dataset: List[dict], config: Config, prompts: EvalPrompts):
     """
     This is the main function that queries the model to evaluate a set of generated questions. It divides the question dataset into chunks of size `config.chunk_size`, defines a method to evaluate each chunk of questions and runs it concurrently on multiple chuncks.
 
@@ -785,7 +778,7 @@ def query_evaluator(dataset: List[dict], config: Config, prompts: EvalPrompts):
             # Evaluate each question in the chunk
             for question in chunk:
                 assert question is not None, "Question content cannot be None"
-                score, response = generate_model_score(str(question), config, prompts)
+                score, response = generate_model_score(client, str(question), config, prompts)
 
                 question["score"] = score
                 question["model_response"] = response
@@ -982,11 +975,13 @@ if MAIN:
 # %%
 # Generate and evaluate the dataset
 if MAIN:
-    generated_dataset = query_generator(total_q_to_gen,
+    generated_dataset = query_generator(client,
+                                        total_q_to_gen,
                                         config,
                                         gen_prompts)
 
-    scored_dataset = query_evaluator(generated_dataset,
+    scored_dataset = query_evaluator(client,
+                                     generated_dataset,
                                     config,
                                     eval_prompts)
 

@@ -19,13 +19,13 @@ MAIN = __name__ == '__main__'
 from utils import import_json, save_json, retry_with_exponential_backoff, apply_system_format, apply_assistant_format, apply_user_format, apply_message_format, pretty_print_questions, tabulate_model_scores, plot_score_by_category, plot_simple_score_distribution, print_dict_as_table
 
 #%%
-def test_generate_formatted_response(test_fn: Callable):
+def test_generate_formatted_response(test_fn: Callable, client):
     from part2_dataset_generation.solutions import Config, QuestionGeneration, Question
     config = Config(model="gpt-4o-mini", temperature=1)
 
     user_msg = "Generate a multiple choice question about ethics in business."
     
-    result = test_fn(config, user=user_msg)
+    result = test_fn(client, config, user=user_msg)
 
     try:
         result_dict = json.loads(result)
@@ -62,9 +62,9 @@ def test_generate_formatted_response(test_fn: Callable):
 
 
 
-def test_rubric(dataset, config, eval_prompts):
+def test_rubric(client, dataset, config, eval_prompts):
     import part2_dataset_generation.solutions as solutions
-    scored_dataset = solutions.query_evaluator(dataset, config, eval_prompts)
+    scored_dataset = solutions.query_evaluator(client=client, dataset=dataset, config=config, prompts=eval_prompts)
     ordered_dataset = sorted(scored_dataset, key=operator.itemgetter("score"), reverse=True)
     return ordered_dataset
 
