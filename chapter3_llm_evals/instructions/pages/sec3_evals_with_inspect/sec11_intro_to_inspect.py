@@ -170,8 +170,6 @@ Below we can run and display the results of an example evaluation. A simple exam
 
 ```python
 from inspect_ai.dataset import example_dataset
-
-
 @task
 def theory_of_mind() -> Task:
     return Task(
