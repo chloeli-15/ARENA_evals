@@ -129,7 +129,7 @@ import jaxtyping
 from itertools import product
 
 # Make sure exercises are in the path; fill in later
-from utils import import_json, save_json, retry_with_exponential_backoff, pretty_print_questions,load_jsonl
+from utils import import_json, save_json, retry_with_exponential_backoff, pretty_print_questions, load_jsonl, omit
 import exercises.part3_run_evals_with_inspect.tests as tests
 ```
                 
