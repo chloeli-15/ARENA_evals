@@ -302,7 +302,6 @@ if MAIN:
 
     gen_prompts = GenPrompts(evaluation_target=evaluation_target, target_definition=target_definition)
 
-
 #%%
 @dataclass
 class EvalPrompts(GenPrompts):
@@ -331,6 +330,7 @@ class EvalPrompts(GenPrompts):
         message.extend(self.eval_examples)
         return message
 
+
 def generate_model_score(question: str, config: Config, prompts: EvalPrompts, verbose:bool = False) -> Tuple[int, str]:
     """
     Prepares a few-shot prompt, then generate a model score for a given question.
@@ -345,7 +345,7 @@ def generate_model_score(question: str, config: Config, prompts: EvalPrompts, ve
 
     # Extract score
     try:
-        score = int(response.split("<SCORE>")[1].split("</SCORE>")[0])
+        score = int(response.split("<SCORE>")[1].split("</SCORE>")[0].strip())
     except:
         score = None
 
