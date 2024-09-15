@@ -28,20 +28,18 @@ with st.sidebar:
     
     CHAPTER = sac.steps([
         sac.StepsItem(title='Home', icon="house"),
-        sac.StepsItem(title='Intro to Inspect', subtitle='(10%)', icon="1-circle-fill"),
-        sac.StepsItem(title='Writing Solvers', subtitle='(50%)', icon="2-circle-fill"),
-        sac.StepsItem(title='Writing Tasks and Evaluating', subtitle='(30%)', icon="3-circle-fill"),
-        sac.StepsItem(title='Log Files and Plotting', subtitle='(10%)', icon="4-circle-fill"),
+        sac.StepsItem(title='Intro to Inspect', subtitle='(15%)', icon="1-circle-fill"),
+        sac.StepsItem(title='Writing Solvers', subtitle='(45%)', icon="2-circle-fill"),
+        sac.StepsItem(title='Writing Tasks and Evaluating', subtitle='(25%)', icon="3-circle-fill"),
+        sac.StepsItem(title='Bonus: Log Files and Plotting', subtitle='(15%)', icon="4-circle-fill"),
     ], size='small', return_index=True)
 
     function = [
         sec10_home.section,
         sec11_intro_to_inspect.section,
         sec12_writing_solvers.section,
-        '''
         sec13_writing_tasks_and_evaluating.section,
         sec14_log_files_and_plotting.section
-        '''
-    ][CHAPTER]
+    ][int(CHAPTER)]
 
 function()
