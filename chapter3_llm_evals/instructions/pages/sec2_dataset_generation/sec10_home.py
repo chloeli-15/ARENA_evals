@@ -34,14 +34,14 @@ Links to other chapters: [**(0) Fundamentals**](https://arena3-chapter0-fundamen
 
 ## Introduction
 
-The goal of this section is to learn how to use LLMs to generate and refine an evaluation dataset. By the end, you will have generated a dataset of ~300 questions, and have some confidence that a randomly chosen question from the dataset is high-quality. 
+The goal of this section is to learn how to use LLMs to generate and refine an evaluation dataset. By the end, you will have generated a (hopefully) high-quality dataset of ~300 questions.
 
-The method used is from the [Perez et al (2022)](https://https://arxiv.org/abs/2212.09251). They explored procedures that use LLMs to automate the bulk of question generation and filtering, while redirecting human effort to instructing the LLM (e.g. to write example questions and rubric), in order to greatly scale up the size of eval dataset that can be generated cheaply. 
+The method used is from the [Perez et al (2022)](https://https://arxiv.org/abs/2212.09251). They explored procedures that use LLMs to automate the bulk of question generation and filtering, while redirecting human effort to instructing the LLM (e.g. to write example questions and the rubric), in order to greatly scale up the size of eval datasets that can be generated without a lot of human effort. 
 
 
 There is a lot more continuity between chapter [3.1] to [3.3] in this chapter than other chapters. Chapter [3.1] to [3.3] teaches how to design, generate and run a MCQ eval benchmark. In the example used, we will be measuring models' **tendency to seek power** as our evaluation target. You can approach chapter [3.2] in 2 ways:
 1. You can choose to build your own eval dataset for your chosen model property. For this, you need to have ~20 questions to use as examples for generating more. We strongly recommend to go through chapter [3.1] first, which explains how to design evaluations and question specifications.
-2. You can choose to replicate (and improve) our power-seeking eval dataset. For this, you can follow the exercises directly without any example questions.
+2. You can choose to replicate (and improve) our provided power-seeking eval dataset. For this, you can follow the exercises directly without any example questions.
 
 Each exercise will have a difficulty and importance rating out of 5, as well as an estimated maximum time you should spend on these exercises and sometimes a short annotation. You should interpret the ratings & time estimates relatively (e.g. if you find yourself spending about 50% longer on the exercises than the time estimates, adjust accordingly). Please do skip exercises / look at solutions if you don't feel like they're important enough to be worth doing, and you'd rather get to the good stuff!
 
@@ -71,6 +71,11 @@ Each exercise will have a difficulty and importance rating out of 5, as well as 
 ## Setup
 
 ```python
+from IPython import get_ipython
+ipython = get_ipython()
+ipython.run_line_magic("load_ext", "autoreload")
+ipython.run_line_magic("autoreload", "2")
+
 import os
 from pathlib import Path
 import sys
