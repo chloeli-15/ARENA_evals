@@ -114,17 +114,31 @@ def generate_formatted_response(config : Config,
                                 system : Optional[str]=None, 
                                 verbose : bool = False,
                                 max_tokens: Optional[int] = None) -> Optional[str]:
-    """
-    Generate a response to the `messages` from the OpenAI API.
+    '''
+    Generate a formatted response using the OpenAI API.
+
+    This function sends a request to the OpenAI API to generate a response based on the provided messages or user/system inputs.
+    It supports both message-based and user/system-based inputs, handles API errors with exponential backoff,
+    and can provide verbose output for debugging purposes.
 
     Args:
-        config: Config object with model, temperature, etc.
-        messages (dict): array of formatted messages with role and content
+        config (Config): Configuration object containing model, temperature, and other settings.
+        messages (Optional[List[dict]], optional): List of formatted message dictionaries with 'role' and 'content' keys.
+        user (Optional[str], optional): User message string (alternative to `messages`).
+        system (Optional[str], optional): System message string (alternative to `messages`).
+        verbose (bool, optional): If True, prints detailed message information. Defaults to False.
 
-        user (str): user message (alternative to `messages`)
-        system (str): system message (alternative to `messages`)
-    """
-    if model != "gpt-4o-mini":
+    Returns:
+        str: The generated response content if successful, or an error message if the generation fails.
+
+    Raises:
+        Exception: Propagates any exceptions encountered during API call or response parsing.
+
+    Note:
+        - If both `messages` and `user`/`system` are provided, `messages` takes precedence.
+        - The function uses the `retry_with_exponential_backoff` decorator to handle transient errors.
+    '''
+    if config.model != "gpt-4o-mini":
         warnings.warn(f"Warning: The model '{model}' is not 'gpt-4o-mini'.")
         
     if messages is None:

@@ -34,14 +34,14 @@ Links to other chapters: [**(0) Fundamentals**](https://arena3-chapter0-fundamen
 
 ## Introduction
 
-The goal of this section is to learn how to use LLMs to generate and refine an evaluation dataset. By the end, you will have generated a dataset of ~300 questions, and have some confidence that a randomly chosen question from the dataset is high-quality. 
+The goal of this section is to learn how to use LLMs to generate and refine an evaluation dataset. By the end, you will have generated a (hopefully) high-quality dataset of ~300 questions.
 
-The method used is from the [Perez et al (2022)](https://https://arxiv.org/abs/2212.09251). They explored procedures that use LLMs to automate the bulk of question generation and filtering, while redirecting human effort to instructing the LLM (e.g. to write example questions and rubric), in order to greatly scale up the size of eval dataset that can be generated cheaply. 
+The method used is from the [Perez et al (2022)](https://https://arxiv.org/abs/2212.09251). They explored procedures that use LLMs to automate the bulk of question generation and filtering, while redirecting human effort to instructing the LLM (e.g. to write example questions and the rubric), in order to greatly scale up the size of eval datasets that can be generated without a lot of human effort. 
 
 
-There is a lot more continuity between chapter [3.1] to [3.3] in this chapter than other chapters. Chapter [3.1] to [3.3] teaches how to design, generate and run a MCQ eval benchmark. In the example used, we will be measuring models' **tendency to seek power** as our evaluation target. You can approach chapter [3.2] in 2 ways:
+DQ: I don't understand. There is a lot more continuity between chapter [3.1] to [3.3] in this chapter than other chapters. Chapter [3.1] to [3.3] teaches how to design, generate and run a MCQ eval benchmark. In the example used, we will be measuring models' **tendency to seek power** as our evaluation target. You can approach chapter [3.2] in 2 ways:
 1. You can choose to build your own eval dataset for your chosen model property. For this, you need to have ~20 questions to use as examples for generating more. We strongly recommend to go through chapter [3.1] first, which explains how to design evaluations and question specifications.
-2. You can choose to replicate (and improve) our power-seeking eval dataset. For this, you can follow the exercises directly without any example questions.
+2. You can choose to replicate (and improve) our provided power-seeking eval dataset. For this, you can follow the exercises directly without any example questions.
 
 Each exercise will have a difficulty and importance rating out of 5, as well as an estimated maximum time you should spend on these exercises and sometimes a short annotation. You should interpret the ratings & time estimates relatively (e.g. if you find yourself spending about 50% longer on the exercises than the time estimates, adjust accordingly). Please do skip exercises / look at solutions if you don't feel like they're important enough to be worth doing, and you'd rather get to the good stuff!
 
@@ -79,10 +79,22 @@ import json
 from dotenv import load_dotenv
 from typing import List, Dict, Any, Optional 
 import random
+from pathlib import Path
+import sys 
+from dataclasses import dataclass, field
+from pydantic import BaseModel
+
+# Make sure exercises are in the path
+chapter = r"chapter3_llm_evals"
+exercises_dir = Path(f"{os.getcwd().split(chapter)[0]}/{chapter}/exercises").resolve()
+section_dir = exercises_dir / "part2_dataset_generation"
+if str(exercises_dir) not in sys.path: 
+    sys.path.append(str(exercises_dir))
 
 # Make sure exercises are in the path; fill in later
-from utils import import_json, save_json, retry_with_exponential_backoff, pretty_print_questions,load_jsonl
-import exercises.part2_dataset_generation.tests as tests
+from utils import import_json, save_json, load_prompts, retry_with_exponential_backoff, apply_system_format, apply_assistant_format, apply_user_format, apply_message_format, pretty_print_questions, tabulate_model_scores, plot_score_by_category, plot_simple_score_distribution, print_dict_as_table
+import part2_dataset_generation.tests as tests
+from part1_intro.solutions import apply_system_format, apply_user_format, apply_assistant_format, apply_message_format
 ```
                 
 """,
