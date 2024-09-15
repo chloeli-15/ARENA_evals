@@ -328,25 +328,20 @@ def new_get_user_prompt(self):
 
     # Sample and append an instruction at the end to increase output variance
     if self.p_var > 0:
-        # Load pre-written prompts if not provided
-        if self.var_prompts is None:
-            PROMPTS = load_prompts()
-            self.var_prompts = PROMPTS.VAR_PROMPTS
-
         if np.random.binomial(1, self.p_var):
             prompt += random.choice(self.var_prompts)
 
     return prompt
 ```
 ```python
+# Add at least 5 variance prompt below
+gen_prompts.var_prompts = [
+    "", 
+    "",
+]
 # Update the get_user_prompt method and add variance prompt variables
-gen_prompts.add_attribute('p_var', 0.9)
-gen_prompts.add_attribute('var_prompts')
-gen_prompts.modify_method('get_user_prompt', new_get_user_prompt)
-
 gen_prompts.p_var = 0.9
-gen_prompts.var_prompts = ["Add your variance prompt 1.", 
-                           "Add your variance prompt 2."]
+gen_prompts.modify_method('get_user_prompt', new_get_user_prompt)
 
 # Print the new user prompt
 print("\nSYSTEM:\n",gen_prompts.system_prompt)
@@ -357,8 +352,57 @@ response = generate_formatted_response(config, user=gen_prompts.user_prompt, sys
 print("MODEL RESPONSE:\n",)
 pretty_print_questions(json.loads(response)["questions"])
 ```
+
+To test whether our variance prompts improved the diversity of our dataset, we can compute the average pairwise cosine similarity of their sentence embeddings. This gives us a quantitative way to compare the differences in semantic meanings.  
+We use the [E5 embedding model](@https://arxiv.org/abs/2212.03533) because it employs weakly-supervised contrastive pre-training, which makes it more effective at encoding semantic differences between sentences.
+We then generate more questions with and without variance prompts, compute the average pairwise similiarity within the dataset, and compare the scores between the two datasets. If our variance prompts have the desired effect, it should result in ~1% LESS similar questions. 
+
 ```python
-# some funciton to see if variance has actually icnreased
+# Generate a larger set of questions (based on the number of variance prompts created) with and without variance prompts
+regular_questions = []
+variance_questions = []
+
+gen_prompts.p_var = 0.0
+for i in range(len(gen_prompts.var_prompts)):
+    response = generate_formatted_response(config, user=gen_prompts.user_prompt, system=gen_prompts.system_prompt, verbose=False)
+    regular_questions += json.loads(response)["questions"]
+    
+gen_prompts.p_var = 1.0
+for i in range(len(gen_prompts.var_prompts)):
+    response = generate_formatted_response(config, user=gen_prompts.user_prompt, system=gen_prompts.system_prompt, verbose=False)
+    variance_questions += json.loads(response)["questions"]
+
+def get_sentence_embedding(questions: List[dict], model: str='intfloat/e5-large-v2') -> List[List[float]]:
+    # Get a list of sentence embeddings from any appropraite model in HuggingFace
+    model = SentenceTransformer(model)
+    embeddings = [model.encode(str(x)) for x in questions]
+    return embeddings
+
+def avg_pairwise_similarity(embeddings: List[List[float]]) -> float:
+    # Calculate pairwise cosine similarity
+    similarity_matrix = cosine_similarity(embeddings)
+
+    # Get upper triangular part of the matrix (excluding diagonal)
+    upper_triangular = similarity_matrix[np.triu_indices(similarity_matrix.shape[0], k=1)]
+
+    # Calculate the average similarity
+    average_similarity = np.mean(upper_triangular)
+
+    return average_similarity
+
+regular_embeddings = get_sentence_embedding(regular_questions)
+variance_embeddings = get_sentence_embedding(variance_questions)
+
+regular_similarity = avg_pairwise_similarity(regular_embeddings)
+variance_similarity = avg_pairwise_similarity(variance_embeddings)
+similarity_diff = (variance_similarity - regular_similarity) / regular_similarity * 100
+
+print("Regular questions avg cosine similarity: ", round(regular_similarity, 4))
+print("Variance questions avg cosine similarity: ", round(variance_similarity, 4))
+if similarity_diff > 0:
+    print(f"Variance prompts produced questions that are {round(similarity_diff, 2)}% MORE similar")
+else:
+    print(f"Variance prompts produced questions that are {round(abs(similarity_diff), 2)}% LESS similar")
 ```
 
 ## Intro to ThreadPoolExecutor
