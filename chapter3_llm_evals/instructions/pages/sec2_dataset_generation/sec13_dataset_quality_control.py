@@ -192,6 +192,9 @@ This is very similar to the `generate_response` function we wrote. The differenc
 * gives few-shot examples as a list of past `user` and `assistant` messages, instead of appending them directly into the `user` message.
 * extracts and returns an integer `score` from the model response
 
+Why aren't we using Structured Outputs for this? 
+It's a bit overkill for a simple use case like this and sometimes it's easier to just prompt the model to respond in a particular format and do some simple string parsing.
+
 ```python
 def generate_model_score(question: str, config: Config, prompts: EvalPrompts, verbose:bool = False) -> Tuple[int, str]:
     """

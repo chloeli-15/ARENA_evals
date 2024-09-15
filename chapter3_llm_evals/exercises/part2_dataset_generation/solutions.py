@@ -316,8 +316,6 @@ class EvalPrompts(GenPrompts):
         message.extend(self.eval_examples)
         return message
 
-# For scoring, set temp to zero because we only want to most probable/accurate score
-config.temperature = 0.0
 
 def generate_model_score(question: str, config: Config, prompts: EvalPrompts, verbose:bool = False) -> Tuple[int, str]:
     """
