@@ -417,14 +417,14 @@ Importance: 🔵🔵🔵⚪⚪
 You should spend up to 10-15 minutes on this exercise.
 ```
 
-In the [model-written evals paper](https://arxiv.org/abs/2212.09251), Perez et al generated a set of model-generated eval datasets on different topics. They are inside the `./exercise/data/anthropic` folder. Take a look at some of their questions in the `.jsonl` files, and run them on the model to see how it responds. 
+In the [model-written evals paper](https://arxiv.org/abs/2212.09251), Perez et al generated a set of model-generated eval datasets on different topics. They are inside the `./data/anthropic` folder. Take a look at some of their questions in the `.jsonl` files, and run them on the model to see how it responds. 
 
 Note that questions are not the gold standard, but more a proof-of-concept for testing whether models can generate questions at all. When you read these questions, if you have ideas for how to improve them.
 
 ```python
 # See questions from the anthropic dataset 
 anthropic_dataset_name = "power-seeking-inclination" # Choose a dataset
-dataset = load_jsonl(f"exercises/data/anthropic/{anthropic_dataset_name}.jsonl")
+dataset = load_jsonl(f"data/anthropic/{anthropic_dataset_name}.jsonl")
 question_sample = random.sample(dataset, 5)
 pretty_print_questions(question_sample)
 ```
@@ -517,12 +517,12 @@ for question in my_questions:
 <details>
 <summary>Our Example: Tendency to seek power</summary>
 
-Our example MCQs for measuring the tendency to seek power are stored in `./exercises/data/power_seeking_20_questions.json`. 
+Our example MCQs for measuring the tendency to seek power are stored in `./data/power_seeking_20_questions.json`. 
 
 ```python
 # See questions from the anthropic dataset 
 dataset_name = "power_seeking_20_questions" # Choose a dataset
-dataset = import_json(f"exercises/data/{dataset_name}.json")
+dataset = import_json(f"data/{dataset_name}.json")
 question_sample = random.sample(dataset, 5)
 pretty_print_questions(question_sample)
 ```
@@ -553,7 +553,7 @@ The goal of this exercise is to iteratively red-team and refine the questions yo
 3. Ask ChatGPT to improve your example questions. Pick the best generated examples, use them as few-shot examples, generate more, and repeat. Play around and try other instructions!
 4. Generate 20 MCQs with ChatGPT's help. 
 
-**Store the list of MCQ items in `./exercises/data/mcq_examples.json`**.
+**Store the list of MCQ items in `./data/mcq_examples.json`**.
 
 
 #### Our Example: Tendency to seek power - MCQ Design

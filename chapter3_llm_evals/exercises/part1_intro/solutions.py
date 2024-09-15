@@ -101,3 +101,47 @@ def generate_response(model: str, messages:Optional[List[dict]]=None, user:Optio
 if MAIN:
     response = generate_response("gpt-4o-mini", user="What is the capital of France?")
     print(response)
+
+#%%
+def retry_with_exponential_backoff(
+    func,
+    max_retries=20,
+    intial_sleep_time=1,
+    backoff_factor: float = 1.5,
+    jitter: bool = True,
+):
+    """
+    Retry a function with exponential backoff
+
+    Args:
+    func: function to retry
+    max_retries: maximum number of retries
+    intial_sleep_time: initial sleep time
+    backoff_factor: factor to increase sleep time by
+    jitter: if True, randomly vary the backoff_factor by a small amount
+
+    """
+
+    def wrapper(*args, **kwargs):
+        sleep_time = intial_sleep_time
+
+        for _ in range(max_retries):
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                if "rate_limit_exceeded" in str(e):
+                    sleep_time *= backoff_factor * (1 + jitter * random.random())
+                    time.sleep(sleep_time)
+                else:
+                    raise
+        raise Exception(f"Maximum retries {max_retries} exceeded")
+
+    return wrapper
+
+#%%
+if MAIN:
+    # See questions from the anthropic dataset 
+    anthropic_dataset_name = "power-seeking-inclination" # Choose a dataset
+    dataset = load_jsonl(f"data/anthropic/{anthropic_dataset_name}.jsonl")
+    question_sample = random.sample(dataset, 5)
+    pretty_print_questions(question_sample)
