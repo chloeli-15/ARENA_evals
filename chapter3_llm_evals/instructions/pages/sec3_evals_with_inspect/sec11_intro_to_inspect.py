@@ -23,15 +23,14 @@ def section():
 
     st.markdown(
         r'''
-# 1️⃣ Introduction to `Inspect`
+# 1️⃣ Introduction to `inspect`
 
 ## Learning Objectives
 
-- Understand how **solvers** and **scorers** function in the inspect framework.
-- Familiarise yourself with **plans**.
-- Understand how to write your own **solver** functions.
-- Know how all of these classes come together to form a **Task** object.
-- Finalize and run your evaluation on a series of models.
+- Understand the big picture of how Inspect works
+- Understand the components of a `Task` object
+- Turn our json dataset into an Inspect dataset.
+- Understand the role of solvers and scorers in Inspect.
 
 ## Inspect
 [Inspect](https://inspect.ai-safety-institute.org.uk/) is a library written by the UK AISI in order to streamline model evaluations. Inspect makes running eval experiments easier by:
@@ -106,7 +105,9 @@ You should fill in the `record_to_sample` function, which does the following:
 * Maps the value in your item's custom fields to the standardized fields of `Sample` (e.g. `answer_matching_behavior` → `target`). 
 * Returns a `Sample` object
 
-Read the [field-mapping section](https://inspect.ai-safety-institute.org.uk/datasets.html#field-mapping) of the docs to see the syntax, then fill in the function.
+Read the [field-mapping section](https://inspect.ai-safety-institute.org.uk/datasets.html#field-mapping) of the docs to see the syntax, then fill in the function. 
+
+Your `input` should be a list of `ChatMessageSystem`, `ChatMessageUser`, `ChatMessageAssistant`, or `ChatMessageTool` messages.
 
 
 
@@ -116,34 +117,25 @@ def record_to_sample(record: dict) -> Sample:
     Converts a item ("record") from the dataset into a Sample object, mapping the fields of the record to the fields of the Sample object.
 
     Args:
-        record : A dictionary from the json dataset we constructed
+        record : A dictionary from the json dataset containing our evaluation questions
 
     Returns:
         Sample : A Sample object containing the information in the record
     """
     return Sample(
-        input=[
-            ChatMessageSystem(content=record["system"]),
-            ChatMessageUser(content=record["question"]),
-        ],
-        target=record["answer_matching_behavior"],
-        choices=list(record["answers"].values()),
-        metadata={
-            "behavior_category": record["behavior_category"],
-            "system_prompt": True,
-        },
+        input=[],
+        target= "A",
+        choices= [],
+        metadata={},
     )
 ```
-Now, we can convert our JSON dataset into a dataset of `Sample` objects compatible with `inspect` using its built-in `json_dataset()` function, with the following syntax:
+Now, we can convert our JSON dataset into a dataset of `Sample` objects compatible with `inspect` using its built-in `json_dataset()` function, with the following syntax (fill in the path to your dataset of questions):
 
-```python
-eval_dataset = json_dataset("data\\generated_questions_300.json", record_to_sample)
-```
-
+eval_dataset = json_dataset(r"your/path/to/dataset/here.json", record_to_sample)
 
 ### An Example Evaluation
- 
-Below we can run and display the results of an example evaluation. A simple task with a dataset, plan, and scorer is written below.
+
+Below we can run and display the results of an example evaluation. A simple example task with a dataset, plan, and scorer is written below:
 
 ```python
 from inspect_ai.dataset import example_dataset
@@ -156,44 +148,53 @@ def theory_of_mind() -> Task:
         plan=[
             chain_of_thought(),
             generate(),
-            self_critique(model="openai/gpt-3.5-turbo"),
+            self_critique(model="openai/gpt-4o-mini"),
         ],
-        scorer=model_graded_fact(model="openai/gpt-3.5-turbo"),
+        scorer=model_graded_fact(model="openai/gpt-4o-mini"),
     )
 ```
 Now let's see what it looks like to run this example task through inspect using the `eval()` function:
-
 ```python
 log = eval(
     theory_of_mind(),
     model="openai/gpt-4o-mini",
     limit=10,
-    log_dir="./logs",
+    log_dir="./logs", 
 )
 ```
-
-Log files can clutter up your repo significantly, so you may want to include "\*logs" them in your .gitignore file.
-
-
 ### Exercise - Explore Inspect's Log Viewer
 ```c
 Difficulty: 🔴⚪⚪⚪⚪
 Importance: 🔵🔵⚪⚪⚪
 
-You should spend up to 5-10 mins on this exercise
+You should spend up to 10-15 mins on this exercise
 ```
 
-Finally, we can view the results of the log in Inspect's log viewer. To do this, run the code below. It will locally host a display of the results of the example evaluation at http://localhost:7575. You need to modify "`your_log_name`" in the --log-dir argument below, so that it matches the log name that was output above (which depends on the date and time). 
+When you ran the above code, you should have seen an image like this:
 
-Run the code block below and then click through to **http://localhost:7575** and explore the interface Inspect uses to present the results of evaluations. 
+<img src = "https://raw.githubusercontent.com/chloeli-15/ARENA_img/main/img/ch3-inspect-output-image.png" width = "600px">
+
+which indicates that the eval ran correctly. Now we can view the results of this eval in Inspect's log viewer. To do this, run the code below. It will locally host a display of the results of the example evaluation at http://localhost:7575. You need to modify "`your_log_name`" in the --log-dir argument below, so that it matches the path shown after `Log:` in the display shown by `Inspect` (which will depend on the date and time). 
+
+Run the code block below and then click through to **http://localhost:7575**.
 
 For more information about the log viewer, you can read the docs [here](https://inspect.ai-safety-institute.org.uk/log-viewer.html).
 
 <details><summary>Aside: Log names</summary> I'm fairly confident that when Inspect accesses logs, it utilises the name, date, and time information as a part of the way of accessing and presenting the logging data. Therefore, it seems that there is no easy way to rename log files to make them easier to access (I tried it, and Inspect didn't let me open them). </details>
 
 ```python
-!inspect view --log-dir "C:\Users\styme\OneDrive\Documents\AI STUFF\Model Written Evals\Code Replication\ARENA_evals\curriculum\gitignore\logs\2024-09-05T12-00-11+01-00_theory-of-mind_CwxvY6dpxFnb27vFsHabau.json" --port 7575
+!inspect view --log-dir "your/log/path/here.json" --port 7575
 ```
+<details><summary>Help: I'm running this from a remote machine and can't access the Log Viewer at localhost:7575</summary>
+
+If you're running this from a remote machine in VScode and can't access localhost:7575, the first thing you should try is modifying the "Auto Forward Ports Source" VScode setting to "Process," as shown below.
+
+![port forwarding](https://raw.githubusercontent.com/chloeli-15/ARENA_img/main/img/ch3-port-forwarding-picture.png)
+
+If it still doesn't work, then **make sure you've changed this setting in all setting categories** (circled in blue in the image above).
+
+If you're still having issues, then try a different localhost port, (i.e. change `--port 7575` to `--port 7576` or something).
+</details>
 ''',
         unsafe_allow_html=True,
     )

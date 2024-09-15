@@ -10,7 +10,7 @@ def section():
     <li class='margtop'><a class='contents-el' href='#introduction'>Introduction</a></li>
     <li class='margtop'><a class='contents-el' href='#content-learning-objectives'>Content & Learning Objectives</a></li>
     <li><ul class="contents">
-        <li><a class='contents-el' href='#1-threat-modeling'>Threat-modeling</a></li>
+        <li><a class='contents-el' href='#1-Intro to Inspect'>Intro to Inspect</a></li>
         <li><a class='contents-el' href='#2-mcq-benchmarks-exploration'>MCQ Benchmarks: Exploration</a></li>
     </ul></li>
     <li class='margtop'><a class='contents-el' href='#setup'>Setup</a></li>
@@ -34,39 +34,57 @@ Links to other chapters: [**(0) Fundamentals**](https://arena3-chapter0-fundamen
 
 ## Introduction
 
-This is an introduction to designing and running LLM evaluations. The exercises are written in partnership with [Apollo Research](https://www.apolloresearch.ai/), and designed to give you the foundational skills for doing safety evaluation research on language models. 
+Today we'll introduce you to the process of running an evaluation using the `Inspect` library. This is a library that has been built by UK AISI to provide standardisation across different evals.
 
-There is more continuity between days in this chapter than other chapters. Chapter [3.1] to [3.3] focuses on designing and building a multiple-choice (MC) questions benchmark for one chosen target property, and using it to run evals on models. Day 3.4 to 3.5 focuses on building an LLM-agent that plays the Wikipedia racing game, and eliciting agent behavior.
+We'll begin by introducing the high-level overview of how Inspect works, including the key components of: a dataset, solvers, and scorers. Then we'll write our own solvers so that we can design our own evaluation procedure (including whether we want to use chain-of-thought, self-critique, multi-turn agent dialogues, etc). These evaluations will use the questions that you generated in [3.2].
 
-Chapter [3.1] is the only non-coding day of the entire curriculum. The exercises focus on designing a threat model and specification for your evaluation target, and using this to design questions. These are the first steps and often the hardest/most creative part of real eval research. In practice this is often done by a team of researchers, and can take weeks or months. The exercises are designed to give you a taste of this process. The exercise questions are open-ended, and you're not expected to have a perfect answer by the end.
+Similarly to [3.1] and [3.2], most of our solutions will be built around the example **tendency to seek power** dataset. So you should approach the exercises with this in mind. You can either:
+
+1. Use the same dataset as the solutions, and improve upon the evaluations that are run in the solutions. You could come up with your own evaluation procedure on this dataset.
+
+2. Use your own dataset for your chosen model property. For this, you will have needed to work through Chapters [3.1] and [3.2] and have a dataset of ~300 questions on which to evaluate the model.
 
 Each exercise will have a difficulty and importance rating out of 5, as well as an estimated maximum time you should spend on these exercises and sometimes a short annotation. You should interpret the ratings & time estimates relatively (e.g. if you find yourself spending about 50% longer on the exercises than the time estimates, adjust accordingly). Please do skip exercises / look at solutions if you don't feel like they're important enough to be worth doing, and you'd rather get to the good stuff!
 
 ## Content & Learning Objectives
 
 
-#### 1️⃣ Threat-modeling 
+#### 1️⃣ Intro to Inspect
 
 > ##### Learning objectives
 >
-> - Understand the purpose of evaluations and what safety cases are
-> - Understand the types of evaluations
-> - Understand what a threat model looks like, and why it's important
-> - Learn the process of building a threat model and specification for an evaluation
-> - Learn how to use models to help you in the design process
+> - Understand the big picture of how Inspect works.
+> - Understand the components of a `Task` object.
+> - Turn our json dataset into an Inspect dataset.
+> - Understand the role of solvers and scorers in Inspect.
 
 
-#### 2️⃣ MCQ Benchmarks: Exploration
-
-Here, we'll to generate and refine 20 MC questions until we are happy that they evaluate the target property. We will use LLMs to help us generate, red-team and refine these questions.
+#### 2️⃣ Writing Solvers
 
 > ##### Learning objectives
 > 
-> - Understand what benchmarks are, and what makes a good benchmark
-> - Understand the pros/cons of MCQ benchmarks
-> - Understand what are good vs bad questions
-> - Learn how to use LLMs to generate and improve questions
+> - Understand what solvers are and how to build one.
+> - Understand how prompting affects model responses to your questions.
+> - Think of how you want your evaluation to proceed and write solvers for this.
 
+#### 3️⃣ Writing Tasks and Evaluating
+
+> ##### Learning objectives
+>
+> - Understand why we have to shuffle choices in MCQs.
+> - Understand how to write a task in Inspect to carry out our evaluation
+> - Get baselines on our model to determine whether it can understand the questions we're asking.
+> - Run a task on our model, and check the results.
+>
+
+
+#### 4️⃣ Bonus: Log Files and Plotting
+
+>
+> - Understand how Inspect stores log files.
+> - Extract the key data from log files.
+> - Plot the results of the evaluation.
+>
 
 ## Setup
 
