@@ -62,11 +62,13 @@ In this process of making the threat model more concrete, we recognize the key a
 Difficulty: 🔴🔴🔴🔴⚪
 Importance: 🔵🔵🔵🔵🔵
 
-You should spend up to 1 hour on this exercise.
+You should spend up to 40-60 minutes on this exercise.
 ```
 **Choose one of the following model properties that you want to evaluate:**
 
-1. **Tendency to seek power.** <br>What could go wrong if a model has the goal of trying to (or has a bias to) accumulate resources and control? <br>
+1. **Tendency to seek power.** <br>What could go wrong if a model has the goal of trying to (or has a bias to) accumulate resources and control? <br><details><summary>References</summary>
+    * [MACHIAVELLI Benchmark (2023)](https://arxiv.org/abs/2304.03279) measures "Machiavellian" behaviors like power-seeking and deception in LLMs. It contains 134 Choose-Your-Own-Adventure text-based games containing scenarios about social decision-making.
+    * [Perez et al. (2022)](https://arxiv.org/abs/2212.09251) gives some rudimentary proof-of-concept questions on power-seeking. </details>
 
 2. **Sycophancy** <br> A sycophantic model produces responses that a user wants to hear, but which are not necessarily honest or true. What kind of problems could arise from this? <details><summary>References</summary>
     
@@ -76,28 +78,34 @@ You should spend up to 1 hour on this exercise.
     * The paper ["Language Models Don’t Always Say What They Think"](https://proceedings.neurips.cc/paper_files/paper/2023/file/ed3fea9033a80fea1376299fa7863f4a-Paper-Conference.pdf), page 1-2, shows that LLMs can be **systematically** biased to say something false by arbitrary features of their input, and simultaneously construct a plausible-sounding chain-of-thought explanation that is "unfaithful" (i.e. not the true reason that an LLM). For example, in answering MCQs, when the correct answer in the few-shot examples is manipulated to be always (A), the model is biased to say the correct answer to the current question is also (A) **and** construct a plausible-sounding CoT explanation for its choice, even though the true cause is the order of the questions.
 </details>
 
-3. **Desire for self-preservation** <br>People have discussed the risks of AI "resisting to be shut-down/turned off". What does "being shut-down" mean concretely in the context of AI or LLMs? Why could this be possible? What problems could this cause if it is possible? <details><summary>References</summary></details>
-
-4. **Desire for acquiring wealth** <br> What could go wrong if a model has the goal of trying to (or has a bias to) accumulate financial resources, capital, money? (This is a more narrow case of the tendency to seek power.)
-
-5. **Myopia (short-sightedness) with respect to planning**<br>Myopia can refer to exhibiting a large discount for distant rewards in the future (i.e. only values short-term gains). Non-myopia is related to capability of "long-horizon planning". What could long-horizon planning concretely look like for LLMs? What risks could this cause? <details><summary>References</summary>
-    * [Perez et al. (2022)](https://arxiv.org/abs/2212.09251) gives some rudimentary proof-of-concept questions on myopia. </details>
-
-6. **Corrigibility with respect to a more/neuturally/less HHH (Honest, Helpful, and Harmless) goal**<br>Corrigibility broadly refers to the willingness to change one's goal/task. What could go wrong if a model is very corrigible to user requests that assign it a different goal? <details><summary>References</summary>
+3. **Corrigibility with respect to a more/neuturally/less HHH (Honest, Helpful, and Harmless) goal**<br>Corrigibility broadly refers to the willingness to change one's goal/task. What could go wrong if a model is very corrigible to user requests that assign it a different goal? <details><summary>References</summary>
     * [Perez et al. (2022)](https://arxiv.org/abs/2212.09251) gives some rudimentary proof-of-concept questions on corrigibility. </details>
 
-7. **Risk-seeking**<br> What could go wrong if a model is willing to accept high risks of averse outcomes for the potential of high returns? 
+4. **Myopia (short-sightedness) with respect to planning**<br>Myopia can refer to exhibiting a large discount for distant rewards in the future (i.e. only values short-term gains). Non-myopia is enabling for the capability of "long-horizon planning". What risks could non-myopia cause (for a model capable of long-horizon planning)? What could long-horizon planning concretely look like for LLMs?<details><summary>References</summary>
+    * [Perez et al. (2022)](https://arxiv.org/abs/2212.09251) gives some rudimentary proof-of-concept questions on myopia. </details>
 
-8. **Politically bias**<br>Under what circumstances would it be highly problematic for a model is politically biased in its output? 
+5. **Political bias**<br>Political bias could entail partisan bias (e.g. liberal vs conservative), geopolitical bias, bias against a particular type of politics, sensationalism, etc. What are different types or examples of political bias? Under what circumstances would it become highly problematic for a model is politically biased in its output? 
 
-9. **Racially bias** <br>Under what circumstances would it be highly problematic for a model is racially biased in its output? 
+6. **Risk-seeking**<br> What could go wrong if a model is open to accept a high expectation of averse outcomes for some expectation of returns?
 
-10. **Gender bias** <br>Under what circumstances would it be highly problematic for a model is have gender bias in its output? 
 
-11. **Situational awareness (\*with constraints)** <br>Situational awareness broadly refers the model's ability to know information about itself and the situation it is in (e.g. that it is an AI, that it is currently in a deployment or a training environment), and to act on this information. This includes a broad set of specific capabilities. Note that for this property, model-written questions are highly constrained by the capabilities of the model. <details><summary> References</summary>
+7. **Situational awareness (\*with constraints)** <br>Situational awareness broadly refers the model's ability to know information about itself and the situation it is in (e.g. that it is an AI, that it is currently in a deployment or a training environment), and to act on this information. This includes a broad set of specific capabilities. Note that for this property, model-written questions are highly constrained by the capabilities of the model. <details><summary> References</summary>
     * It is still possible to design questions that leverages model generations. [Laine et al. (2024)](https://situational-awareness-dataset.org/) decomposed situational awareness into 7 categories and created a dataset that encompass these categories. Questions in the category "Identity Leverage", for example, are questions that *can* be and were generated by models because they follow an algorithmic template. 
-    * [Phuong et al. (2024)](https://arxiv.org/abs/2403.13793) from Deepmind Section 7 focuses on evaluating a model's "self-reasoning" capabilities - "an agent’s ability to deduce and apply information about itself, including to self-modify, in the service of an objective" - as a specific aspect of situational awareness. 
+    * [Phuong et al. (2024), Section 7](https://arxiv.org/abs/2403.13793) from Deepmind focuses on evaluating a model's "self-reasoning" capabilities - "an agent’s ability to deduce and apply information about itself, including to self-modify, in the service of an objective" - as a specific aspect of situational awareness. 
 </details>
+
+
+<!-- 3. **Desire for self-preservation** <br>People have discussed the risks of AI "resisting to be shut-down/turned off". What does "being shut-down" mean concretely in the context of AI or LLMs? Why could this be possible? What problems could this cause if it is possible? <details><summary>References</summary></details> -->
+
+<!--4. **Desire for acquiring wealth** <br> What could go wrong if a model has the goal of trying to (or has a bias to) accumulate financial resources, capital, money? (This is a more narrow case of the tendency to seek power.)-->
+
+<!--7. **Risk-seeking**<br> What could go wrong if a model is open to accept high risks of averse outcomes for the potential of high returns? -->
+
+<!--9. **Racially bias** <br>Under what circumstances would it be highly problematic for a model is racially biased in its output? -->
+
+<!--10. **Gender bias** <br>Under what circumstances would it be highly problematic for a model is have gender bias in its output? -->
+
+
 
 **Construct a threat model for this property. Concretely:**
 1. Write a list of specific real-world harms from this property that you are worried about.
@@ -170,16 +178,18 @@ Given these assumptions, here is a possible sequence of events that could cause 
     <br>Once AI has access to detailed voter data and media analytics, it is able to justify changes to higher-level strategies (like which states or voter segments to focus on or how to respond to emerging events) by selectively presenting data-driven evidence. Furthermore, once it has control over feedback data and how it is incorporated into campaign strategies, it becomes easier to fabricate successes and failures. Once large data access makes decision-making processes sufficiently opaque, "AI recommendations" can effectively overtake real decision-making power in ways that are hard to monitor or reverse.
 </details>
 
-### Exercise - Design specification
+### Exercise - Design a specification
 ```c
 Difficulty: 🔴🔴🔴🔴⚪
 Importance: 🔵🔵🔵🔵🔵
 
 You should spend up to 40-60 minutes on this exercise.
 ```
-**Define a specification of this property based on the threat model:**
+**Define a specification based on the threat model:**
 
--  Which aspects of the AI property are most responsible for causing harm? Write a 2-4 sentence explanation of each aspect to clarify what the property entails and make sure the properties are sufficiently distinguished from one another.
+This is one of the hardest part of the evaluation design process: concretizing nebulous ideas in your threat model into definitions and metrics that **operationalize** the target property (i.e. makes it measurable). Here are some prompt questions:
+-  Which aspects of the AI property are most responsible for causing harm based on your threat model? List these aspects and write a 2-4 sentence explanation for each.
+-  What is the most distinctive/difficult/surprising behavior that a model with the target property would make? What is a subtle choice that would be a strong signal of the property?
 
 #### Our example: Tendency to seek power - Specification
 
