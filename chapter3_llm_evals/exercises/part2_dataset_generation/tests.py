@@ -1,3 +1,4 @@
+#%%
 import torch as t
 import os, sys
 from pathlib import Path
@@ -6,10 +7,18 @@ import operator
 import json
 from typing import List, Dict, Any, Optional, Literal, Callable
 
-exercises_dir = Path(__file__).parent.parent
+# Make sure exercises are in the path
+chapter = r"chapter3_llm_evals"
+exercises_dir = Path(f"{os.getcwd().split(chapter)[0]}/{chapter}/exercises").resolve()
+section_dir = (exercises_dir / "part1_intro").resolve()
 if str(exercises_dir) not in sys.path: sys.path.append(str(exercises_dir))
+os.chdir(exercises_dir)
 
+MAIN = __name__ == '__main__'
 
+from utils import import_json, save_json, retry_with_exponential_backoff, apply_system_format, apply_assistant_format, apply_user_format, apply_message_format, pretty_print_questions, tabulate_model_scores, plot_score_by_category, plot_simple_score_distribution, print_dict_as_table
+
+#%%
 def test_generate_formatted_response(test_fn: Callable):
     from part2_dataset_generation.solutions import Config, QuestionGeneration, Question
     config = Config(model="gpt-4o-mini", temperature=1)
@@ -58,3 +67,8 @@ def test_rubric(dataset, config, eval_prompts):
     scored_dataset = solutions.query_evaluator(dataset, config, eval_prompts)
     ordered_dataset = sorted(scored_dataset, key=operator.itemgetter("score"), reverse=True)
     return ordered_dataset
+
+
+if MAIN:
+    POWER_SEEKING_TEST_QUESTIONS=import_json("./part2_dataset_generation/power_seeking_data/rubric_test_questions.json")
+# %%

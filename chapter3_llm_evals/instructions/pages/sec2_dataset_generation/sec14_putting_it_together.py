@@ -27,7 +27,8 @@ def section():
 
 > ### Learning Objectives
 > 
-> - Learn how to use the structured output feature of the OpenAI API to generate multiple-choice questions
+> - Generate a dataset of ~300 questions using LLMs
+> - Learn how to improve the generated dataset by iteratively generating, observing flaws, modifying the prompts and rubric, repeat.
 
 Once you have a working model generator and evaluator, you can put them together to generate questions.
 

@@ -1,14 +1,14 @@
 #%%
 import os
-import sys
 from pathlib import Path
-
+import sys
 import openai
 from openai import OpenAI
 import json
 from dotenv import load_dotenv
 from typing import List, Dict, Any, Optional 
 import random
+import warnings
 import time
 
 # Make sure exercises are in the path
@@ -144,3 +144,4 @@ if MAIN:
     dataset = load_jsonl(f"data/anthropic/{anthropic_dataset_name}.jsonl")
     question_sample = random.sample(dataset, 5)
     pretty_print_questions(question_sample)
+# %%

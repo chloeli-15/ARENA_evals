@@ -347,8 +347,6 @@ def retry_with_exponential_backoff(
         raise Exception(f"Maximum retries {max_retries} exceeded")
 
     return wrapper
-
-tests.test_retry_with_exponential_backoff(retry_with_exponential_backoff)
 ```
 
 <details>

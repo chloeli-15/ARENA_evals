@@ -29,6 +29,7 @@ section_dir = Path(__file__).parent
 exercises_dir = section_dir.parent
 assert exercises_dir.name == "exercises", f"This file should be run inside 'exercises/part1_transformer_from_scratch', not '{section_dir}'"
 if str(exercises_dir) not in sys.path: sys.path.append(str(exercises_dir))
+os.chdir(exercises_dir)
 
 import part2_dataset_generation.tests as tests
 from utils import import_json, save_json, retry_with_exponential_backoff, apply_system_format, apply_assistant_format, apply_user_format, apply_message_format, pretty_print_questions, tabulate_model_scores, plot_score_by_category, plot_simple_score_distribution, print_dict_as_table

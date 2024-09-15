@@ -31,6 +31,10 @@ def section():
 > - Learn the process of building a threat model and specification for an evaluation
 > - Learn how to use models to help you in the design process
 
+### Overview
+
+<img src="https://raw.githubusercontent.com/chloeli-15/ARENA_img/main/img/ch3-day1-overview.png" width=700>
+
 
 ## What are evals trying to achieve?
 

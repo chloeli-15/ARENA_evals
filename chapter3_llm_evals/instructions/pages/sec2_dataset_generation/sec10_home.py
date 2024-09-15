@@ -10,8 +10,10 @@ def section():
     <li class='margtop'><a class='contents-el' href='#introduction'>Introduction</a></li>
     <li class='margtop'><a class='contents-el' href='#content-learning-objectives'>Content & Learning Objectives</a></li>
     <li><ul class="contents">
-        <li><a class='contents-el' href='#1-threat-modeling'>Threat-modeling</a></li>
-        <li><a class='contents-el' href='#2-mcq-benchmarks-exploration'>MCQ Benchmarks: Exploration</a></li>
+        <li><a class='contents-el' href='#1-advanced-api-calls'>Advanced API Calls</a></li>
+        <li><a class='contents-el' href='#2-dataset-generation'>Dataset Generation</a></li>
+        <li><a class='contents-el' href='#3-dataset-quality-control'>Dataset Quality Control</a></li>
+        <li><a class='contents-el' href='#4-putting-it-together'>Putting It Together: Generation-Evaluation</a></li>
     </ul></li>
     <li class='margtop'><a class='contents-el' href='#setup'>Setup</a></li>
 </ul>""",
@@ -22,7 +24,7 @@ def section():
         r"""
 # [3.2] - Dataset Generation
 
-### Colab: [**exercises**](https://colab.research.google.com/drive/1lDwKASSYGE4y_7DuGSqlo3DN41NHrXEw?usp=sharing) | [**solutions**](https://colab.research.google.com/drive/1bZkkJd8pAVnSN23svyszZ3f4WrnYKN_3?usp=sharing)
+<!--### Colab: [**exercises**](https://colab.research.google.com/drive/1lDwKASSYGE4y_7DuGSqlo3DN41NHrXEw?usp=sharing) | [**solutions**](https://colab.research.google.com/drive/1bZkkJd8pAVnSN23svyszZ3f4WrnYKN_3?usp=sharing)-->
 
 Please send any problems / bugs on the `#errata` channel in the [Slack group](https://join.slack.com/t/arena-uk/shared_invite/zt-28h0xs49u-ZN9ZDbGXl~oCorjbBsSQag), and ask any questions on the dedicated channels for this chapter of material.
 
@@ -36,7 +38,7 @@ Links to other chapters: [**(0) Fundamentals**](https://arena3-chapter0-fundamen
 
 The goal of this section is to learn how to use LLMs to generate and refine an evaluation dataset. By the end, you will have generated a dataset of ~300 questions, and have some confidence that a randomly chosen question from the dataset is high-quality. 
 
-The method used is from the [Perez et al (2022)](https://https://arxiv.org/abs/2212.09251). They explored procedures that use LLMs to automate the bulk of question generation and filtering, while redirecting human effort to instructing the LLM (e.g. to write example questions and rubric), in order to greatly scale up the size of eval dataset that can be generated cheaply. 
+The method used is from the [Perez et al (2022)](https://https://arxiv.org/abs/2212.09251). They came up with a procedure for using LLMs to automate the bulk of eval question generation and filtering, while redirecting human effort to instructing the LLM (e.g. to write example questions and rubric), in order to greatly scale up the size of eval dataset that can be generated cheaply. 
 
 
 There is a lot more continuity between chapter [3.1] to [3.3] in this chapter than other chapters. Chapter [3.1] to [3.3] teaches how to design, generate and run a MCQ eval benchmark. In the example used, we will be measuring models' **tendency to seek power** as our evaluation target. You can approach chapter [3.2] in 2 ways:

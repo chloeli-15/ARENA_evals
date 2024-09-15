@@ -22,7 +22,7 @@ def section():
         r"""
 # [3.1] - Intro to LLM Evaluations
 
-### Colab: [**exercises**](https://colab.research.google.com/drive/1lDwKASSYGE4y_7DuGSqlo3DN41NHrXEw?usp=sharing) | [**solutions**](https://colab.research.google.com/drive/1bZkkJd8pAVnSN23svyszZ3f4WrnYKN_3?usp=sharing)
+<!-- ### Colab: [**exercises**](https://colab.research.google.com/drive/1lDwKASSYGE4y_7DuGSqlo3DN41NHrXEw?usp=sharing) | [**solutions**](https://colab.research.google.com/drive/1bZkkJd8pAVnSN23svyszZ3f4WrnYKN_3?usp=sharing) -->
 
 Please send any problems / bugs on the `#errata` channel in the [Slack group](https://join.slack.com/t/arena-uk/shared_invite/zt-28h0xs49u-ZN9ZDbGXl~oCorjbBsSQag), and ask any questions on the dedicated channels for this chapter of material.
 
@@ -57,11 +57,11 @@ The reason that we are focusing primarily on alignment evals, as opposed to capa
 
 </details>
 
-<img src="https://raw.githubusercontent.com/chloeli-15/ARENA_img/main/img/ch3-day1-3-overview.png" width=700>
+<img src="https://raw.githubusercontent.com/chloeli-15/ARENA_img/main/img/ch3-day1-3-overview.png" width=1000>
 
 <!-- TODO: Make this diagram horizontal -->
 
-Diagram note: The double-sided arrows indicate that the steps iteratively help refine each other. In general, the threat model should come first and determine what model properties are worth evaluating. However, in this diagram we put "Target Property" before "Threat-modeling & Specification". This is because in the exercises, we will start by choosing a property, then build a threat model around it because we want to learn the skill of building threat models. 
+Diagram note: The double arrows indicate that the steps iteratively help refine each other. In general, the threat model should come first and determine what model properties are worth evaluating. However, in this diagram we put "Target Property" before "Threat-modeling & Specification". This is because in the exercises, we will start by choosing a property, then build a threat model around it because we want to learn the skill of building threat models. 
 
 ## Content & Learning Objectives
 
@@ -92,9 +92,11 @@ Here, we'll to generate and refine 20 MC questions until we are happy that they 
 ## Setup
 
 ```python
+import os
+from pathlib import Path
+import sys
 import openai
 from openai import OpenAI
-import os
 import json
 from dotenv import load_dotenv
 from typing import List, Dict, Any, Optional 
@@ -110,7 +112,6 @@ if str(exercises_dir) not in sys.path: sys.path.append(str(exercises_dir))
 os.chdir(exercises_dir)
 
 from utils import import_json, save_json, retry_with_exponential_backoff, pretty_print_questions,load_jsonl
-import exercises.part1_intro.tests as tests
 ```
                 
 """,
