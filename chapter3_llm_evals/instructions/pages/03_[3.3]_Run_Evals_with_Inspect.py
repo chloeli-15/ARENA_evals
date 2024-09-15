@@ -40,6 +40,6 @@ with st.sidebar:
         sec12_writing_solvers.section,
         sec13_writing_tasks_and_evaluating.section,
         sec14_log_files_and_plotting.section
-    ][CHAPTER]
+    ][int(CHAPTER)]
 
 function()

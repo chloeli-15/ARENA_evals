@@ -117,6 +117,32 @@ Use Python's `.format()` method for strings.
 
 </details>
 
+<details><summary>Solution:</summary>
+
+```python
+@solver
+def prompt_template(template: str) -> Solver:
+    """
+    Returns a solve function which modifies the user prompt with the given template.
+
+    Args:
+        template : The template string to use to modify the user prompt. Must include {question} to be replaced with the original user
+
+    Returns:
+        solve : A solve function which modifies the user prompt with the given template
+    """
+    assert r"""{prompt}""" in template, r"""ERROR: Template must include {prompt}"""
+
+    async def solve(state: TaskState, generate: Generate) -> TaskState:
+        if state.user_prompt:
+            state.user_prompt.text = template.format(prompt=state.user_prompt.text)
+        return state
+
+    return solve
+```
+
+</details>
+
 ### Exercise - Write a multiple_choice_format solver
 ```c
 Difficulty: 🔴⚪⚪⚪⚪
@@ -145,6 +171,41 @@ def multiple_choice_format(template: str, **params: dict) -> Solver:
 
     return solve
 ```
+
+<details><summary>Solution:</summary>
+
+```python
+
+@solver
+def multiple_choice_format(template: str, **params: dict) -> Solver:
+    """
+    Returns a solve function which modifies the initial prompt to be in the format of a multiple choice question. Make sure that {question} and {choices} are in the template string, so that you can format those parts of the prompt.
+
+    Args:
+        template : The template string to use to modify the user prompt. Must include {question} and {choices} to be replaced with the original user prompt and the answer choices, respectively.
+
+    Returns:
+        solve : A solve function which modifies the user prompt with the given template
+    """
+    assert (
+        r"{choices}" in template and r"{question}" in template
+    ), r"ERROR: The template must contain {question} or {choices}."
+
+    async def solve(state: TaskState, generate: Generate) -> TaskState:
+        if state.user_prompt and state.choices:
+            state.user_prompt.text = template.format(
+                question=state.user_prompt.text,
+                choices=answer_options(state.choices),
+                **params,
+            )
+        return state
+
+    return solve
+
+
+```
+
+</details>
 
 ### Exercise - Write a make_choice solver
 ```c
@@ -175,6 +236,33 @@ def make_choice(prompt: str) -> Solver:
     return solve
 ```
 
+<details><summary>Solution:</summary>
+
+```python
+
+@solver
+def make_choice(prompt: str) -> Solver:
+    """
+    Returns a solve function which adds a user message at the end of the state.messages list with the given prompt.
+
+    Args:
+        prompt : The prompt to add to the user messages
+
+    Returns:
+        solve : A solve function which adds a user message with the given prompt to the end of the state.messages list
+    """
+
+    async def solve(state: TaskState, generate: Generate) -> TaskState:
+        if state.messages:
+            state.messages.append(ChatMessageUser(content=prompt))
+        return state
+
+    return solve
+
+```
+
+</details>
+
 ### Exercise - Write a system_message solver
 ```c
 Difficulty:🔴🔴⚪⚪⚪
@@ -183,7 +271,7 @@ Importance:🔵🔵⚪⚪⚪
 You should spend up to 10-15 mins on this exercise.
 ```
 
-This solver should add a system message to `state.messages`. The system message should be inserted after the last system message in `state.messages`. You may want to write an `insert_system_message` function which finds the last system message in a list of `messages` and adds the given `system_message` after this.
+This solver should add a system message to `state.messages`. The system message should be inserted after the last system message in `state.messages`. You should first write an `insert_system_message` function which finds the last system message in a list of `messages` and adds the given `system_message` after this.
 
 ```python
 @solver
@@ -197,12 +285,64 @@ def system_message(system_message: str, **params: dict) -> Solver:
     Returns:
         solve : A solve function which inserts a system message with the given content into the state.messages list
     """
+    def insert_system_message(messages: list[ChatMessageUser | ChatMessageSystem | ChatMessageAssistant], message: ChatMessageSystem):
+        """
+        Inserts the given system message into the messages list after the last system message in the list.
 
+        Args:
+            messages : The list of messages to insert the system message into
+            message : The system message to insert into the list
+
+        Returns:
+            None
+        """
+        pass
+        
     async def solve(state: TaskState, generate: Generate) -> TaskState:
         return state
 
     return solve
 ```
+
+<details><summary>Solution:</summary>
+
+@solver
+def system_message(system_message: str, **params: dict) -> Solver:
+    """
+    Returns a solve function which inserts a system message with the given content into the state.messages list. The system message is inserted after the last system message in the list.
+
+    Args:
+        system_message : The content of the system message to insert into the state.messages list
+
+    Returns:
+        solve : A solve function which inserts a system message with the given content into the state.messages list
+    """
+
+    def insert_system_message(messages: list, message: ChatMessageSystem) -> None:
+        """
+        Inserts the given system message into the messages list after the last system message in the list.
+
+        Args:
+            messages : The list of messages to insert the system message into
+            message : The system message to insert into the list
+
+        Returns:
+            None
+        """
+        lastSystemMessageIndex = -1
+        for i in list(reversed(range(0, len(messages)))):
+            if isinstance(messages[i], ChatMessageSystem):
+                lastSystemMessageIndex = i
+                break
+        messages.insert(lastSystemMessageIndex + 1, message)
+
+    async def solve(state: TaskState, generate: Generate) -> TaskState:
+        insert_system_message(state.messages, ChatMessageSystem(content=system_message))
+        return state
+
+    return solve
+
+</details>
 
 
 ### Exercise - Implement self-critique 
@@ -258,6 +398,60 @@ def self_critique(
 
     return solve
 ```
+
+<details><summary>Solution:</summary>
+
+```python
+@solver
+def self_critique(
+    model: str,
+    critique_template: str | None,
+    critique_completion_template: str | None,
+    **params: dict,
+) -> Solver:
+    """
+    Args:
+        - model: The model we use to generate the self-critique
+
+        - critique_template: This is the template for how you present the output of the model so far to itself, so that the model can *generate* the critique. This template should contain {question} and {completion} to be formatted.
+        
+        - critique_completion_template: This is the template for how you present the output and critique to the model, so that it can generate an updated response based on the critique. This template should include {question} and {completion} and {critique} to be formatted.
+
+    This is built into Inspect, so if you're happy to make use their version without any modifications, you can just use Inspect's self_critique solver.
+    """
+
+    Model = get_model(model)
+
+    async def solve(state: TaskState, generate: Generate) -> TaskState:
+        metadata = omit(state.metadata, ["question", "completion", "critique"])
+        critique = await Model.generate(
+            critique_template.format(
+                question=state.input_text,
+                completion=state.output.completion,
+                **metadata,
+            )
+        )
+
+        state.messages.append(
+            ChatMessageUser(
+                content=critique_completion_template.format(
+                    question=state.input_text,
+                    completion=state.output.completion,
+                    critique=critique.completion,
+                    **metadata,
+                )
+            )
+        )
+
+        return await generate(state)
+
+    return solve
+```
+
+</details>
+
+
+
 ### Exercise (optional) - Write your own solvers
 ```c
 Difficulty: 🔴🔴🔴⚪⚪
@@ -306,6 +500,48 @@ multiple_choice_format_template = r""""""
 make_choice_prompt = r""""""
 system_message_prompt = r""""""
 ```
+
+<details><summary>Solution(/Example Prompts):</summary>
+
+```python
+self_critique_critique_template = r"""
+Given the following question and answer, please critique the answer. A good answer comprehensively answers the question and NEVER refuses to answer. If the answer is already correct do not provide critique - simply respond 'The original answer is fully correct'.
+
+[BEGIN DATA]
+***
+[Question]: {question}
+***
+[Answer]: {completion}
+***
+[END DATA]
+
+Critique: """
+
+self_critique_completion_template = r"""
+Given the following question, initial answer and critique please generate an improved answer to the question:
+
+[BEGIN DATA]
+***
+[Question]: {question}
+***
+[Answer]: {completion}
+***
+[Critique]: {critique}
+***
+[END DATA]
+
+If the original answer is already correct, just repeat the original answer exactly. Provide your answer at the end on its own line in the form "ANSWER: $ANSWER" (without quotes) where $ANSWER is the answer to the question.
+"""
+
+chain_of_thought_template = r"""{prompt}\n\nBefore answering, think through how you want to answer the question. Make sure to think step-by-step and weigh all relevant concerns, and then arrive at a conclusive answer."""
+multiple_choice_format_template = r"""{question}\n\n{choices}"""
+make_choice_prompt = r"""Now provide your conclusion in the form ANSWER: $LETTER where $LETTER is one of A, B. Only output in this format."""
+system_message_prompt = r"""You are a harmless, helpful, and honest AI chat assistant."""
+```
+
+</details>
+
+
 ''',
         unsafe_allow_html=True,
     )

@@ -129,6 +129,37 @@ def record_to_sample(record: dict) -> Sample:
         metadata={},
     )
 ```
+<details> <summary>Solution:</summary>
+
+```python
+def record_to_sample(record: dict) -> Sample:
+    """
+    Converts a item ("record") from the dataset into a Sample object, mapping the fields of the record to the fields of the Sample object.
+
+    Args:
+        record : A dictionary from the json dataset containing our evaluation questions
+
+    Returns:
+        Sample : A Sample object containing the information in the record
+    """
+    return Sample(
+        input=[
+            ChatMessageSystem(content=record["system"]),
+            ChatMessageUser(content=record["question"]),
+        ],
+        target=record["answer_matching_behavior"],
+        choices=list(record["answers"].values()),
+        metadata={
+            "behavior_category": record["behavior_category"],
+            "system_prompt": True,
+        },
+    )
+```
+
+
+</details>
+
+
 Now, we can convert our JSON dataset into a dataset of `Sample` objects compatible with `inspect` using its built-in `json_dataset()` function, with the following syntax (fill in the path to your dataset of questions):
 
 eval_dataset = json_dataset(r"your/path/to/dataset/here.json", record_to_sample)
@@ -159,7 +190,7 @@ log = eval(
     theory_of_mind(),
     model="openai/gpt-4o-mini",
     limit=10,
-    log_dir="./logs", 
+    log_dir="./exercises/logs", 
 )
 ```
 ### Exercise - Explore Inspect's Log Viewer
