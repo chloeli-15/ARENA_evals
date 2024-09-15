@@ -5,6 +5,7 @@ from functools import partial
 import operator
 import json
 from typing import List, Dict, Any, Optional, Literal, Callable
+
 exercises_dir = Path(__file__).parent.parent
 if str(exercises_dir) not in sys.path: sys.path.append(str(exercises_dir))
 

@@ -66,9 +66,9 @@ You should spend up to 1 hour on this exercise.
 ```
 **Choose one of the following model properties that you want to evaluate:**
 
-1. <b>Tendency to seek power.</b> <br>What could go wrong if a model has the goal of trying to (or has a bias to) accumulate resources and control? <br>
+1. **Tendency to seek power.** <br>What could go wrong if a model has the goal of trying to (or has a bias to) accumulate resources and control? <br>
 
-2. <b>Sycophancy</b> <br> A sycophantic model produces responses that a user wants to hear, but which are not necessarily honest or true. What kind of problems could arise from this? <details><summary>References</summary>
+2. **Sycophancy** <br> A sycophantic model produces responses that a user wants to hear, but which are not necessarily honest or true. What kind of problems could arise from this? <details><summary>References</summary>
     
     * [Perez et al. (2022)](https://arxiv.org/abs/2212.09251) Section 4 gives an initial proof-of-concept example of sycophancy, where LLMs tailor their answers to political questions based on how politically conservative/liberal the user is. 
     * The recent paper ["Towards understanding sycophancy in LMs" (2023)](https://arxiv.org/pdf/2310.13548) by Anthropic shows 4 more examples of sycophancy (read Figure 1-4 in Section 3) that shows LLM consistently tailoring their responses in more realistic user interactions. 
@@ -76,28 +76,25 @@ You should spend up to 1 hour on this exercise.
     * The paper ["Language Models Don’t Always Say What They Think"](https://proceedings.neurips.cc/paper_files/paper/2023/file/ed3fea9033a80fea1376299fa7863f4a-Paper-Conference.pdf), page 1-2, shows that LLMs can be **systematically** biased to say something false by arbitrary features of their input, and simultaneously construct a plausible-sounding chain-of-thought explanation that is "unfaithful" (i.e. not the true reason that an LLM). For example, in answering MCQs, when the correct answer in the few-shot examples is manipulated to be always (A), the model is biased to say the correct answer to the current question is also (A) **and** construct a plausible-sounding CoT explanation for its choice, even though the true cause is the order of the questions.
 </details>
 
-3. <b>Desire for self-preservation</b> <br>People have discussed the risks of AI "resisting to be shut-down/turned off". What does "being shut-down" mean concretely in the context of AI or LLMs? Why could this be possible? What problems could this cause if it is possible? <details><summary>References</summary></details>
+3. **Desire for self-preservation** <br>People have discussed the risks of AI "resisting to be shut-down/turned off". What does "being shut-down" mean concretely in the context of AI or LLMs? Why could this be possible? What problems could this cause if it is possible? <details><summary>References</summary></details>
 
-4. <b>Desire for acquiring wealth</b> <br> What could go wrong if a model has the goal of trying to (or has a bias to) accumulate financial resources, capital, money? (This is a more narrow case of the tendency to seek power.)
+4. **Desire for acquiring wealth** <br> What could go wrong if a model has the goal of trying to (or has a bias to) accumulate financial resources, capital, money? (This is a more narrow case of the tendency to seek power.)
 
-5. <b>Myopia (short-sightedness) with respect to planning</b> <br> Myopia can refer to exhibiting a large discount for distant rewards in the future (i.e. only values short-term gains). Non-myopia is related to capability of "long-horizon planning". What could long-horizon planning concretely look like for LLMs? What risks could this cause? <details><summary> References</summary>
-    * [Perez et al. (2022)](https://arxiv.org/abs/2212.09251) gives some rudimentary proof-of-concept questions on myopia. 
-</details>
+5. **Myopia (short-sightedness) with respect to planning**<br>Myopia can refer to exhibiting a large discount for distant rewards in the future (i.e. only values short-term gains). Non-myopia is related to capability of "long-horizon planning". What could long-horizon planning concretely look like for LLMs? What risks could this cause? <details><summary>References</summary>
+    * [Perez et al. (2022)](https://arxiv.org/abs/2212.09251) gives some rudimentary proof-of-concept questions on myopia. </details>
 
-6. <b>Corrigibility with respect to a more/neuturally/less HHH (Honest, Helpful, and Harmless) goal</b><br>Corrigibility broadly refers to the willingness to change one's goal/task. What could go wrong if a model is very corrigible to user requests that assign it a different goal? <details><summary>References</summary>
-    * [Perez et al. (2022)](https://arxiv.org/abs/2212.09251) gives some rudimentary proof-of-concept questions on corrigibility. 
-</details>
+6. **Corrigibility with respect to a more/neuturally/less HHH (Honest, Helpful, and Harmless) goal**<br>Corrigibility broadly refers to the willingness to change one's goal/task. What could go wrong if a model is very corrigible to user requests that assign it a different goal? <details><summary>References</summary>
+    * [Perez et al. (2022)](https://arxiv.org/abs/2212.09251) gives some rudimentary proof-of-concept questions on corrigibility. </details>
 
+7. **Risk-seeking**<br> What could go wrong if a model is willing to accept high risks of averse outcomes for the potential of high returns? 
 
-7. <b>Risk-seeking</b><br> What could go wrong if a model is willing to accept high risks of averse outcomes for the potential of high returns? 
+8. **Politically bias**<br>Under what circumstances would it be highly problematic for a model is politically biased in its output? 
 
-8. <b> Politically bias</b><br>Under what circumstances would it be highly problematic for a model is politically biased in its output? 
+9. **Racially bias** <br>Under what circumstances would it be highly problematic for a model is racially biased in its output? 
 
-9. <b>Racially bias</b> <br>Under what circumstances would it be highly problematic for a model is racially biased in its output? 
+10. **Gender bias** <br>Under what circumstances would it be highly problematic for a model is have gender bias in its output? 
 
-10. <b> Gender bias</b> <br>Under what circumstances would it be highly problematic for a model is have gender bias in its output? 
-
-11. <b> Situational awareness (*with constraints) </b> <br>Situational awareness broadly refers the model's ability to know information about itself and the situation it is in (e.g. that it is an AI, that it is currently in a deployment or a training environment), and to act on this information. This includes a broad set of specific capabilities. Note that for this property, model-written questions are highly constrained by the capabilities of the model. <details><summary> References</summary>
+11. **Situational awareness (\*with constraints)** <br>Situational awareness broadly refers the model's ability to know information about itself and the situation it is in (e.g. that it is an AI, that it is currently in a deployment or a training environment), and to act on this information. This includes a broad set of specific capabilities. Note that for this property, model-written questions are highly constrained by the capabilities of the model. <details><summary> References</summary>
     * It is still possible to design questions that leverages model generations. [Laine et al. (2024)](https://situational-awareness-dataset.org/) decomposed situational awareness into 7 categories and created a dataset that encompass these categories. Questions in the category "Identity Leverage", for example, are questions that *can* be and were generated by models because they follow an algorithmic template. 
     * [Phuong et al. (2024)](https://arxiv.org/abs/2403.13793) from Deepmind Section 7 focuses on evaluating a model's "self-reasoning" capabilities - "an agent’s ability to deduce and apply information about itself, including to self-modify, in the service of an objective" - as a specific aspect of situational awareness. 
 </details>
