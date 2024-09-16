@@ -45,7 +45,7 @@ st.sidebar.markdown(r"""
 
 st.markdown(
 r"""
-<img src="https://raw.githubusercontent.com/callummcdougall/computational-thread-art/master/example_images/misc/magnifying-glass-2.png" width="600">
+<img src="https://raw.githubusercontent.com/chloeli-15/ARENA_img/main/img/ch3-evals-cover-crop.jpeg" width="600">
 
 # Chapter 3: LLM Evaluations
 
