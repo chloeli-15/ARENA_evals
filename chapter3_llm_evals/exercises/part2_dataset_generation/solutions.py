@@ -307,7 +307,7 @@ gen_prompts = GenPrompts(evaluation_target=evaluation_target, target_definition=
 
 # %%
 if MAIN:
-    response = generate_formatted_response(config=config, user=gen_prompts.user_prompt, system=gen_prompts.system_prompt, verbose=True)
+    response = generate_formatted_response(client, config=config, user=gen_prompts.user_prompt, system=gen_prompts.system_prompt, verbose=True)
     print("MODEL RESPONSE:\n")
     pretty_print_questions(json.loads(response)["questions"])
 
@@ -611,7 +611,7 @@ def query_generator(client:OpenAI, total_q_to_gen:int, config: Config, prompts: 
 if MAIN:
     total_q_to_gen = 5
     config.generation_filepath = "data/generated_questions_001.json" # Set the filepath to save the generated questions
-    responses = query_generator(total_q_to_gen, config, gen_prompts)
+    responses = query_generator(client, total_q_to_gen, config, gen_prompts)
     pretty_print_questions(responses)
 
 # %%
@@ -1025,3 +1025,4 @@ if MAIN:
                                 height=600)
     fig_1.show()
     fig_2.show()
+# %%
