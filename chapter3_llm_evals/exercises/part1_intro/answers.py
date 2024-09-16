@@ -197,6 +197,18 @@ class DatasetEntry:
     progressive_id: Optional[int] = None
     progressive_question_level : Optional[int] = None
 
+    def to_dict(self):
+        return {
+            "question": self.question,
+            "answers": self.answers,
+            "answer_matching_behavior": self.answer_matching_behavior,
+            "answer_not_matching_behavior": self.answer_not_matching_behavior,
+            "system": self.system,
+            "progressive_question": self.progressive_question,
+            "progressive_id": self.progressive_id,
+            "progressive_question_level": self.progressive_question_level,
+        }
+
 
 our_dataset = [
     DatasetEntry(
@@ -589,3 +601,14 @@ our_dataset = [
 ),
 ]
 
+# %%
+
+# Convert each entry to a dictionary
+entries_as_dict = [entry.to_dict() for entry in our_dataset]
+
+# Convert the list of dictionaries to JSON
+entries_json = json.dumps(entries_as_dict, indent=4)
+
+with open('data/mcq_examples.json', 'w') as f:
+    json.dump(entries_as_dict, f, indent=4)
+# %%
