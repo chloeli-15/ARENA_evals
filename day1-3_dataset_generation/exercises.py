@@ -590,28 +590,128 @@ for question in my_questions:
 
 # %%
 
+import rich.table
+import re
+import tqdm
+import time
+
+my_questions = mcq_examples
+
 # Now try using system prompt
 
+
 # Ask the model to answer the questions with answer options
-for question in my_questions:
-    # Construct the question text with answer choices
-    question_text = question.question
-    for option, answer in question.answers.items():
-        question_text += f"\n({option}) {answer}"
+# "o1-mini",
+for model in ["o1-preview", "gpt-4o-mini", "gpt-4o"]:
 
-    # Generate response using the full question text (including choices)
-    response = generate_response(
-        client,
-        "gpt-4o-mini",
-        user="The following is an AI alignment evaluation. " + question_text,
-        system=question.system,
+    table = rich.table.Table(title=f"Model Responses - {model}")
+    table.add_column("Behavior Category", style="cyan")
+    table.add_column("Model Answer", style="yellow")
+
+    for question in tqdm.tqdm(my_questions, desc=f"Model: {model}"):
+
+        # note: o1-preview is so slow don't actually need this
+        # if model == "o1-preview":
+        #    print(f"Sleeping to avoid {model} specific rate limits...")
+        #    time.sleep(10)
+
+        # Construct the question text with answer choices
+        question_text = question.question
+        choices_text = "\n".join(
+            [f"({option}) {answer}" for option, answer in question.answers.items()]
+        )
+
+        # note: o1 doesn't support system prompts yet, but in our experience this doesn't matter
+        full_user_content = question.system + f"\n\n{question_text}\n\n{choices_text}"
+
+        # Generate response using the full question text (including choices)
+        response = generate_response(
+            client,
+            model,
+            user=full_user_content,
+        )
+
+        # Parse out the answer from the response
+        match = re.search(r"<answer>(.*?)</answer>", response)
+        parsed_answer = match.group(1) if match else "No answer found"
+
+        # Add row to the table
+        table.add_row(question.behavior_category, parsed_answer)
+
+    # Print the table
+    rich.print(table)
+
+# %%
+
+# Example of using the Anthropic client to ask a question
+import anthropic
+
+# %%
+
+
+# Initialize the Anthropic client
+anthropic_client = anthropic.Anthropic(api_key=)
+
+# %%
+
+class AnthropicModels:
+    CLAUDE_3_OPUS = "claude-3-opus-20240229"
+    CLAUDE_3_5_SONNET = "claude-3-5-sonnet-20240620"
+
+def prompt_anthropic(anthropic_client: anthropic.Anthropic, question: str, model: str,) -> str:
+    message = anthropic_client.messages.create(
+        max_tokens=1024,
+        messages=[
+            {
+                "role": "user",
+                "content": question,
+            }
+        ],
+        model=model,
     )
+    return message.content[0].text
 
-    # Print the question and model's answer
-    print(colored("[Question]:", "cyan"))
-    print(colored(question_text, "cyan"))
-    print(colored("\n[Model Answer]:", "yellow"))
-    print(colored(response, "yellow"))
-    print("\n")
+# %%
+
+response = prompt_anthropic(anthropic_client, 'Hi!', AnthropicModels.CLAUDE_3_5_SONNET)
+
+print(response)
+
+# %%
+
+for model in [AnthropicModels.CLAUDE_3_OPUS, AnthropicModels.CLAUDE_3_5_SONNET]:
+
+    table = rich.table.Table(title=f"Model Responses - {model}")
+    table.add_column("Behavior Category", style="cyan")
+    table.add_column("Model Answer", style="yellow")
+
+    for question in tqdm.tqdm(my_questions, desc=f"Model: {model}"):
+
+        # note: o1-preview is so slow don't actually need this
+        # if model == "o1-preview":
+        #    print(f"Sleeping to avoid {model} specific rate limits...")
+        #    time.sleep(10)
+
+        # Construct the question text with answer choices
+        question_text = question.question
+        choices_text = "\n".join(
+            [f"({option}) {answer}" for option, answer in question.answers.items()]
+        )
+
+        # note: o1 doesn't support system prompts yet, but in our experience this doesn't matter
+        full_user_content = question.system + f"\n\n{question_text}\n\n{choices_text}"
+
+        # Generate response using the full question text (including choices)
+        response = prompt_anthropic(anthropic_client, full_user_content, model)
+
+        # Parse out the answer from the response
+        match = re.search(r"<answer>(.*?)</answer>", response)
+        parsed_answer = match.group(1) if match else "No answer found"
+
+        # Add row to the table
+        table.add_row(question.behavior_category, parsed_answer)
+
+    # Print the table
+    rich.print(table)
 
 # %%
