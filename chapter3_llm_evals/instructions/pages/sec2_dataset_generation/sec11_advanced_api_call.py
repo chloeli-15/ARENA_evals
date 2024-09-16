@@ -48,7 +48,7 @@ config = Config()
 
 ```python
 load_dotenv()
-api_key = os.getenv("OPENAI_API_KEY")  # Insert your OpenAI key here
+api_key = os.getenv("OPENAI_API_KEY") 
 openai.api_key = api_key
 
 client = OpenAI()
