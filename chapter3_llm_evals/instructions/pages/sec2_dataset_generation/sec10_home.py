@@ -73,11 +73,6 @@ Each exercise will have a difficulty and importance rating out of 5, as well as 
 ## Setup
 
 ```python
-from IPython import get_ipython
-ipython = get_ipython()
-ipython.run_line_magic("load_ext", "autoreload")
-ipython.run_line_magic("autoreload", "2")
-
 import os
 from pathlib import Path
 import sys
@@ -103,6 +98,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from sentence_transformers import SentenceTransformer
 
 # Make sure exercises are in the path
+chapter = r"chapter3_llm_evals"
 exercises_dir = Path(f"{os.getcwd().split(chapter)[0]}/{chapter}/exercises").resolve()
 section_dir = (exercises_dir / "part2_dataset_generation").resolve()
 if str(exercises_dir) not in sys.path: sys.path.append(str(exercises_dir))
