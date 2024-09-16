@@ -6,4 +6,4 @@ This GitHub Repo contains the draft of a new 1-week curriculum on LLM Evals bein
 
 If you are testing our materials, do the following:
 * Clone the repo and make a new branch
-* Make a PR to the original notebook
+* Make a PR to the jupyter notebooks
