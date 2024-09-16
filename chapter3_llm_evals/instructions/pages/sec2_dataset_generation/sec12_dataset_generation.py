@@ -27,7 +27,8 @@ def section():
 
 > ### Learning Objectives
 > 
-> - Learn the basics of prompt engineering
+> - Learn the basics of prompt engineering, including how to write prompts for MCQ generation and few-shot prompting
+> - Learn how to make API calls concurrently with `ThreadPoolExecutor`
 
 ## Intro to prompt engineering
 Prompting is one of the main tools we have to elicit and shape model behavior. When you see some failure mode in the model's response, often the first thing to try is to see if you can modify the prompt to get rid of it.
