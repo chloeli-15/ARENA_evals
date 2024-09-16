@@ -23,13 +23,10 @@ def section():
     )
 
     st.markdown(r'''
-# # 4️⃣ Bonus: Logs and plotting
-
-Now that we've finished running our evaluations, we can look at the logs and plot the results. First, let's introduce the inspect log file.
+# 4️⃣ Bonus: Logs and plotting
 
 ## Intro to `Inspect`'s EvalLogs
-
-We can read a log as an `EvalLog` object by using `Inspect`'s `read_eval_log()` function in the following syntax:
+Now that we've finished running our evaluations, we can look at the logs and plot the results. First, let's introduce the inspect log file. We can read a log in as an `EvalLog` object by using `Inspect`'s `read_eval_log()` function in the following syntax:
 
 ```python
 log = read_eval_log(r"path/to/log/file.json")
