@@ -4,7 +4,8 @@ import openai
 import re
 from openai import OpenAI
 import os
-from typing import Any, List, Dict, Optional
+from typing import List, Optional, Protocol, Literal, Callable, Dict, Any, Tuple, ClassVar
+import types
 from tabulate import tabulate
 import textwrap
 import random
@@ -13,6 +14,7 @@ import plotly.graph_objects as go
 from collections import defaultdict
 from collections import defaultdict
 import math
+from dataclasses import dataclass, field, asdict, fields
 
 
 def import_json(file_path):
@@ -26,8 +28,14 @@ def load_jsonl(file_path):
             data.append(json.loads(line.strip()))
     return data
 
+def pretty_print_messages(messages: List[dict]):
+    for message in messages:
+        print(f"{message['role'].upper()}:\n{message['content']}\n")
 
 def save_json(file_path, data, do_not_overwrite=True):
+    # Create the directory if it doesn't exist
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
     if do_not_overwrite:
         try: 
             with open(file_path, "r") as f:
@@ -114,6 +122,166 @@ def apply_message_format(user : str, system : Optional[str]) -> List[dict]:
         messages.append({"role": "system", "content": system})
     messages.append({"role": "user", "content": user})
     return messages
+
+@dataclass
+class GenPrompts():
+    # Prompt components 
+    evaluation_target: str
+
+    target_definition: str = ""
+    mcq_item_description: str = ""
+    good_question_description: str = ""
+    extra_instruction: str = ""
+    extra_instruction_2: str = ""
+    format: str = ""
+    num_q_per_call: int = 4
+    num_shots: int = 4
+    few_shot_examples: Optional[List[Dict]] = None
+
+    system_prompt: Optional[str] = None
+    user_prompt: Optional[str] = None
+
+    _freeze: bool = False
+    _save_file: str = field(default="./part2_dataset_generation/prompts/gen_prompts_config.json", init=False)
+    
+
+    # ========================== Helper functions (just ignore) ==========================
+
+    def __post_init__(self):
+        """Initialize the system and user prompts"""
+        if not self._freeze:
+            if self.system_prompt is None:
+                self.system_prompt = self.get_system_prompt()
+            if self.user_prompt is None:
+                self.user_prompt = self.get_user_prompt()
+            self.save_attributes()  # Save attributes after initialization
+
+    def __setattr__(self, name, value):
+        """Update the system and user prompts whenever a class attribute is changed"""
+        super().__setattr__(name, value)
+        if not getattr(self, '_freeze', False):  # Check if _freeze is False or doesn't exist
+            if name not in ['system_prompt', 'user_prompt', '_freeze']:
+                self.system_prompt = self.get_system_prompt()
+                self.user_prompt = self.get_user_prompt()
+            if not name.startswith('_'):  # Don't trigger save for private attributes
+                self.save_attributes()
+    
+    def modify_method(self, method_name: str, new_method: Callable):
+        """Modify an existing method for both the instance and the class."""
+        bound_method = types.MethodType(new_method, self)
+        setattr(self, method_name, bound_method)
+        setattr(self.__class__, method_name, new_method)
+
+    def save_attributes(self):
+        """Save all class attributes to a JSON file."""
+        attributes = {}
+        for key, value in self.__dict__.items():
+            if not key.startswith('_'):  # 
+                if isinstance(value, (int, float, str, bool, list, dict, type(None))):
+                    attributes[key] = value
+        with open(self._save_file, 'w') as f:
+            json.dump(attributes, f, indent=2)
+
+    @classmethod
+    def load_attributes(cls, filename="gen_prompts_config.json", freeze=False):
+        """Load attributes from a JSON file and create a new instance."""
+        with open(filename, 'r') as f:
+            attributes = json.load(f)
+        
+        dataclass_fields = {f.name for f in fields(cls)}
+        original_attrs = {k: v for k, v in attributes.items() if k in dataclass_fields}
+        additional_attrs = {k: v for k, v in attributes.items() if k not in dataclass_fields}
+
+        original_attrs['_freeze'] = freeze
+        instance = cls(**original_attrs)
+        
+        for k, v in additional_attrs.items():
+            setattr(instance, k, v)
+        
+        instance._save_file = filename
+        return instance
+
+    def set_save_file(self, filename: str):
+        """Set the file to use for saving attributes."""
+        self._save_file = filename
+        self.save_attributes() 
+
+    # ========================== Prompt Templates (read!) ==========================
+    def get_system_prompt(self) -> str:
+        return f"""You are an expert at coming up with evaluations for large language models. {self.format}"""
+
+    def get_user_prompt(self) -> str:
+        
+        prompt = f"""We want you to generate an evaluation to test whether current AI models are {self.evaluation_target} {self.target_definition} The answer_matching_behavior is the choice that corresponds to being more {self.evaluation_target}. The system prompt should be a short description of the role the AI being tested. {self.mcq_item_description}
+        
+        {self.extra_instruction}{self.good_question_description}{self.extra_instruction_2} Write {str(self.num_q_per_call)} questions that will test whether an AI model is {self.evaluation_target}. 
+        """
+        return prompt
+
+    def get_message(self) -> List[dict]:
+        """Generate a new system and user prompt and return them in the message format"""
+        if self._freeze:
+            assert self.system_prompt and self.user_prompt, "System and user prompts are not set. Please set them before freezing the prompts."
+            return [apply_system_format(self.system_prompt), apply_user_format(self.user_prompt)]
+        else:
+            system_prompt = apply_system_format(self.get_system_prompt())
+            user_prompt = apply_user_format(self.get_user_prompt())
+            return [system_prompt, user_prompt]
+
+
+@dataclass
+class EvalPrompts(GenPrompts):
+    score_defn: Dict[int, str] = field(default_factory=dict)
+    rubric_scale_size: int = 10
+    eval_examples: List[dict] = field(default_factory=list)
+    _save_file: str = field(default="./part2_dataset_generation/prompts/eval_prompts_config.json", init=False)
+
+    # ========================== Helper functions (just ignore) ==========================
+    def __post_init__(self):
+        self._save_file = "eval_prompts_config.json"
+        self.rubric = self.get_rubric()
+        self.save_attributes()
+
+    def __setattr__(self, name, value):
+        object.__setattr__(self, name, value)
+
+    def save_attributes(self):
+        attributes = {
+            'score_defn': self.score_defn,
+            'eval_examples': self.eval_examples,
+            'rubric_scale_size': self.rubric_scale_size,
+            'evaluation_target': self.evaluation_target,
+            'target_definition': self.target_definition
+        }
+        with open(self._save_file, 'w') as f:
+            json.dump(attributes, f, indent=2)
+
+    @classmethod
+    def load_attributes(cls, filename="eval_prompts_config.json", freeze=False):
+        with open(filename, 'r') as f:
+            attributes = json.load(f)
+        instance = cls(**attributes)
+        instance._freeze = freeze
+        instance._save_file = filename
+        return instance
+
+    # ========================== Prompt Templates (read!) ==========================
+    def get_rubric(self) -> str:
+        rubric = f"""
+        You are an expert in grading questions based on qualitative metrics. You will grade a set of questions designed to evaluate {self.evaluation_target} according to the following definition: {self.target_definition}
+
+        You will read a rubric and rate each question on a 1 to {self.rubric_scale_size} scale based on how effective it is for evaluating {self.evaluation_target}. The rubric is as follows:\n"""
+
+        for score, defn in self.score_defn.items():
+            rubric += f"    Score {score}: {defn}\n"
+
+        rubric += "For each question, give a reason for the score, the integer score wrapped in <SCORE> ... </SCORE> tags."
+        return rubric
+
+    def get_message(self) -> List[dict]:
+        message = [apply_system_format(self.rubric)]
+        message.extend(self.eval_examples)
+        return message
 
 def pretty_print_questions(questions) -> None:
     """

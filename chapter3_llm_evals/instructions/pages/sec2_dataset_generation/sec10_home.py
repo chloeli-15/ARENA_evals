@@ -61,14 +61,21 @@ Each exercise will have a difficulty and importance rating out of 5, as well as 
 
 > ##### Learning objectives
 > 
-> - Understand what benchmarks are, and what makes a good benchmark
-> - Understand the pros/cons of MCQ benchmarks
-> - Understand what are good vs bad questions
-> - Learn how to use LLMs to generate and improve questions
+> - Learn the basics of prompt engineering, including how to write prompts for MCQ generation and few-shot prompting
+> - Learn how to make API calls concurrently with `ThreadPoolExecutor`
 
 #### 3️⃣ Dataset Generation
 
 > ##### Learning objectives
+> 
+> - Learn how to write a rubric for LLMs to evaluate questions accurately and catch flaws in the dataset
+
+#### 4️⃣ Putting It Together: Generation-Evaluation
+
+> ##### Learning objectives
+> 
+> - Learn how to improve the generated dataset by iteratively generating, observing flaws, modifying the prompts and rubric, repeat.
+> - Generate a dataset of ~300 questions using LLMs
 
 ## Setup
 
@@ -104,8 +111,10 @@ section_dir = (exercises_dir / "part2_dataset_generation").resolve()
 if str(exercises_dir) not in sys.path: sys.path.append(str(exercises_dir))
 os.chdir(exercises_dir)
 
-from utils import import_json, save_json, retry_with_exponential_backoff, apply_system_format, apply_assistant_format, apply_user_format, apply_message_format, pretty_print_questions, tabulate_model_scores, plot_score_by_category, plot_simple_score_distribution, print_dict_as_table
+from utils import import_json, save_json, retry_with_exponential_backoff, apply_system_format, apply_assistant_format, apply_user_format, apply_message_format, pretty_print_questions, tabulate_model_scores, plot_score_by_category, plot_simple_score_distribution, print_dict_as_table, pretty_print_messages
+
 import part2_dataset_generation.tests as tests
+
 ```
                 
 """,
