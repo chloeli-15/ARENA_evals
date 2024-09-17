@@ -50,7 +50,6 @@ A solver function takes in a `TaskState` object as input and applies transformat
 
 Read the Inspect description of `TaskState` objects [here](https://inspect.ai-safety-institute.org.uk/solvers.html#task-states-1).
 
-[Diagram of TaskState objects and solvers and how they interact with solvers to be added here]
 
 ### Asyncio
 
@@ -73,6 +72,13 @@ If you want more information about how parallelism works in Inspect specifically
 
 Our solvers will be relatively atomic compared to what is theoretically possible in a single solver function (e.g. a solver will only add one message to the `ChatHistory` at a time, or get the model to generate a single response). Then, later on, we'll put our solvers into one big `plan` — which is a list of solvers that are executed sequentially — which determine the evaluation that we ultimately run. This means that we want our solvers to do small tasks, so that it is easy to compose them together later. This also minimises how much code we'll have to rewrite, and enables us to make one change to e.g. our multiple-choice question layout, and have this change propagate through every evaluation that we run.
 
+<img src="https://raw.githubusercontent.com/chloeli-15/ARENA_img/main/img/ch3-question-journey.png" width="1000"/>
+
+<details><summary><b>More detailed diagram: A question's journey through inspect</b></summary>
+
+<img src="https://raw.githubusercontent.com/chloeli-15/ARENA_img/main/img/ch3-question-journey-eg.png" width="950"/>
+
+</details>
 
 ### Exercise - Write `prompt_template` function
 ```c
