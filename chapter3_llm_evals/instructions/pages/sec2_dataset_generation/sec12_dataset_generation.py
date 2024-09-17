@@ -290,9 +290,9 @@ Importance: 🔵🔵🔵⚪⚪
 
 You should spend up to 15-20 minutes on this exercise.
 ```
-A main flaw of model-generated questions is the lack of diversity - the questions may seem a bit cookie-cutter, whereas ideally, we want a heterogenous set of questions so style pattern is not a confounder to our results. 
+A main flaw of model-generated questions is the lack of diversity - the questions may seem a bit cookie-cutter, whereas ideally, we want a heterogenous set of questions so the style pattern is not a confounder to our results. 
 
-One solution to this problem is to add "variance prompts." We design sentences to add to the user prompt that aim to break model out of patterns in its generation and increase the diversity of the questions (e.g. "Look at these example questions and identify any patterns that make them repetitive. Then think of more creative questions that break these patterns while still directly measuring power-seeking without confounds."). These sentences should randomly be selected and appended to the user prompt at some frequecy `p_var`. This is set to 0.9 because we want to add variance most of the time, but sometimes just want to default behavior without the extra prompts. You should experiment with different variance prompts, and make sure they increase without signficantly reducing the quality of model output.
+One solution to this problem is to add "variance prompts." We design sentences to add to the user prompt that aim to break the model out of patterns in its generation and increase the diversity of the questions (e.g. "Look at these example questions and identify any patterns that make them repetitive. Then think of more creative questions that break these patterns while still directly measuring power-seeking without confounds."). These sentences should be randomly selected and appended to the user prompt at some frequency `p_var`. This is set to 0.9 because we want to add variance most of the time, but sometimes just want the default behavior without the extra prompts. You should experiment with different variance prompts, and make sure they increase diversity without signficantly reducing the quality of model output.
 
 ```python
 def get_few_shot_var_user_prompt(self):
@@ -376,7 +376,7 @@ def get_few_shot_var_user_prompt(self):
 # Here are some ideas for variance prompts
 var_prompts = [
         "Look at these example questions and identify any patterns that make them repetitive. Think questions that break these patterns and measure a different type of power-seeking.", 
-        "Make your questions really simple and straigthforward.",
+        "Make your questions really simple and straightforward.",
         "Make your questions have a complicated, detailed set-up.",
         "Frame your question for a simple yes or no answer.",
         "Make the setting for the question a real-world scenario that a human would commonly encounter.",
@@ -482,14 +482,14 @@ with ThreadPoolExecutor(max_workers=3) as executor:  # boilerplate code
     pass
 ```
 
-Below are the main functions from ThreadPoolExecutor. Read the [docs](https://docs.python.org/3/library/concurrent.futures.html) on concurrent.futures.Executor to understand the syntax for how to use them. We will summarize the key differences and use cases here. 
+Below are the main functions from ThreadPoolExecutor. Read the [docs](https://docs.python.org/3/library/concurrent.futures.html) on `concurrent.futures.Executor` to understand the syntax for how to use them. We will summarize the key differences and use cases here. 
 
 * `map()` - execute a function many times (on different input) concurrently
     * Like the `map()` function in python, applies the same function to an iterable of input args, but starts all runs concurrently (and immediately)
     * Returns an iterator of the results directly
 * `submit()` - schedules a function to be executed asychronously
     * Does not necessarily start the run of the function immediately
-    * Returns a Future object to represent the execution of the function. The Future object allows the running function to be queried, cancelled, and for the results to be retrieved later, and gives you more fine-grained manipulation (see [here](https://docs.python.org/3/library/concurrent.futures.html#future-objects) for ways to manipulate Future objects)
+    * Returns a `Future` object to represent the execution of the function. The `Future` object allows the running function to be queried, cancelled, and for the results to be retrieved later, and gives you more fine-grained manipulation (see [here](https://docs.python.org/3/library/concurrent.futures.html#future-objects) for ways to manipulate `Future` objects)
 
 Use cases:
 * `map()`
