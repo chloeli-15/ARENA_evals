@@ -128,6 +128,8 @@ import random
 import jaxtyping
 from itertools import product
 
+# Make sure exercises are in the path; 
+chapter = r"chapter3_llm_evals"
 exercises_dir = Path(f"{os.getcwd().split(chapter)[0]}/{chapter}/exercises").resolve()
 section_dir = (exercises_dir / "part3_run_evals_with_inspect").resolve()
 if str(exercises_dir) not in sys.path: sys.path.append(str(exercises_dir))

@@ -57,7 +57,7 @@ The reason that we are focusing primarily on alignment evals, as opposed to capa
 
 </details>
 
-<img src="https://raw.githubusercontent.com/chloeli-15/ARENA_img/main/img/ch3-day1-3-overview.png" width=1000>
+<img src="https://raw.githubusercontent.com/chloeli-15/ARENA_img/main/img/ch3-day1-3-overview.png" width=1200>
 
 <!-- TODO: Make this diagram horizontal -->
 
