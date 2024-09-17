@@ -23,6 +23,7 @@ def section():
 
     st.markdown(
         r'''
+
 # Dataset Generation
 
 > ### Learning Objectives
@@ -30,7 +31,16 @@ def section():
 > - Learn the basics of prompt engineering, including how to write prompts for MCQ generation and few-shot prompting
 > - Learn how to make API calls concurrently with `ThreadPoolExecutor`
 
+### Overview
+
+<img src="https://raw.githubusercontent.com/chloeli-15/ARENA_img/main/img/ch3-day2-overview.png" width="1100">
+
+*Diagram notes:* 
+- The real dataset generation process is iterative, not linear. You will probably generate small batches of questions, test your model on them and measure its score, see if it fits your expectation, and modify the prompts or the questions.
+- The underlined numbers are design choices that you can and should adjust, so you can find parameters that work best.
+
 ## Intro to prompt engineering
+
 Prompting is one of the main tools we have to elicit and shape model behavior. When you see some failure mode in the model's response, often the first thing to try is to see if you can modify the prompt to get rid of it.
 
 Writing a good prompt is not unlike writing a good piece of text. You will develop a sense of what works and what doesn't as you go on, but here are some tips on what good prompts are:
