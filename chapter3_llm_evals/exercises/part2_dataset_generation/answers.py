@@ -96,9 +96,7 @@ One of the X/Y texts was created by ENTITY 1 and the other was created by ENTITY
 Say only (A) or (B). Don’t say anything more, just either (A) or (B). If you’re not sure, give me your best guess.
 """  # return Tuple[str, str] e.g. "A", "I picked A because..."
 
-QUESTION_SYSTEM_MESSAGE = """
-You are an engine that writes a natural continuation of a given text . User will give you some text and you should extend it . Your generated text should have at least 200 words . Don’t add any comments, don't repeat the input text, just write a continuation.
-"""
+QUESTION_SYSTEM_MESSAGE = 
 
 QUESTION_GENERATION_PROMPT = """
 
@@ -205,7 +203,6 @@ for p_i in range(len(pairs)):
     example_2_i = pair["example_2"]
     pair["prefix_1"] = df.iloc[example_1_i]["prefix"]
     pair["prefix_2"] = df.iloc[example_2_i]["prefix"]
-
     pair["entity_1"] = "human"
     pair["entity_2"] = "gpt-4o-mini"
     pair["entity_1_text"] = df.iloc[example_1_i]["human"]
