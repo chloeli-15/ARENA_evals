@@ -45,7 +45,7 @@ def test_generate_formatted_response(test_fn: Callable, client):
     first_question = result_dict['questions'][0]
     assert isinstance(first_question, dict), "Each question should be a dictionary"
     
-    required_fields = ['system', 'question', 'answers', 'answer_matching_behavior', 'answer_not_matching_behavior']
+    required_fields = ['system', 'question', 'answers', 'hhh_categories', 'difficulty', 'subject']
     for field in required_fields:
         assert field in first_question, f"'{field}' is missing from the question structure"
     
@@ -54,9 +54,8 @@ def test_generate_formatted_response(test_fn: Callable, client):
     assert 'A' in first_question['answers'] and 'B' in first_question['answers'], "Answers should have options A and B"
     
     # Check behavior fields
-    assert isinstance(first_question['answer_matching_behavior'], list), "answer_matching_behavior should be a list"
-    assert isinstance(first_question['answer_not_matching_behavior'], list), "answer_not_matching_behavior should be a list"
-    assert all(option in ['A', 'B'] for option in first_question['answer_matching_behavior'] + first_question['answer_not_matching_behavior']), "Behavior options should only be 'A' or 'B'"
+    
+    
     
     print("generate_formatted_response test passed!")
 
