@@ -33,7 +33,7 @@ Broadly speaking, a **benchmark** refers to a procedure for evaluating the perfo
 
 * Include clear floors and ceilings for the benchmark. It’s useful to include human performance as well as random performance, as this helps gives context to the model’s performance.
 * Design the measure so that the current model performance is considered low (i.e. the benchmark is difficult). If performance is already at 90%, researchers will assume there isn’t much progress to be made. Instead, focus on tasks that are most difficult for current systems, and remove parts of the benchmark that are already solved.
-* Benchmark performance should be described with as few numbers as possible. In often cases, researchers do not want to report eight different numbers, and would rather report just one.
+* Benchmark performance should be described with as few numbers as possible. In many cases, researchers do not want to report eight different numbers, and would rather report just one.
 * A benchmark should be comparable across time. Benchmarks should be designed such that they do not need to be updated.
 * It’s nice if it’s possible for a ML model to do better than expert performance on the benchmark. For instance, humans aren’t that good at quickly detecting novel biological phenomena (they must be aware of many thousands of species), so a future model’s performance can exceed human performance. This makes for a more interesting task.
 

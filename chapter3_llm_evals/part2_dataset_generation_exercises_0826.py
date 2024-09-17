@@ -26,7 +26,7 @@ repo = "ARENA_3.0"
 
 if IN_COLAB:
     # Install packages
-    %pip install openai==0.28
+    %pip install openai
     %pip install jaxtyping
     %pip install plotly
     %pip install futures
