@@ -45,6 +45,7 @@ def retry_with_exponential_backoff(
             except Exception as e:
                 if "rate_limit_exceeded" in str(e):
                     sleep_time *= backoff_factor * (1 + jitter * random.random())
+                    print(f"Rate limit exceeded. Retrying in {sleep_time} seconds...")
                     time.sleep(sleep_time)
                 else:
                     raise

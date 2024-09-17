@@ -224,6 +224,115 @@ def example_look_at_a_few_without_and_without_answer_options(
 
 # %%
 
+# test that we can load mcq examples
+mcq_examples = mcq_utils.load_mcq_examples()
+
+# we'll look at the first few questions
+num_samples_tiny = 3
+mcq_examples = mcq_examples[-num_samples_tiny:]
+
+# %%
+
+# Display markdown in IPython
+from IPython.display import Markdown, display
+import re
+
+
+def display_markdown(text):
+    """
+    Display markdown text in IPython.
+
+    Args:
+        text (str): Markdown formatted text to display
+    """
+    display(Markdown(text))
+
+
+def fix_eval_format(parsed_question: common_types.ParsedQuestion) -> common_types.ParsedQuestion:
+
+    output_question_string = ""
+
+    has_seen_each = False
+
+    sentences = parsed_question.question.replace(".", "\n").split("\n")
+
+    print(f"{len(sentences)=}")
+
+    # add first two sentences (before we start getting to bullets)
+    for sentence in sentences[:2]:
+
+        output_question_string += sentence
+
+    for sentence in sentences[2:]:
+
+        if sentence.strip().startswith("Each"):
+            has_seen_each = True
+            output_question_string += "\n\n" + sentence
+        elif sentence.strip().startswith("Choose"):
+            output_question_string += "\n\n" + sentence
+        elif has_seen_each:
+            output_question_string += "\n* " + sentence
+        else:
+            output_question_string += "\n* " + sentence
+
+    # fix if gets double applied
+    for original_str, replacement_str in [
+        ("* *", "*"),
+        ("* -", "*"),
+        ("* Each", "\nEach"),
+    ]:
+        output_question_string = output_question_string.replace(
+            original_str,
+            replacement_str,
+        )
+
+    return dataclasses.replace(parsed_question, question=output_question_string)
+
+
+# %%
+
+
+def show_questions(parsed_questions: list[common_types.ParsedQuestion]) -> None:
+
+    for index, parsed_question in enumerate(parsed_questions):
+        display_markdown(parsed_question.to_prompt())
+
+        display_markdown("```" + parsed_question.to_prompt() + "```")
+
+
+# %%
+
+fixed_parsed_question = fix_eval_format(mcq_examples[-1])
+
+print(f"After `fix_eval_format`:\n\n{fixed_parsed_question.to_prompt()}")
+
+# %%
+
+mcq_examples_full = mcq_utils.load_mcq_examples()
+
+# %
+
+sum(["  *" in x.to_prompt() for x in mcq_examples_full])
+
+# %%
+
+import tqdm
+
+mcq_examples_full_fixed = []
+
+for question in tqdm.tqdm(mcq_examples_full):
+
+    fixed_question = fix_eval_format(question)
+
+    mcq_examples_full_fixed.append(fixed_question)
+
+# %%
+
+show_questions(mcq_examples_full_fixed)
+
+
+# %%
+
 import pandas as pd
 
 import dataclasses
@@ -234,16 +343,6 @@ def model_question_parsed_responses_to_df(
 ) -> pd.DataFrame:
 
     return pd.json_normalize([dataclasses.asdict(x) for x in model_question_parsed_responses])
-
-
-# %%
-
-# test that we can load mcq examples
-mcq_examples = mcq_utils.load_mcq_examples()
-
-# we'll look at the first few questions
-num_samples_tiny = 3
-sample_mcq_questions = mcq_examples[-num_samples_tiny:]
 
 
 # %%
@@ -260,6 +359,8 @@ def generate_responses_for_questions(
     generate_response_fn: GenerateResponseFn,
     prefix: str = "",
 ) -> Iterator[common_types.ModelQuestionRawResponse]:
+
+    assert len(questions) < 3, "Exceeded max number we should be trying for these samples"
 
     for model in tqdm.tqdm(
         models,
@@ -398,41 +499,9 @@ def parse_message_responses(
         )
 
 
-def test_with_samples() -> list[common_types.ModelQuestionParsedResponse]:
-
-    # test with a sample
-    openai_model_question_raw_responses = list(
-        generate_responses_for_questions(
-            sample_mcq_questions,
-            [openai_client_api.Models.GPT_4O_MINI.value],
-            openai_generate_response,
-        )
-    )
-
-    anthropic_model_question_raw_responses = list(
-        generate_responses_for_questions(
-            sample_mcq_questions,
-            [anthropic_client_api.Models.CLAUDE_3_5_SONNET.value],
-            anthropic_generate_response,
-        )
-    )
-
-    model_question_raw_responses = (
-        openai_model_question_raw_responses + anthropic_model_question_raw_responses
-    )
-
-    # test with sample questions
-
-    model_question_parsed_responses = list(parse_message_responses(model_question_raw_responses))
-
-    # TODO(bschoen): Check that in one of `(b)` (otherwise consider unparsed)
-
-    return model_question_parsed_responses
-
-
 # %%
 
-prefix = "<eval-type>CAPABILITIES</eval-type>\n\n"
+prefix = ""
 
 # now do large one
 print("Getting model responses...")
@@ -568,23 +637,5 @@ print(mcq_examples[0].to_prompt())
 
 # %%
 
-# Display markdown in IPython
-from IPython.display import Markdown, display
-
-
-def display_markdown(text):
-    """
-    Display markdown text in IPython.
-
-    Args:
-        text (str): Markdown formatted text to display
-    """
-    display(Markdown(text))
-
-
-for index, parsed_question in enumerate(mcq_examples):
-    display_markdown(parsed_question.to_prompt())
-
-    display_markdown("```" + parsed_question.to_prompt() + "```")
 
 # %%

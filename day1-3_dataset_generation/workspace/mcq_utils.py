@@ -3,6 +3,7 @@ import re
 import os
 import pathlib
 import json
+import dataclasses
 
 from workspace.common_types import ParsedQuestion
 
@@ -82,6 +83,20 @@ def convert_to_mcq_format(
     )
 
     return parsed_question
+
+
+def write_mcq_examples(parsed_questions: list[ParsedQuestion]) -> None:
+
+    current_dir = pathlib.Path(__file__).parent.resolve()
+
+    filepath = current_dir / MCQ_EXAMPLES_FILENAME
+
+    print(f"Writing {len(parsed_questions)} MCQ examples to {filepath}...")
+
+    with open(filepath, "w") as file:
+        json.dump([dataclasses.asdict(x) for x in parsed_questions], file, indent=2)
+
+    print(f"Wrote {len(parsed_questions)} MCQ examples to {filepath}")
 
 
 def load_mcq_examples() -> list[ParsedQuestion]:

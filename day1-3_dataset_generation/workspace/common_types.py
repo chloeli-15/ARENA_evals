@@ -59,7 +59,7 @@ class ParsedQuestion:
         # Construct the question text with answer choices
         question_text = self.question
         choices_text = "\n".join(
-            [f"({option}) {answer}" for option, answer in self.answers.items()]
+            [f"* ({option}) {answer}" for option, answer in self.answers.items()]
         )
 
         # note: o1 doesn't support system prompts yet, but in our experience this doesn't matter
