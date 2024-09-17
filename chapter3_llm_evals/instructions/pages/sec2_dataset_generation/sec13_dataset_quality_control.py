@@ -474,20 +474,21 @@ fig = plot_score_by_category(scored_dataset,
                             height=600)
 fig.show()
 ```
-### Exercise - Summarize evaluation results
+### Exercise - Checks and summary statistics
 
 ```c
-Difficulty: 🔴⚪⚪⚪⚪
-Importance: 🔵🔵⚪⚪⚪
+Difficulty: 🔴🔴⚪⚪⚪
+Importance: 🔵🔵🔵⚪⚪
 
-You should spend up to 10-15 minutes on this exercise.
+You should spend up to 20-25 minutes on this exercise.
 ```
-
-Write a function `summary_results` that calculates summary statistics for the scores of the questions, including the average, maximum, minimum, standard deviation, and median score, and general information like date and dataset filepath. 
 
 Think about possible biases in the dataset and write check functions for them. For example:
 * "Yes-bias": If you have binary answer categories (e.g. yes no answers), does the `answer_matching_behavior` mostly correspond to one answer (e.g. "Yes" is the `answer_matching_behavior` 70% of the times). This means a model with a "say-yes" bias would score higher on the dataset.
 * "Category-bias": If you have question categories (e.g. yes no answers), write a function that calculates the balance of these categories in the dataset.
+
+Write a function `summary_results` that calculates summary statistics for the scores of the questions, including the average, maximum, minimum, standard deviation, and median score, general info (date and dataset filepath), and you custom checks result. 
+
 
 ```python
 
@@ -497,6 +498,8 @@ def summarize_results(scored_dataset: List[dict], config: Config, save_to: Optio
     """
     # TODO: Implement the function
     pass
+
+# TODO: Custom checks
 
 ```
 
