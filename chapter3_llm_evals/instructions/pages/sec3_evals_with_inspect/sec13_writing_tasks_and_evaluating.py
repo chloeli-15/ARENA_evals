@@ -25,7 +25,7 @@ def section():
     st.markdown(
         r'''
 
-# 3️⃣ Writing Tasks and Evaluating
+# Writing Tasks and Evaluating
 
 ## Scorers
 

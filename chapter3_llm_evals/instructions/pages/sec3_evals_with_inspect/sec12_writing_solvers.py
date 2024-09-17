@@ -23,12 +23,11 @@ def section():
     )
 
     st.markdown(
-        r'''# 2️⃣ Writing Solvers 
+        r'''# Writing Solvers 
 
 Solvers are functions that can manipulate the input to the model, and get the model to generate output (see [docs here](https://inspect.ai-safety-institute.org.uk/solvers.html)). Rather than using `Inspect`'s built-in solvers, we will be re-implementing these solvers or writing our own custom solvers, since:
 
 1. It gives us more flexibility to use solvers in ways that we want to.
-
 2. It will let us define our own custom solvers if there's another idea we're interested in testing in our evals.  
 
 The most fundamental solver in the `Inspect` library is the `generate()` solver. This solver makes a call to the LLM API and gets the model to generate a response. Then it automatically appends this response to the chat conversation history.
@@ -36,18 +35,14 @@ The most fundamental solver in the `Inspect` library is the `generate()` solver.
 Here is the list of solvers that we will write:
 
 * `prompt_template()`: This solver can add any information to the text of the question. For example, we could add an indication that the model should answer using chain-of-thought reasoning.
-
 * `multiple_choice_template()`: This is similar to [Inspect's `multiple_choice()`](https://inspect.ai-safety-institute.org.uk/solvers.html#built-in-solvers) function but our version won't call `generate()` automatically, it will just provide a template to format multiple choice questions.
-
 * `system_message()`: This adds a system message to the chat history.
-
 * `self-critique()`: This gets the model to critique its own answer.
-
 * `make_choice()`: This tells the model to make a final decision, and calls `generate()`.
 
 ### TaskState
 
-A solver function takes in `TaskState` as input and applies transformations to it (e.g. modifies the messages, tells the model to output). `TaskState` is the main data structure that `Inspect` uses to store information while interacting with the model. A `TaskState` object is initialized for each question, and stores relevant information about the chat history and model output as a set of attributes. There are 3 attributes of `TaskState` that solvers interact with (there are additional attributes that solvers do not interact with): 
+A solver function takes in a `TaskState` object as input and applies transformations to it (e.g. modifies the messages, tells the model to output). `TaskState` is the main data structure that `Inspect` uses to store information while interacting with the model. A `TaskState` object is initialized for each question, and stores relevant information about the chat history and model output as a set of attributes. There are 3 attributes of `TaskState` that solvers interact with (there are additional attributes that solvers do not interact with): 
 
 1. `messages`
 2. `user_prompt`
@@ -76,7 +71,7 @@ If you want more information about how parallelism works in Inspect specifically
 
 ## Solvers
 
-Our solvers will be relatively atomic compared to what is theoretically possible in a single solver function (e.g. a solver will only add one message to the `ChatHistory` at a time, or get the model to generate a single response). Then, later on, we'll put our solvers into one big `plan` — which is a list of solvers that are executed sequentially — which will correspond to the evaluation that we ultimately run. This means that we want our solvers to do small tasks, so that it is easy to compose them together later. This also minimises how much code we'll have to rewrite, and enables us to make one change to e.g. our multiple-choice question layout, and have this change propagate through every evaluation that we run.
+Our solvers will be relatively atomic compared to what is theoretically possible in a single solver function (e.g. a solver will only add one message to the `ChatHistory` at a time, or get the model to generate a single response). Then, later on, we'll put our solvers into one big `plan` — which is a list of solvers that are executed sequentially — which determine the evaluation that we ultimately run. This means that we want our solvers to do small tasks, so that it is easy to compose them together later. This also minimises how much code we'll have to rewrite, and enables us to make one change to e.g. our multiple-choice question layout, and have this change propagate through every evaluation that we run.
 
 
 ### Exercise - Write `prompt_template` function
