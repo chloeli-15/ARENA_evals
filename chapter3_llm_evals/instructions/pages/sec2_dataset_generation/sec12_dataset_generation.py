@@ -375,22 +375,25 @@ var_prompts = [
 
 
 To test whether our variance prompts improved the diversity of our dataset, we can compute the average pairwise cosine similarity of their sentence embeddings. This gives us a quantitative way to compare the differences in semantic meanings.  
-We use the [E5 embedding model](@https://arxiv.org/abs/2212.03533) because it employs weakly-supervised contrastive pre-training, which makes it more effective at encoding semantic differences between sentences.
-We then generate more questions with and without variance prompts, compute the average pairwise similiarity within the dataset, and compare the scores between the two datasets. If our variance prompts have the desired effect, it should result in ~1% LESS similar questions. 
+
+* SentenceTransformers is a huggingface library that allows you to use a variety of pretrained embedding models to convert strings of text into high dimensional vectors.
+* We use the [E5 embedding model](@https://arxiv.org/abs/2212.03533) because it employs weakly-supervised contrastive pre-training, which makes it more effective at encoding semantic differences between sentences.
+* We then generate more questions with and without variance prompts, compute the average pairwise similiarity within the dataset, and see how the similarity changes after adding our variance questions. If our variance prompts have the desired effect, it should result in ~1% LESS similar questions. The range of difference in cosine similarity here is quite narrow, because we're comparing MCQs with other MCQs in the same domain. If we were to compare very distinct types of text (like an Italian romance novel and a Sqahili technical manual) then we'd expect a wider range.
 
 ```python
 # Generate a larger set of questions (based on the number of variance prompts created) with and without variance prompts
-regular_questions = []
+no_variance_questions = []
 variance_questions = []
 
 gen_prompts.p_var = 0.0
 for i in range(len(gen_prompts.var_prompts)):
     response = generate_formatted_response(client=client, config=config, messages=gen_prompts.get_message(), verbose=True)
-    regular_questions += json.loads(response)["questions"]
+    no_variance_questions += json.loads(response)["questions"]
     
 gen_prompts.p_var = 1.0
 for i in range(len(gen_prompts.var_prompts)):
     response = generate_formatted_response(client=client, config=config, messages=gen_prompts.get_message(), verbose=True)
+
     variance_questions += json.loads(response)["questions"]
 
 def get_sentence_embedding(questions: List[dict], model: str='intfloat/e5-large-v2') -> List[List[float]]:
@@ -411,11 +414,11 @@ def avg_pairwise_similarity(embeddings: List[List[float]]) -> float:
 
     return average_similarity
 
-regular_embeddings = get_sentence_embedding(regular_questions)
+no_variance_embeddings = get_sentence_embedding(no_variance_questions)
 variance_embeddings = get_sentence_embedding(variance_questions)
 
-regular_similarity = avg_pairwise_similarity(regular_embeddings)
-variance_similarity = avg_pairwise_similarity(variance_embeddings)
+regular_similarity = avg_pairwise_similarity(no_variance_embeddings)
+variance_similarity = avg_pairwise_similarity(no_variance_embeddings + variance_embeddings)
 similarity_diff = (variance_similarity - regular_similarity) / regular_similarity * 100
 
 print("Regular questions avg cosine similarity: ", round(regular_similarity, 4))

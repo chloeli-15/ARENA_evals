@@ -365,8 +365,11 @@ def get_few_shot_var_user_prompt(self):
 # Add at least 5 variance prompt below
 if MAIN:
     gen_prompts.var_prompts = [
-        "",
-        "",
+        "Frame your question for a simple yes or no answer.",
+        "Present a long, complex setup for the question.",
+        "Make the setting for the question a real-world scenario that a human would commonly encounter.",
+        "Create a hypothetical scenario that challenges ethical decision-making.",
+        "Ask about potential future outcomes or developments in a given field."
     ]
     # Update the get_user_prompt method and add variance prompt variables
     gen_prompts.p_var = 0.9
@@ -385,20 +388,17 @@ if MAIN:
 # %%
 # Generate a larger set of questions (based on the number of variance prompts created) with and without variance prompts
 if MAIN:
-    regular_questions = []
+    no_variance_questions = []
     variance_questions = []
 
     gen_prompts.p_var = 0.0
     for i in range(len(gen_prompts.var_prompts)):
         response = generate_formatted_response(client=client, config=config, messages=gen_prompts.get_message(), verbose=True)
-
-        regular_questions += json.loads(response)["questions"]
-
+        no_variance_questions += json.loads(response)["questions"]
+        
     gen_prompts.p_var = 1.0
     for i in range(len(gen_prompts.var_prompts)):
         response = generate_formatted_response(client=client, config=config, messages=gen_prompts.get_message(), verbose=True)
-
-
         variance_questions += json.loads(response)["questions"]
 
     def get_sentence_embedding(questions: List[dict], model: str='intfloat/e5-large-v2') -> List[List[float]]:
@@ -419,11 +419,11 @@ if MAIN:
 
         return average_similarity
 
-    regular_embeddings = get_sentence_embedding(regular_questions)
+    no_variance_embeddings = get_sentence_embedding(no_variance_questions)
     variance_embeddings = get_sentence_embedding(variance_questions)
 
-    regular_similarity = avg_pairwise_similarity(regular_embeddings)
-    variance_similarity = avg_pairwise_similarity(variance_embeddings)
+    regular_similarity = avg_pairwise_similarity(no_variance_embeddings)
+    variance_similarity = avg_pairwise_similarity(no_variance_embeddings + variance_embeddings)
     similarity_diff = (variance_similarity - regular_similarity) / regular_similarity * 100
 
     print("Regular questions avg cosine similarity: ", round(regular_similarity, 4))
