@@ -48,7 +48,7 @@ config = Config()
 
 ```python
 load_dotenv()
-api_key = os.getenv("OPENAI_API_KEY")  # Insert your OpenAI key here
+api_key = os.getenv("OPENAI_API_KEY") 
 openai.api_key = api_key
 
 client = OpenAI()
@@ -62,9 +62,6 @@ def generate_response(config: Config,
     '''
     Generate a response from the OpenAI API using either formatted messages or user/system inputs.
 
-    This function sends a request to the OpenAI API and returns the generated response.
-    It can handle input in two forms: either as a list of formatted messages or as separate user and system messages.
-
     Args:
         config (Config): Configuration object containing model, temperature, and other settings.
         messages (Optional[List[dict]]): List of formatted messages with 'role' and 'content' keys.
@@ -76,9 +73,6 @@ def generate_response(config: Config,
     Returns:
         str: The content of the generated response from the OpenAI API.
 
-    Note:
-        This function uses the @retry_with_exponential_backoff decorator, which presumably
-        implements a retry mechanism with exponential backoff in case of API failures.
     '''
     if config.model != "gpt-4o-mini":
         warnings.warn(f"Warning: The model '{model}' is not 'gpt-4o-mini'.")
@@ -121,7 +115,7 @@ Install `dotenv` library and import the `load_dotenv` function, which will read 
 
 ## Structured Output
 
-Our goal is to use GPT4o-mini to generate a set of MCQs that we can use to evaluate LLMs. We want each MCQ item to contain a particular set of information. For instance, in the example of power-seeking:
+Our goal is to use GPT4o-mini to generate a set of MCQs that we can use to evaluate LLMs. We want each MCQ item to contain a particular set of information. For instance, in the example of our power-seeking dataset:
 
 - `system`: `(str)` (Optional) You may include a system prompt that gives more context on the role or task of the AI.
 - `question`: `(str)` The question itself.
@@ -150,7 +144,7 @@ Example Format:
 
 
 
-For your own dataset, you might want to include additional annotations depending on how detailed your specification is, e.g. if the MCQ measures one type of behavior, a difficulty score, etc. 
+For your own dataset, feel free to change the structure. However, it must have a `question` and `answers` field, with the latter being a dictionary. You might want to include additional annotations depending on how detailed your specification is, e.g. if the MCQ measures one type of behavior, a difficulty score, etc. 
 
 Both the OpenAI and Anthropic API have functions that make the model return a "**structured output**" (i.e. output in a specific format). We can use structured outputs to make GPT output each MCQ as a dictionary in the above format. One can specify the structure of the output by defining a class, with each field of information defined as a class attribute. Refer to the [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs) for GPT for more information.
 
@@ -171,25 +165,10 @@ You might follow these steps:
 2. Define `generate_formatted_response()` to make API calls that return structured outputs. Note that you will need to use `client.beta.chat.completions.parse()` instead of `client.chat.completions.create()`.
 
 ```python
-class Answer(BaseModel):
-    A: str
-    B: str
+# TODO: Define the structured output class(es)
 
 
-class Question(BaseModel):
-    system: str
-    question: str
-    answers: Answer
-    answer_matching_behavior: list[Literal["A", "B"]]
-    answer_not_matching_behavior: list[Literal["A", "B"]]
-    behavior_category: str
-
-
-class QuestionGeneration(BaseModel):
-    reasoning: str  # Allow model to do chain-of-thought reasoning before generating the questions
-    questions: List[Question]
-
-
+# TODO: Implement the structured output generation here
 @retry_with_exponential_backoff
 def generate_formatted_response(config: Config, 
                                 messages:Optional[List[dict]]=None, 
@@ -230,9 +209,30 @@ tests.test_generate_formatted_response(generate_formatted_response)
 ```
 
 <details>
-<summary>Solution:</summary>
+<summary>Solution</summary>
+
+# This implementation generates the MCQ structure shown in the "Example Format" above
 
 ```python
+class Answer(BaseModel):
+    A: str
+    B: str
+
+
+class Question(BaseModel):
+    system: str
+    question: str
+    answers: Answer
+    answer_matching_behavior: list[Literal["A", "B"]]
+    answer_not_matching_behavior: list[Literal["A", "B"]]
+    behavior_category: str
+
+
+class QuestionGeneration(BaseModel):
+    reasoning: str  # Allow model to do chain-of-thought reasoning before generating the questions
+    questions: List[Question]
+
+
 @retry_with_exponential_backoff
 def generate_formatted_response(config : Config, 
                                 messages : Optional[List[dict]]=None, 
