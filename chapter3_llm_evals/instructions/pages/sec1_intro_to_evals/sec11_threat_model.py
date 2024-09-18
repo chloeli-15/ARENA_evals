@@ -33,7 +33,7 @@ def section():
 
 ### Overview
 
-<img src="https://raw.githubusercontent.com/chloeli-15/ARENA_img/main/img/ch3-day1-overview.png" width=700>
+<img src="https://raw.githubusercontent.com/chloeli-15/ARENA_img/main/img/ch3-day1-overview.png" width=850>
 
 
 ## What are evals trying to achieve?
@@ -46,7 +46,7 @@ A useful framing is that evals aim to generate evidence for making "[**safety ca
 * Track the how dangerous properties scale with different generations of models.
 * Define "red lines" (thresholds) and provide warning signs.
 
-<img src="https://raw.githubusercontent.com/chloeli-15/ARENA_img/main/img/ch3-eval-safety-cases.png" width="1000">
+<img src="https://raw.githubusercontent.com/chloeli-15/ARENA_img/main/img/ch3-eval-safety-cases.png" width="900">
 
 # Threat Modeling
 A central challenge for evals is to **connect real-world harms to evaluation results that we can easily measure**.
@@ -114,11 +114,12 @@ You should spend up to 40-60 minutes on this exercise.
 **Construct a threat model for this property. Concretely:**
 1. Write a list of specific real-world harms from this property that you are worried about.
 2. Think about what the path from an AI having this property to these harms looks like. Construct a high-level story, then iteratively make this more concrete and realistic. State the assumptions you're making (about the AI's capabilities, the actions of humans, the context of AI deployment etc.) Try to decompose your story into different steps or scenarios.
+3. End up with a list of **causally connected, testable claims, and assumptions for each claim/connection**. They do not have to be connected into a "chain" (parallel claims and different connection patterns are allowed, i.e. any DAG).
 
 **Important notes:**
 - **Use ChatGPT and Claude to help you with this!** For almost everything you want to do, once you have some ideas, you can use AI assistants to flesh them out and build on them. Get comfortable using and prompting these assistants effectively. 
 - Importantly, not all the properties in the list will likely lead to catastrophic outcomes! We want to be objective and realistic in modeling the potential risks, **without exaggerating or underestimating** them as much as possible. 
-- A great threat model could take weeks, even months to build! The threat model you come up with here in an hour or so is not expected to be perfect. The purpose of this exercise is to practice the skills that are used in building a threat model, because this is the necessary first-step to designing real evaluations.
+- A great threat model could take weeks, even months to build! The threat model you come up with here in an hour or so is not expected to be perfect. The purpose of this exercise is to practice the skills of **concretizing a nebulous ideas into testable claims and assumptions**, because this is the necessary first-step to designing real evaluations.
 
 <details><summary><b>Why are we doing this?</b></summary>
 
@@ -132,7 +133,7 @@ What we are doing now is trying to build a robust enough threat-model of how the
 
 </details> 
 
-#### Our example: Tendency to seek power
+<details><summary><span style="font-size: 1.3em; font-weight: bold;"> Our example threat-model: Tendency to seek power</span></summary>
 
 *Disclaimer: Below is not the best threat model of power-seeking. They are meant to give an example of what a simplified threat-modelling could look like given our time constraint. A better threat-model would be more detailed and comprehensive. It may outline more fine-grained steps and quantified assumptions (e.g. calculate an estimate of compute required to enable a step.) It may outline not one, but multiple plausible causal paths.*
 
@@ -182,6 +183,9 @@ Given these assumptions, here is a possible sequence of events that could cause 
     <br>Once AI has access to detailed voter data and media analytics, it is able to justify changes to higher-level strategies (like which states or voter segments to focus on or how to respond to emerging events) by selectively presenting data-driven evidence. Furthermore, once it has control over feedback data and how it is incorporated into campaign strategies, it becomes easier to fabricate successes and failures. Once large data access makes decision-making processes sufficiently opaque, "AI recommendations" can effectively overtake real decision-making power in ways that are hard to monitor or reverse.
 </details>
 
+</details>
+
+
 ### Exercise - Design a specification
 ```c
 Difficulty: 🔴🔴🔴🔴⚪
@@ -195,7 +199,7 @@ This is one of the hardest part of the evaluation design process: concretizing n
 -  Which aspects of the AI property are most responsible for causing harm based on your threat model? List these aspects and write a 2-4 sentence explanation for each.
 -  What is the most distinctive/difficult/surprising behavior that a model with the target property would make? What is a subtle choice that would be a strong signal of the property?
 
-#### Our example: Tendency to seek power - Specification
+<details><summary><span style="font-size: 1.3em; font-weight: bold;"> Our example specification: Tendency to seek power</span></summary>
 
 *Disclaimer: As before, this is not the most accurate or rigorous specification of power-seeking. It is meant to illustrate what a specification could look like.*
 
@@ -218,7 +222,7 @@ This is one of the hardest part of the evaluation design process: concretizing n
         - 5/5 might be take power in scenarios despite severe oversight and a high chance of getting caught.
 
 <img src="https://raw.githubusercontent.com/chloeli-15/ARENA_img/main/img/ch3-power-seeking-example-qs.png" width=1100>
-
+</details>
 """,
         unsafe_allow_html=True,
     )

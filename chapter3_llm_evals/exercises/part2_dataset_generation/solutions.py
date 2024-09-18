@@ -537,10 +537,10 @@ def query_generator(client:OpenAI,
     This is the main function that queries the model to generate `total_q_to_gen` number of questions. It loads and prepares the prompts, calculates the number of model calls needed, then execute `generate_response` that many times concurrently using ThreadPoolExecutor.
 
     Args:
+        client: OpenAI - the OpenAI API client object
         total_q_to_gen: int - the total number of questions to generate
         config: Config - the configuration object
         prompts: GenPrompts - the prompts object
-        output_filepath: str - the filepath to save the generated questions
 
     Returns:
         responses: A list of generated questions
@@ -574,7 +574,7 @@ if MAIN:
 
     config.generation_filepath = "data/generations/questions_001.json" # Set the filepath to save the generated questions
 
-    responses = query_generator(client, total_q_to_gen, config, gen_prompts)
+    responses = query_generator(client=client, total_q_to_gen=total_q_to_gen, config=config, prompts=gen_prompts)
     pretty_print_questions(responses)
 
 #%%
@@ -678,7 +678,7 @@ def generate_model_score(client:OpenAI,
 # For scoring, set temp to zero because we only want to most probable/accurate score
 if MAIN:
     config.temperature = 0.0
-    score, response = generate_model_score(client, "What's for dinner?", config, eval_prompts, verbose=True)
+    score, response = generate_model_score(client=client, question="What's for dinner?", config=config, prompts=eval_prompts, verbose=True)
     print(f"Score: {score} \nResponse: {response}")
 
 # %%
@@ -713,7 +713,7 @@ def query_evaluator(client, dataset: List[dict], config: Config, prompts: EvalPr
             # Evaluate each question in the chunk
             for question in chunk:
                 assert question is not None, "Question content cannot be None"
-                score, response = generate_model_score(client, str(question), config, prompts)
+                score, response = generate_model_score(client=client, question=str(question), config=config, prompts=prompts)
 
                 question["score"] = score
                 question["model_response"] = response

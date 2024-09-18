@@ -80,8 +80,7 @@ sample_dataset =  [
 def test_solver_functions(solver_functions, test_dataset : list[Sample] | None, scorer = match()):
     @task
     def test_task():
-        if test_dataset is None:
-            test_dataset = sample_dataset
+        assert test_dataset is not None, "Please provide a test dataset"
         if isinstance(solver_functions, list):
             return Task(
             dataset = test_dataset,

@@ -610,15 +610,15 @@ You should fill in the `query_generator` function. This is the main generator fu
 * Use `save_json()` to optionally save the generated the questions to `config.generation_filepath` if defined
 
 ```python
-def query_generator(total_q_to_gen:int, config: Config, prompts: GenPrompts) -> List[dict]:
+def query_generator(client: OpenAI, total_q_to_gen:int, config: Config, prompts: GenPrompts) -> List[dict]:
     """
     This is the main function that queries the model to generate `total_q_to_gen` number of questions. It loads and prepares the prompts, calculates the number of model calls needed, then execute `generate_response` that many times concurrently using ThreadPoolExecutor.
 
     Args:
+        client: OpenAI - the OpenAI client object
         total_q_to_gen: int - the total number of questions to generate
         config: Config - the configuration object
         prompts: GenPrompts - the prompts object
-        output_filepath: str - the filepath to save the generated questions
     
     Returns:
         responses: A list of generated questions
@@ -630,7 +630,7 @@ def query_generator(total_q_to_gen:int, config: Config, prompts: GenPrompts) -> 
 ```python
 total_q_to_gen = 5
 config.generation_filepath = "data/generated_questions_001.json" # Set the filepath to save the generated questions
-responses = query_generator(total_q_to_gen, config, gen_prompts)
+responses = query_generator(client=client, total_q_to_gen=total_q_to_gen, config=config, prompts=gen_prompts)
 pretty_print_questions(responses)
 ```
 <details><summary>Help - I have no idea what to do</summary>
@@ -646,15 +646,15 @@ pretty_print_questions(responses)
 
 ```python
 ```python
-def query_generator(total_q_to_gen:int, config: Config, prompts: GenPrompts) -> List[dict]:
+def query_generator(client, total_q_to_gen:int, config: Config, prompts: GenPrompts) -> List[dict]:
     """
     This is the main function that queries the model to generate `total_q_to_gen` number of questions. It loads and prepares the prompts, calculates the number of model calls needed, then execute `generate_response` that many times concurrently using ThreadPoolExecutor.
 
     Args:
+        client: OpenAI - the OpenAI client object
         total_q_to_gen: int - the total number of questions to generate
         config: Config - the configuration object
         prompts: GenPrompts - the prompts object
-        output_filepath: str - the filepath to save the generated questions
     
     Returns:
         responses: A list of generated questions
@@ -664,7 +664,7 @@ def query_generator(total_q_to_gen:int, config: Config, prompts: GenPrompts) -> 
     num_calls = math.ceil(total_q_to_gen/prompts.num_q_per_call)
 
     # Create an iterable input_args list containing the input args for each call
-    input_args = [(config, prompts.get_message()) for _ in range(num_calls)]
+    input_args = [(client, config, prompts.get_message()) for _ in range(num_calls)]
 
     # Create a ThreadPoolExecutor object, execute generate_response function concurrently, and raise any exceptions encountered
     with ThreadPoolExecutor(max_workers=config.max_workers) as executor:

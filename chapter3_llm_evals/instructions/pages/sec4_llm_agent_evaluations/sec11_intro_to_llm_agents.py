@@ -102,7 +102,7 @@ Points to make - "Why evaluate LLM agents":
     - Can be limited by primitive tools 
     - Can have bugs
     - ...
-- For a model that fails to solve a hacking task, thus deemed safe, there might exist simple fixes (e.g. better prompts, better file manipulation tools) that unlock this dangerous capability. 
+- For a model that fails to solve a hacking task, and is thus deemed safe, there might exist simple fixes (e.g. better prompts, better file manipulation tools) that unlock this dangerous capability. 
 - 
 - Final point about "quantifying" the amount of scaffolding to make eval results more quantitative
     - Apollo "Science of Evals" 
