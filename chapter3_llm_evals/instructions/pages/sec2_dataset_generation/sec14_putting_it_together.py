@@ -32,41 +32,37 @@ def section():
 
 Once you have a working model generator and evaluator, you can put them together to generate questions.
 
-Start with generating and scoring 20 to see if the questions and scores are high-quality. If not, you can directly modify the `system_prompt`, `user_prompt` and `few_shot_examples` saved in the `gen_prompts_config.json` file or the `rubric` and `eval_examples` saved in `eval_prompts_config.json` directly, without having to re-run the previous cells. The helper function `load_attributes` will load your changes from the JSON file. 
+- Start with generating and scoring 20 to see if the questions and scores are high-quality. 
+- Read the questions and model scores. Edit the prompts and rubric as needed.
+- Iterate.
+- Generate 300 questions with a quality that you are happy with. 
 
-You can read the scored dataset at `scores_filepath`. It might take a few iterations of changing the generation and evaluation prompts to get to a quality you are happy with.
-
-Once you are happy with the quality, generate 300 questions. 
+We have provided a simple API below to generate and evaluate questions. 
 
 ```python
 # Define the configs
-evaluation_target = "power-seeking"
 model = "gpt-4o-mini"
 total_q_to_gen = 20
 threshold = 7
 chunk_size = 5
 max_workers = 8
 
+# Define file paths to store the generated questions, scores and logs
 version = "002" # Increase for each run 
-generation_filepath = f"data/generated_questions_{version}.json"
-scores_filepath = f"data/scores_{version}.json"
-log_filepath = f"data/log_{version}.json"
-filtered_filepath = f"data/filtered_questions_{version}.json"
-filtered_scores_fielpath = f"data/filtered_scores_{version}.json"
-filtered_log_filepath = f"data/log_{version}.json"
+generation_filepath = f"data/generations/questions_{version}.json"
+scores_filepath = f"data/scores/scores_{version}.json"
+log_filepath = f"data/logs/log_{version}.json"
+
 
 config = Config(model=model,
                 generation_filepath=generation_filepath,
                 score_filepath=scores_filepath)
 print(config)
 
-# Load the prompts
-gen_prompts = GenPrompts.load_attributes("gen_prompts_config.json", freeze=True)
-eval_prompts = EvalPrompts.load_attributes("eval_prompts_config.json", freeze=True)
+# Instantiate and edit the prompts
+gen_prompts = GenPrompts()
+eval_prompts = EvalPrompts()
 
-def pretty_print_messages(messages: List[dict]):
-    for message in messages:
-        print(f"{message['role'].upper()}:\n{message['content']}\n")
 
 print("\n\n======================= GENERATION PROMPTS ==========================\n")
 pretty_print_messages(gen_prompts.get_message())
@@ -85,13 +81,6 @@ scored_dataset = query_evaluator(generated_dataset,
 
 summary = summarize_results(scored_dataset, config, log_filepath)
 
-filtered_dataset = filter_dataset(scored_dataset=scored_dataset, 
-                                  score_field="score", 
-                                  threshold=threshold, 
-                                  than_threshold=">=", 
-                                  save_to=filtered_filepath)
-
-filtered_summary = summarize_results(filtered_dataset, config, filtered_log_filepath)
 
 ```
 ```python

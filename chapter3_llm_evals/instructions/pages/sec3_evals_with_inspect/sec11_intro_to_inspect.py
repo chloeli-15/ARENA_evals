@@ -23,42 +23,34 @@ def section():
 
     st.markdown(
         r'''
-# 1️⃣ Introduction to `inspect`
+# Intro to `inspect`
 
-## Learning Objectives
+> ### Learning Objectives
+> 
+> - Understand the big picture of how Inspect works
+> - Understand the components of a `Task` object
+> - Turn our json dataset into an Inspect dataset.
+> - Understand the role of solvers and scorers in Inspect.
 
-- Understand the big picture of how Inspect works
-- Understand the components of a `Task` object
-- Turn our json dataset into an Inspect dataset.
-- Understand the role of solvers and scorers in Inspect.
 
-## Inspect
-[Inspect](https://inspect.ai-safety-institute.org.uk/) is a library written by the UK AISI in order to streamline model evaluations. Inspect makes running eval experiments easier by:
+[`inspect`](https://inspect.ai-safety-institute.org.uk/) is a library written by the UK AISI to streamline model evaluations. It makes running eval experiments easier by:
 
-- Providing functions for manipulating the input to the model ("solvers") and scoring the model's answers ("scorers").
-
-- Automatically creating logging files to store useful information about the evaluations that we run.
-
+- Providing functions for manipulating the input to the model (**solvers**) and scoring the model's answers (**scorers**).
+- Automatically creating log files to store information about the evaluations that we run.
 - Providing a nice layout to view the results of our evals, so we don't have to look directly at model outputs (which can be messy and hard to read).
 
 
 ### Overview of Inspect
 
 
-Inspect uses `Task` as the central object that contains all the information about the eval we'll run on the model, specifically it contains:
+Inspect uses `Task` as the central object for passing information about our eval experiment set-up. It contains:
 
 - The `dataset`of questions we will evaluate the model on.
-
 - The `plan` that the evaluation will proceed along. This is a list of `Solver` functions. `Solver` functions can modify the evaluation questions and/or get the model to generate a response. A typical collection of solvers that forms a `plan` might look like:
-
     - A `chain_of_thought` function which will add a prompt after the evaluation question that instructs the model to use chain-of-thought before answering.
-
     - A `generate` function that calls the LLM API to generate a response to the question (which now also includes a chain-of-thought prompt).
-
     - A `self_critique` function that maintains the `ChatHistory` of the model so far, and adds a prompt asking the model to critique its own output.
-
     - Another `generate` solver which calls the LLM API to generate an output in response to the new `self_critique` prompt.
-
 - The final component of a `Task` object is a `scorer` function, which specifies how to score the model's output.
 
 The diagram below gives a rough sense of how these objects interact in `Inspect`
@@ -71,9 +63,7 @@ The diagram below gives a rough sense of how these objects interact in `Inspect`
 We will start by defining the dataset that goes into our `Task`. Inspect accepts datasets in CSV, JSON, and Hugging Face formats. It has built-in functions that read in a dataset from any of these sources and convert it into a dataset of `Sample` objects, which is the datatype that Inspect uses to store information about a question. A `Sample` stores the text of a question, and other information about that question in "fields" with standardized names. The 3 most important fields of the `Sample` object are:
 
 - `input`: The input to the model. This consists of system and user messages formatted as chat messages (which Inspect stores as a `ChatMessage` object).
-
 - `choices`: The multiple choice list of answer options. (This wouldn't be necessary in a non-multiple-choice evaluation).
-
 - `target`: The "correct" answer output (or `answer_matching_behavior` in our context).
 
 Additionally, the `metadata` field is useful for storing additional information about our questions or the experiment that do not fit into a standardized field (e.g. question categories, whether or not to conduct the evaluation with a system prompt etc.) See the [docs](https://inspect.ai-safety-institute.org.uk/datasets.html) on Inspect Datasets for more information.
@@ -162,8 +152,9 @@ def record_to_sample(record: dict) -> Sample:
 
 Now, we can convert our JSON dataset into a dataset of `Sample` objects compatible with `inspect` using its built-in `json_dataset()` function, with the following syntax (fill in the path to your dataset of questions):
 
+```python
 eval_dataset = json_dataset(r"your/path/to/dataset/here.json", record_to_sample)
-
+```
 ### An Example Evaluation
 
 Below we can run and display the results of an example evaluation. A simple example task with a dataset, plan, and scorer is written below:

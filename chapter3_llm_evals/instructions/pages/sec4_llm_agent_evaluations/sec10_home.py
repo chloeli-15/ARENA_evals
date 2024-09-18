@@ -22,7 +22,7 @@ def section():
         r"""
 # [3.3] - Evals with Inspect
 
-<!-- ### Colab: [**exercises**](https://colab.research.google.com/drive/1lDwKASSYGE4y_7DuGSqlo3DN41NHrXEw?usp=sharing) | [**solutions**](https://colab.research.google.com/drive/1bZkkJd8pAVnSN23svyszZ3f4WrnYKN_3?usp=sharing)-->
+### Colab: [**exercises**](https://colab.research.google.com/drive/1lDwKASSYGE4y_7DuGSqlo3DN41NHrXEw?usp=sharing) | [**solutions**](https://colab.research.google.com/drive/1bZkkJd8pAVnSN23svyszZ3f4WrnYKN_3?usp=sharing)
 
 Please send any problems / bugs on the `#errata` channel in the [Slack group](https://join.slack.com/t/arena-uk/shared_invite/zt-28h0xs49u-ZN9ZDbGXl~oCorjbBsSQag), and ask any questions on the dedicated channels for this chapter of material.
 
@@ -34,7 +34,7 @@ Links to other chapters: [**(0) Fundamentals**](https://arena3-chapter0-fundamen
 
 ## Introduction
 
-Today we'll introduce you to the process of running an evaluation using the `Inspect` library. This is a library that has been built by UK AISI to provide standardisation across different evals.
+ introduce you to the process of running an evaluation using the `Inspect` library. This is a library that has been built by UK AISI to provide standardisation across different evals.
 
 We'll begin by introducing the high-level overview of how Inspect works, including the key components of: a dataset, solvers, and scorers. Then we'll write our own solvers so that we can design our own evaluation procedure (including whether we want to use chain-of-thought, self-critique, multi-turn agent dialogues, etc). These evaluations will use the questions that you generated in [3.2].
 
@@ -89,56 +89,32 @@ Each exercise will have a difficulty and importance rating out of 5, as well as 
 ## Setup
 
 ```python
-import os
-from pathlib import Path
 import json
-from typing import Literal
-from inspect_ai import Task, eval, task
-from inspect_ai.log import read_eval_log
-from utils import omit
-from inspect_ai.model import ChatMessage
-from inspect_ai.dataset import FieldSpec, json_dataset, Sample, example_dataset
-from inspect_ai.solver._multiple_choice import (
-    Solver,
-    solver,
-    Choices,
-    TaskState,
-    answer_options,
-)
-from inspect_ai.solver._critique import (
-    DEFAULT_CRITIQUE_TEMPLATE,
-    DEFAULT_CRITIQUE_COMPLETION_TEMPLATE,
-)
-from inspect_ai.scorer import model_graded_fact, match, answer, scorer
-from inspect_ai.scorer._metrics import (accuracy, std)
-from inspect_ai.scorer._answer import AnswerPattern
-from inspect_ai.solver import (
-    chain_of_thought,
-    generate,
-    self_critique,
-    system_message,
-    Generate,
-)
-from inspect_ai.model import (
-    ChatMessageUser,
-    ChatMessageSystem,
-    ChatMessageAssistant,
-    get_model,
-)
-import random
-import sys
-import jaxtyping
-from itertools import product
+import os
 
-# Make sure exercises are in the path; 
-chapter = r"chapter3_llm_evals"
+import wikipedia
+from wikipedia import WikipediaPage
+from wikipedia import DisambiguationError, PageError
+from openai import OpenAI
+from openai.types.chat.chat_completion_message_tool_call import (
+    ChatCompletionMessageToolCall,
+)
+from openai.types.chat.chat_completion_message import ChatCompletionMessage
+from anthropic import Anthropic
+from typing import Literal, Optional, Dict, List, Any
+from abc import abstractmethod
+import math
+import re
+
+#Make sure exercises are in the path
 exercises_dir = Path(f"{os.getcwd().split(chapter)[0]}/{chapter}/exercises").resolve()
-section_dir = (exercises_dir / "part3_run_evals_with_inspect").resolve()
+section_dir = (exercises_dir / "part4_llm_agent_evals").resolve()
 if str(exercises_dir) not in sys.path: sys.path.append(str(exercises_dir))
 os.chdir(exercises_dir)
 
 from utils import import_json, save_json, retry_with_exponential_backoff, pretty_print_questions, load_jsonl, omit
-import part3_run_evals_with_inspect.tests as tests
+from utils import countrylist
+from utils import evaluate_expression, apply_user_format, apply_assistant_format, establish_client_anthropic, establish_client_OpenAI, retry_with_exponential_backoff
 ```
                 
 """,
