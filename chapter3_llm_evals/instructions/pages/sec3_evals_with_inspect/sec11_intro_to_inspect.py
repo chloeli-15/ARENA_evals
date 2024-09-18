@@ -152,7 +152,9 @@ def record_to_sample(record: dict) -> Sample:
 
 Now, we can convert our JSON dataset into a dataset of `Sample` objects compatible with `inspect` using its built-in `json_dataset()` function, with the following syntax (fill in the path to your dataset of questions):
 
+```python
 eval_dataset = json_dataset(r"your/path/to/dataset/here.json", record_to_sample)
+```
 
 ### An Example Evaluation
 
