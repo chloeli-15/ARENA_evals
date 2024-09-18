@@ -77,11 +77,9 @@ sample_dataset =  [
         target = "B"
     )
 ]
-def test_solver_functions(solver_functions, test_dataset : list[Sample] | None, scorer = match()):
+def test_solver_functions(solver_functions, test_dataset=sample_dataset, scorer = match()):
     @task
     def test_task():
-        if test_dataset is None:
-            test_dataset = sample_dataset
         if isinstance(solver_functions, list):
             return Task(
             dataset = test_dataset,
