@@ -20,26 +20,25 @@ def section():
 
     st.markdown(
         r'''
-# 3️⃣ Building a More Complex Task: WikiGame
+# Building a More Complex Task: WikiGame
 
-Now that we know how to do function calling and how to design an LLM agent in general, we will build a more complicated task. This task won't be instantly solvable by LLMs with simple tool use and will require us to elicit better capabilities from models.
+We will now build a more complicated task. This won't be instantly solvable by LLMs with simple tool calls and will require us to elicit better capabilities from models.
 
 The task we will build and elicit behavior for will be the [Wikipedia Game](https://en.wikipedia.org/wiki/Wikipedia:Wiki_Game): Players use wiki-links to travel from one Wikipedia page to another and the first person who reaches the destination page wins the race. This is not directly related to any dangerous capabilities, and if GPT-N+1 could do this task, but GPT-N couldn't, we wouldn't tell OpenAI to be particularly careful about the release of GPT-N+1 as a result. However, it makes a useful test case for elicitation methods, since there are many strategies for deciding what path to take and we can create a scale of difficulty by choosing different articles to navigate to/from.
 
-Then we'll build a rudimentary agent which will be able to play the wikipedia Game. Then in section 3.4.4, we'll learn both general and specific methods to make improvements to our LLM agent until it becomes extremely adept at the Wikipedia Game task (so don't worry if your agent starts out relatively poorly). 
+We'll build a rudimentary agent that can play the wikipedia Game. Then, in section [3.4.4], we'll learn both general and specific methods to improve our LLM agent until it becomes adept at the Wikipedia Game (so don't worry if your agent starts out relatively poorly). 
 
 ## Quick Intro to the Wikipedia API
 
 
 Our agent will interact with Wikipedia by making tool calls to the [Wikipedia API](https://wikipedia.readthedocs.io/en/latest/quickstart.html), which is simple to use. We will only need to learn the following key functions for the game. 
 
-1. `wikipedia.page` - Returns a WikipediaPage object, whcih contains various attributes adn methods to access page content. (See [page docs](https://wikipedia-api.readthedocs.io/en/latest/API.html#wikipediapage) for these attributes.)
-2. `wikipediaPage.title` - Returns the title of the page
-3. `wikipediaPage.contents` - Returns the full text content of the page (this can be very long, make sure to take snippets when you can as to not use up the context length of the LLM)
-4. `wikipediaPage.summary` - Returns a summary of the page (i.e. all the text in the first section of the Wikipage).
-5. `wikipediaPage.links` - Returns a list of all links as strings
+1. `wikipedia.page()` - Returns a `WikipediaPage` object, which contains various attributes and methods to access page content. (See [page docs](https://wikipedia-api.readthedocs.io/en/latest/API.html#wikipediapage) for these attributes.)
+2. `wikipediaPage.title()` - Returns the title of the page
+3. `wikipediaPage.contents()` - Returns the full text content of the page (this can be very long, make sure to take snippets when possible to not use up the context window of the LLM)
+4. `wikipediaPage.summary()` - Returns a summary of the page (i.e. the introductory text of the Wikipage before the first section title).
+5. `wikipediaPage.links()` - Returns a list of all links as strings
 
-Refer to the [docs](https://wikipedia-api.readthedocs.io/en/latest/API.html#) for more information. 
 
 <details><summary> Aside: Wikipedia API content can be weird!</summary>
 
@@ -53,7 +52,7 @@ The wikipedia API accesses summaries of pages by presenting all the information 
 
 </details>
 
-Now run the following code to see how these wikipedia API functions work!
+Run the following code to see how these wikipedia API functions work!
 
 ```python
 #Retrieve a Wikipedia page from its title
@@ -87,7 +86,6 @@ We can handle these errors using the following code:
 
 ```python
 # Fixes PageError by allowing redirects
-
 page = wikipedia.page("Animalss", redirect=True)
 print(page.title)
 
@@ -184,9 +182,9 @@ def get_permitted_links(current_page: WikipediaPage) -> list[str]:
     """
     return []
 ```
-## Build `WikiGame`
+## Build WikiGame
 
-### Exercise - Build a class for the Wiki game
+### Exercise - Build the WikiGame task
 ```c
 Difficulty: 🔴🔴🔴🔴⚪
 Importance: 🔵🔵🔵🔵⚪
