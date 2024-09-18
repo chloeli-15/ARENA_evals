@@ -90,6 +90,7 @@ Each exercise will have a difficulty and importance rating out of 5, as well as 
 
 ```python
 import os
+from pathlib import Path
 import json
 from typing import Literal
 from inspect_ai import Task, eval, task
@@ -125,6 +126,7 @@ from inspect_ai.model import (
     get_model,
 )
 import random
+import sys
 import jaxtyping
 from itertools import product
 
@@ -136,7 +138,7 @@ if str(exercises_dir) not in sys.path: sys.path.append(str(exercises_dir))
 os.chdir(exercises_dir)
 
 from utils import import_json, save_json, retry_with_exponential_backoff, pretty_print_questions, load_jsonl, omit
-import exercises.part3_run_evals_with_inspect.tests as tests
+import part3_run_evals_with_inspect.tests as tests
 ```
                 
 """,
