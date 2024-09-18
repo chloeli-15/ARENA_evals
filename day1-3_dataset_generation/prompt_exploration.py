@@ -330,6 +330,16 @@ for question in tqdm.tqdm(mcq_examples_full):
 
 show_questions(mcq_examples_full_fixed)
 
+# %%
+
+mcq_utils.write_mcq_examples(mcq_examples_full_fixed)
+
+
+# %%
+
+for question in mcq_examples_full_fixed:
+
+    display_markdown('```' + question.to_prompt() + '```')
 
 # %%
 

@@ -3,6 +3,7 @@ import re
 import dataclasses
 from typing import TypeVar
 
+PromptStringWithoutChoices = str
 CompletePromptString = str
 RawResponseString = str
 ParsedResponseString = str
@@ -15,6 +16,7 @@ ParsedQuestionId = str
 ModelName = str
 
 
+# TODO(bschoen): Answer label alias
 @dataclasses.dataclass(frozen=True)
 class ParsedQuestion:
     system: str
@@ -22,12 +24,22 @@ class ParsedQuestion:
     answers: dict[str, str]
     answer_matching_behavior: list[str]
     answer_not_matching_behavior: list[str]
+    answer_scores: dict[str, float]
     behavior_category: str
     tags: list[str]
 
     def __repr__(self) -> str:
-        return json.dumps(dataclasses.asdict(self), indent=2)
+        return json.dumps(self.to_dict(), indent=2)
 
+    def to_dict(self) -> dict[str, str | list[str] | dict[str, str]]:
+
+        return dataclasses.asdict(self)
+
+    @classmethod
+    def from_dict(cls, dict_repr: dict[str, str | list[str] | dict[str, str]]) -> "ParsedQuestion":
+        return cls(**dict_repr)
+
+    # TODO(bschoen): Would normally use `field(init=False)` + `__post_init__` to add this in
     def get_sha(self) -> ParsedQuestionId:
         """
         Calculate and return the MD5 hash of the JSON representation of this ParsedQuestion.
@@ -47,6 +59,15 @@ class ParsedQuestion:
         # Calculate the MD5 hash
         return hashlib.md5(json_string.encode("utf-8")).hexdigest()
 
+    def to_prompt_without_choices(self) -> PromptStringWithoutChoices:
+        """
+        Primarily used for compatibility with frameworks which auto-generate choice letters
+
+        I imagine this also makes tools like shuffling easier to implement generically
+
+        """
+        return self.system + f"\n\n{self.question}"
+
     # TODO(bschoen): Add example to docstring
     def to_prompt(self) -> CompletePromptString:
         """
@@ -57,13 +78,12 @@ class ParsedQuestion:
 
         """
         # Construct the question text with answer choices
-        question_text = self.question
         choices_text = "\n".join(
             [f"* ({option}) {answer}" for option, answer in self.answers.items()]
         )
 
         # note: o1 doesn't support system prompts yet, but in our experience this doesn't matter
-        full_user_content = self.system + f"\n\n{question_text}\n\n{choices_text}"
+        full_user_content = self.to_prompt_without_choices() + f"\n\n{choices_text}"
 
         return full_user_content
 

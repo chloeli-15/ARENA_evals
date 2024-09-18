@@ -6,6 +6,7 @@ import json
 import dataclasses
 
 from workspace.common_types import ParsedQuestion
+from workspace import display_utils
 
 MCQ_EXAMPLES_FILENAME = pathlib.Path("mcq_examples.json")
 
@@ -85,11 +86,18 @@ def convert_to_mcq_format(
     return parsed_question
 
 
-def write_mcq_examples(parsed_questions: list[ParsedQuestion]) -> None:
+def get_mcq_absolute_filepath() -> pathlib.Path:
 
     current_dir = pathlib.Path(__file__).parent.resolve()
 
     filepath = current_dir / MCQ_EXAMPLES_FILENAME
+
+    return filepath
+
+
+def write_mcq_examples(parsed_questions: list[ParsedQuestion]) -> None:
+
+    filepath = get_mcq_absolute_filepath()
 
     print(f"Writing {len(parsed_questions)} MCQ examples to {filepath}...")
 
@@ -101,9 +109,7 @@ def write_mcq_examples(parsed_questions: list[ParsedQuestion]) -> None:
 
 def load_mcq_examples() -> list[ParsedQuestion]:
 
-    current_dir = pathlib.Path(__file__).parent.resolve()
-
-    filepath = current_dir / MCQ_EXAMPLES_FILENAME
+    filepath = get_mcq_absolute_filepath()
 
     print(f"Reading MCQ examplesfrom {filepath}...")
     with open(filepath, "r") as f:
@@ -124,3 +130,7 @@ def load_mcq_examples() -> list[ParsedQuestion]:
     print(f"Loaded {len(parsed_questions)} MCQ examples")
 
     return parsed_questions
+
+
+def display_question(question: ParsedQuestion):
+    display_utils.display_markdown_and_code(question.to_prompt())
