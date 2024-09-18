@@ -147,7 +147,7 @@ def prompt_template(template: str) -> Solver:
 Test your solver code with the following test. Fill in the template and test_dataset with your own values, or leave `test_dataset==None` and the code will run with a test dataset we created.
 
 ```python
-tests.test_solver_functions(template="", test_dataset=None)
+tests.test_solver_functions(solver_functions=prompt_template(template=""), test_dataset=None)
 ```
 
 ### Exercise - Write a multiple_choice_format solver
