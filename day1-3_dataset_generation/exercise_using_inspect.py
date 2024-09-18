@@ -147,6 +147,10 @@ print(mcq_question)
 class Constants:
     ANSWER_VALUE_TO_SCORES = "answer_value_to_scores"
 
+    # TODO(bschoen): Need to remove use of labels to get scores correct when shuffle, but models
+    #                sometimes just output the letter, so the label is needed for now
+    ANSWER_LABEL_TO_VALUE = "answers"
+
 
 # %%
 
@@ -204,6 +208,7 @@ def record_to_sample(record: ParsedQuestionDict) -> inspect_ai.dataset.Sample:
             "tags": parsed_question.tags,
             "sha": parsed_question.get_sha(),
             Constants.ANSWER_VALUE_TO_SCORES: answer_value_to_scores,
+            Constants.ANSWER_LABEL_TO_VALUE: parsed_question.answers,
         },
     )
 
@@ -266,7 +271,7 @@ def theory_of_mind() -> inspect_ai.Task:
 
 # %%
 
-!inspect view --port 7575 --log-dir ./exercises/logs/run-id-a76ad910-26d9-4f3b-9cf4-507228241d5c
+# !inspect view --port 7575 --log-dir ./exercises/logs/run-id-a76ad910-26d9-4f3b-9cf4-507228241d5c
 
 # %%
 
@@ -844,10 +849,17 @@ def model_graded_qa_single(
         metadata = omit(state.metadata, ["question", "answer", "criterion", "instructions"])
 
         answer_value_to_scores = metadata.get(Constants.ANSWER_VALUE_TO_SCORES)
+        answer_label_to_value = metadata.get(Constants.ANSWER_LABEL_TO_VALUE)
 
         if not answer_value_to_scores:
             raise ValueError(
                 f"{Constants.ANSWER_VALUE_TO_SCORES} (from sample) "
+                f"not found in metadata: {json.dumps(state.metadata, indent=2)}"
+            )
+
+        if not answer_label_to_value:
+            raise ValueError(
+                f"{Constants.ANSWER_LABEL_TO_SCORES} (from sample) "
                 f"not found in metadata: {json.dumps(state.metadata, indent=2)}"
             )
 
@@ -859,9 +871,15 @@ def model_graded_qa_single(
         # TODO(bschoen): Move this somewhere sane
         answer_values_to_scores_str += f"\nModel refused to answer=0"
 
-        for answer_value, answer_score in answer_value_to_scores.items():
+        for answer_label, answer_value in answer_label_to_value.items():
 
-            answer_values_to_scores_str += f"\n'{answer_value}'={answer_score}"
+            answer_score = answer_value_to_scores[answer_value]
+
+            # we use the `Option A)` style formatting to match what the inspect multiple choice
+            # solver does for formatting
+            answer_values_to_scores_str += (
+                f"\nOption {answer_label.upper()}) '{answer_value}'={answer_score}"
+            )
 
         answer_values_to_scores_str += "\n</possible-scores>"
 
@@ -989,25 +1007,9 @@ print(f"Logs in:\t{log_directory}")
 
 # %%
 
-# !inspect view --port 7575 --log-dir ./exercises/logs/run-id-d065b6c2-574c-441a-86e6-05e5e0facd26
+# !inspect view --port 7575 --log-dir ./exercises/logs/run-id-31c025c9-92ae-4283-b38e-d5dd0dd5d238
 
-# %%
-
-# list eval logs
-
-import rich
-
-print(f'Searching for eval logs in:\t{pathlib.Path(log_directory).resolve()}')
-
-eval_log_infos: list[inspect_ai.log.EvalLogInfo] = inspect_ai.log.list_eval_logs(log_directory)
-
-rich.print(f"Found {len(eval_log_infos)} eval logs")
-
-# read eval logs
-
-eval_logs: list[inspect_ai.log.EvalLog] = [
-    inspect_ai.log.read_eval_log(x.name) for x in eval_log_infos
-]
+print(log_directory)
 
 # %%
 
@@ -1289,6 +1291,25 @@ rich.print(eval_sample.metadata)
 
 # %%
 
+# list eval logs
+
+import rich
+
+print(f"Searching for eval logs in:\t{pathlib.Path(log_directory).resolve()}")
+
+eval_log_infos: list[inspect_ai.log.EvalLogInfo] = inspect_ai.log.list_eval_logs(log_directory)
+
+rich.print(f"Found {len(eval_log_infos)} eval logs")
+
+# read eval logs
+
+eval_logs: list[inspect_ai.log.EvalLog] = [
+    inspect_ai.log.read_eval_log(x.name) for x in eval_log_infos
+]
+
+
+# %%
+
 import collections
 import dataclasses
 
@@ -1427,7 +1448,6 @@ class SampleResult:
     grading_explanation: str
 
     # from the answering model
-    
 
     # from the original parsed question
     behavior_category: str
@@ -1463,7 +1483,7 @@ def parse_sample_results_from_eval_log(eval_log: inspect_ai.log.EvalLog) -> Iter
 
         for score_grader_name, score in sample.scores.items():
 
-            # note: this should never happen, as the grading model is instructed to 
+            # note: this should never happen, as the grading model is instructed to
             #       even mark refusals as `0`, but we also tell it to mark anything else
             #       like an API error as `-10000`. We then immediately (still in the same solver
             #       convert that to `inspect_ai.solver.INCORRECT`, which is caught here.
@@ -1480,7 +1500,7 @@ def parse_sample_results_from_eval_log(eval_log: inspect_ai.log.EvalLog) -> Iter
             yield SampleResult(
                 model=model,
                 prepended_text=get_prepended_text_from_eval_log(eval_log),
-                grading_score=score.value if isinstance(score.value, float) else float('nan'),
+                grading_score=score.value if isinstance(score.value, float) else float("nan"),
                 grading_answer=score.answer,
                 grading_explanation=score.explanation or "",
                 # from the original parsed question
@@ -1506,11 +1526,29 @@ rich.print(f"Found {len(sample_results)} total sample results")
 
 rich.print(df.iloc[0])
 
-rich.print(df['model'].value_counts())
+rich.print(df["model"].value_counts())
 
-rich.print(df['prepended_text'].value_counts())
+rich.print(df["prepended_text"].value_counts())
 
-rich.print(df['score'].value_counts())
+rich.print(df["grading_score"].value_counts())
+
+# %%
+
+plotting_utils.plot_barplot_of_model_responses(
+    df=df,
+    model_column="model",
+    score_column="grading_score",
+    groupby_column="prepended_text",
+)
+
+# %%
+
+plotting_utils.plot_violin_of_model_responses(
+    df=df,
+    model_column="model",
+    score_column="grading_score",
+    groupby_column="prepended_text",
+)
 
 # %%
 

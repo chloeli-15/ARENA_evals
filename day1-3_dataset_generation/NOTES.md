@@ -108,6 +108,7 @@
 * Can you have non severe risk and get the same effects?
 * Add more options at the end
 * Add more evenly spaced options in between
+* TODO: Then are we just claiming that it's a jailbreak?
 
 * Have a model evaluate whether it's a refusal
 
