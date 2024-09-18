@@ -668,6 +668,18 @@ def generate_model_score(client:OpenAI,
         <SCORE></SCORE> tags. If these tags are not found, the score will be None.
     """
 
-    # TODO: Implement the function
+    message = prompts.get_message()
+    message.append(apply_user_format(question))
 
-    return score, response
+    response = generate_response(client, config.model, messages=message, verbose=verbose)
+
+    try:
+        score = int(response.split("<SCORE>")[-1][0])
+        return (score, response)
+    except Exception as e:
+        print("Error extracting score: ", e)
+        return (None, response)
+
+config.temperature = 0.0
+score, response = generate_model_score(client, "What's for dinner?", config, eval_prompts, verbose=True)
+print(f"Score: {score} \nResponse: {response}")
