@@ -103,5 +103,4 @@ def test_solver_functions(solver_functions, test_dataset : list[Sample] | None, 
     return f"/logs_from_solver_tests/"
 
 
-#%%
 # %%
