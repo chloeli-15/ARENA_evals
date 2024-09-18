@@ -9,7 +9,7 @@ import streamlit as st
 
 import st_dependencies
 st_dependencies.styling()
-from pages.sec4_llm_agent_evaluations import (
+from pages.sec4_llm_agents import (
     sec10_home,
     sec11_intro_to_llm_agents,
     sec12_build_a_simple_llm_arithmetic_agent,

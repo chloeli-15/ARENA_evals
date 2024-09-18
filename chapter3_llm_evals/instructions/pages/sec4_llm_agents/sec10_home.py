@@ -20,9 +20,9 @@ def section():
 
     st.markdown(
         r"""
-# [3.3] - Evals with Inspect
+# [3.4] - LLM Agents
 
-### Colab: [**exercises**](https://colab.research.google.com/drive/1lDwKASSYGE4y_7DuGSqlo3DN41NHrXEw?usp=sharing) | [**solutions**](https://colab.research.google.com/drive/1bZkkJd8pAVnSN23svyszZ3f4WrnYKN_3?usp=sharing)
+<!-- ### Colab: [**exercises**](https://colab.research.google.com/drive/1lDwKASSYGE4y_7DuGSqlo3DN41NHrXEw?usp=sharing) | [**solutions**](https://colab.research.google.com/drive/1bZkkJd8pAVnSN23svyszZ3f4WrnYKN_3?usp=sharing)-->
 
 Please send any problems / bugs on the `#errata` channel in the [Slack group](https://join.slack.com/t/arena-uk/shared_invite/zt-28h0xs49u-ZN9ZDbGXl~oCorjbBsSQag), and ask any questions on the dedicated channels for this chapter of material.
 
@@ -34,15 +34,7 @@ Links to other chapters: [**(0) Fundamentals**](https://arena3-chapter0-fundamen
 
 ## Introduction
 
- introduce you to the process of running an evaluation using the `Inspect` library. This is a library that has been built by UK AISI to provide standardisation across different evals.
-
-We'll begin by introducing the high-level overview of how Inspect works, including the key components of: a dataset, solvers, and scorers. Then we'll write our own solvers so that we can design our own evaluation procedure (including whether we want to use chain-of-thought, self-critique, multi-turn agent dialogues, etc). These evaluations will use the questions that you generated in [3.2].
-
-Similarly to [3.1] and [3.2], most of our solutions will be built around the example **tendency to seek power** dataset. So you should approach the exercises with this in mind. You can either:
-
-1. Use the same dataset as the solutions, and improve upon the evaluations that are run in the solutions. You could come up with your own evaluation procedure on this dataset.
-
-2. Use your own dataset for your chosen model property. For this, you will have needed to work through Chapters [3.1] and [3.2] and have a dataset of ~300 questions on which to evaluate the model.
+<!-- WRITE INTRO! -->
 
 Each exercise will have a difficulty and importance rating out of 5, as well as an estimated maximum time you should spend on these exercises and sometimes a short annotation. You should interpret the ratings & time estimates relatively (e.g. if you find yourself spending about 50% longer on the exercises than the time estimates, adjust accordingly). Please do skip exercises / look at solutions if you don't feel like they're important enough to be worth doing, and you'd rather get to the good stuff!
 
@@ -115,6 +107,12 @@ os.chdir(exercises_dir)
 from utils import import_json, save_json, retry_with_exponential_backoff, pretty_print_questions, load_jsonl, omit
 from utils import countrylist
 from utils import evaluate_expression, apply_user_format, apply_assistant_format, establish_client_anthropic, establish_client_OpenAI, retry_with_exponential_backoff
+
+load_dotenv()
+api_key = os.getenv("OPENAI_API_KEY")
+openai.api_key = api_key
+
+client = OpenAI()
 ```
                 
 """,
