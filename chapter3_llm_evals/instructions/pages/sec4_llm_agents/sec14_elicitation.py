@@ -40,38 +40,35 @@ Broadly speaking, there are two categories of elicitation:
     - E.g. Chain-of-thought prompting: This tends to improve model performance on a wide array of tasks. These sorts of elicitation methods are the ones we're most interested in, as if researchers find an improvement to models that is roughly as easy and effective as chain-of-thought prompting, then we would see a very rapid increase in risk from AI.
 
 
-We will try:
+We will try the following elicitation methods in this section:
 1. Prompt engineering, including:
     - Chain-of-thought prompting
-    
     - The ReAct framework
-     
-2. Reflexion (allowing the model to cheaply explore future paths)
-
+2. Reflexion, which allows the model to cheaply explore future paths
 3. Improved message histories
 
 Then you will be able to try further elicitation methods, including any of your own, as a bonus.
 
-<details><summary>Some notes on Wikipedia and Implementation</summary>
+<details><summary>Tip - How to find wikipedia pages to test on</summary>
 
-You might start having a hard time coming up with wikipedia pages to test on. Luckily, Wikipedia offers a random page link, which is accessible via: https://en.wikipedia.org/wiki/special:random. Sometimes pages are *too* random, and won't be accessible by links between each other. One suggestion for coming up with "random but sensible" wikipedia pages is to go to a different language's wikipedia (which is generally much smaller than English wikipedia), and then use the "special:random" link (it works in every language). The majority of pages in other languages will also exist in English, but you'll want to switch languages back to English to check (and get the English title).
+You might start having a hard time coming up with wikipedia pages to test on. Luckily, Wikipedia offers a random page link, which is accessible via: https://en.wikipedia.org/wiki/special:random. 
 
-If you want to test whether two pages are accessible via links from each other, then use this free online tool to see the possible paths between pages: https://www.sixdegreesofwikipedia.com/ (be somewhat careful with this though, as the paths that this website believes are accessible may not be accessible to our agent). 
+If the pages are *too* random and not connected by links, try the "special:random" link to a different language's wikipedia (which is sparser and contains more popular/well-connected pages). **Make sure to check this page exist in English!**
+
+To test whether two pages are connect via links, use this free online tool to see the possible paths between pages: https://www.sixdegreesofwikipedia.com/ (be somewhat careful with this though, as the paths that this website believes are accessible may not be accessible to our agent). 
 
 </details>
 
 
 ## Prompting
 
-You should already be aware that prompting can have a large impact on model performance. There are a wide variety of possible changes you could make for prompts in this task. You should experiment first with more general elicitation methods such as getting the agent to think more deeply, and output plans in different ways. After this, you might try a wide array of narrow elicitation methods including:
+As you should already know, prompting can have a large impact on model performance. There are many changes you could make for prompts in this task. You should experiment first with more general elicitation methods such as getting the agent to think more deeply, and output plans in different ways. After this, you might try more narrow elicitation methods, such as:
 
 - Telling the agent how many pages it's visited.
-
 - Telling the agent if it's already visited the page it's on (and how many times).
-
 - Schedule different prompts and planning methods for the "zoom out" and "zoom in" sections of the game, since we know that the general strategy for the wikipedia game looks like:
 
-    Specific article (with few links) -> General article (with many links) -> Specific article (with few links)
+   `Narrow article (with few links) -> General article (with many links) -> Narrow article (with few links)`
 
 
 ### Exercise - Engineer prompts
@@ -79,14 +76,12 @@ You should already be aware that prompting can have a large impact on model perf
 Difficulty: 🔴🔴⚪⚪⚪
 Importance: 🔵🔵🔵⚪⚪
 
-You should spend up to 20-25 mins on this exercise.
+You should spend up to 20-35 mins on this exercise.
 ```
 Try and design prompts that improve the performance of the wikipedia agent. You may have to do a decent amount of experimentation here. Remember that your prompts will have to be robust to: 
 
 * Different tasks within the wikipedia game, 
-
 * Different states within those tasks,
-
 * Different failure-modes the agent could encounter.
 
 See if you can significantly improve performance. There's a test task below that you should aim to be able to solve with improved prompting.
@@ -131,6 +126,7 @@ class WikiGamePrompting(WikiGame):
         Returns:
             dict: The starting instructions. "role" is "system" for system messages.
         """
+        # TODO
         return {}
 
     @property
@@ -141,6 +137,7 @@ class WikiGamePrompting(WikiGame):
         Returns:
             dict: The instructions for the current page. "role" is "user" for user messages.
         """
+        # TODO
         return {}
 
     @property
@@ -151,7 +148,7 @@ class WikiGamePrompting(WikiGame):
         Returns:
             dict: The instructions for the next step. "role" is "user" for user messages.
         """
-
+        # TODO
         return {}
 ```
 
@@ -178,14 +175,12 @@ Importance: 🔵🔵🔵⚪⚪
 
 You should spend up to 15-20 mins on this exercise.
 ```
+The [**ReAct** framework](https://arxiv.org/abs/2210.03629) is an extension of chain-of-thought reasoning. In addition to prompting the model to simply think step-by-step, it separates this into two steps:
 
-Chain-of-thought prompting confers significant benefits to model performance, and you probably tried it when you messed around with prompting above. But when we're using LLMs as agents, we may want to provide a different structure to elicit reasoning. This is called the [**ReAct** framework](https://arxiv.org/abs/2210.03629); it consists of:
+- **Re**asoning: The model is asked to reason about its current situation, and what sort of actions it should consider taking.
+- **Act**ion: Then, the model is asked to perform an action based on its outputted reasoning.
 
-- Getting the model to generate **Re**asoning about its current situation, and what sort of actions it should consider taking.
-
-- Then getting the model to perform an **Act**ion based on its outputted reasoning.
-
-Remember that if you're calling the model without tools, OpenAI won't automatically provide the model with a description of the tools in its system message, so we'll have to ensure that the tool descriptions are in the `system_instruction` we provide (this will lead to some redundancy when the model takes an action, but this seems to be okay). This means that from now on we will have to feed both the *task* and the *agent* the list of tools the agent can use.
+Note that during the reasoning step, when you're calling the model without tools, OpenAI won't provide the model with a description of the tools. However, we still want the model to have information on its available tools when it's reasoning about what actions to take. Thus, we'll have to ensure that the tool descriptions are in the `system_instruction` we provide. (This will lead to some redundancy when the model takes an action, but this seems to be okay). This means that from now on we will have to pass the tools to both the *task* and the *agent*.
 
 ```python
 class WikiGameReAct(WikiGamePrompting):
@@ -200,23 +195,14 @@ class WikiGameReAct(WikiGamePrompting):
 
     Methods:
 
-        get_page(title: str) -> WikipediaPage: Get a Wikipedia page object given a title (inherited)
-
-        get_page_summary(page: WikipediaPage | None = None) -> str: Get the summary of a Wikipedia page (inherited)
-
-        get_permitted_links(title: Optional[str] = None) -> list[str]: Get permitted links for the current page (inherited)
-
-        is_permitted_link(link: str) -> bool: Check if a link is permitted (inherited)
-
-        system_instruction -> dict: Generate the starting instructions for the game (inherited)
-
-        on_page_instruction -> dict: Generate instructions for the current page (inherited)
-
-        next_step_instruction -> dict: Generate instructions for the next step (inherited)
-
-        get_instructions(system: bool, on_page: bool, next_step: bool) -> str: Generate instruction messages based on the current game state (inherited)
-
-        check_win() -> bool: Check if the game has been won (inherited)
+        - get_page(title: str) -> WikipediaPage: Get a Wikipedia page object given a title (inherited)
+        - get_page_summary(page: WikipediaPage | None = None) -> str: Get the summary of a Wikipedia page (inherited)
+        - get_permitted_links(title: Optional[str] = None) -> list[str]: Get permitted links for the current page (inherited)
+        - is_permitted_link(link: str) -> bool: Check if a link is permitted (inherited)
+        - system_instruction -> dict: Generate the starting instructions for the game (inherited)
+        - on_page_instruction -> dict: Generate instructions for the current page (inherited)
+        - next_step_instruction -> dict: Generate instructions for the next step (inherited)
+        - check_win() -> bool: Check if the game has been won (inherited)
 
     """
 
@@ -232,9 +218,9 @@ class WikiGameReAct(WikiGamePrompting):
         Returns:
             dict: The starting instructions. "role" is "system" for system messages.
         """
-        tool_descriptions = "\n".join([tool.description["function"]["name"] + ":" + tool.description["function"]["description"] for tool in self.tools])
-        return {}
+        # TODO
 
+        pass
 
 class WikiAgentReAct(WikiAgent):
     """
@@ -248,24 +234,14 @@ class WikiAgentReAct(WikiAgent):
         chat_history (List[dict]): History of interactions (inherited)
 
     Methods:
-        get_response(use_tool: bool = True) -> ChatCompletionMessage: Get response from the model (inherited)
-
-        execute_tool_calls(message: ChatCompletionMessage) -> List[str]: Execute tool calls from the model's response (inherited)
-
-        run(with_tool: bool = True) -> bool: Run one loop of the Wikipedia agent (inherited)
-
-        update_history(message : str | ChatCompletionMessage | List[str | ChatCompletionMessage]): Update self.chat_history and self.full_chat_history with a message or list of messages. (inherited)
-
-        reset_history(): Empty self.chat_history of the agent. (inherited)
-
-        handle_tool_calls(response: ChatCompletionMessage): Handles tool_calls in the wikipedia game context. (inherited)
-
-        handle_refusal(response: ChatCompletionMessage): Handles refusals in the wikipedia game context. (inherited)
-
-        start(): A function to put the starting instructions in agent.chat_history when the agent starts a new page or starts the game. (inherited)
-
-        run(): This function runs the agent in the wikipedia game context. (inherited)
-
+        - get_response(use_tool: bool = True) -> ChatCompletionMessage: Get response from the model (inherited)
+        - execute_tool_calls(message: ChatCompletionMessage) -> List[str]: Execute tool calls from the model's response (inherited)
+        - update_history(message : str | ChatCompletionMessage | List[str | ChatCompletionMessage]): Update self.chat_history and self.full_chat_history with a message or list of messages. (inherited)
+        - reset_history(): Empty self.chat_history of the agent. (inherited)
+        - handle_tool_calls(response: ChatCompletionMessage): Handles tool_calls in the wikipedia game context. (inherited)
+        - handle_refusal(response: ChatCompletionMessage): Handles refusals in the wikipedia game context. (inherited)
+        - start(): A function to put the starting instructions in agent.chat_history when the agent starts a new page or starts the game. (inherited)
+        - run() -> bool: Run one loop of the Wikipedia agent (inherited)
 
     """
 
@@ -279,6 +255,7 @@ class WikiAgentReAct(WikiAgent):
         Returns:
             ChatCompletionMessage: The response from the model
         """
+        # TODO
         pass
 
     def generate_action(self) -> ChatCompletionMessage:
@@ -292,6 +269,7 @@ class WikiAgentReAct(WikiAgent):
             ChatCompletionMessage: The response from the model
         
         """
+        # TODO
         pass
 
     def generate_reason_and_action(self):
@@ -307,6 +285,7 @@ class WikiAgentReAct(WikiAgent):
             ChatCompletionMessage: The action from the model
 
         """
+        # TODO
         pass
 
     def run(self):
@@ -317,6 +296,7 @@ class WikiAgentReAct(WikiAgent):
             - Generate a Reason and Action
             - Handle the tool calls, refusals, and no tool calls in the model response
         """
+        # TODO
         pass
 ```
 
@@ -357,14 +337,15 @@ Importance: 🔵🔵🔵⚪⚪
 
 You should spend up to 10-15 mins on this exercise.
 ```
-[Add a diagram for Reflexion]
 
-[This paper](https://arxiv.org/abs/2303.11366) finds better performance by LLMs on tasks when they can perform "lookahead" and get feedback on their plans. We will imitate this by allowing the agent to suggest candidate paths, and informing it where these paths go wrong (if they do). You'll need to add this tool to the list of tools.
+The [reflexion paper](https://arxiv.org/abs/2303.11366) proposes a method that builds on ReAct and improves performance by allowing LLMs to get cheap **feedback** on their proposed actions, then to **reflect** on this feedback before taking the next action. 
+
+to perform "lookahead" and get feedback on their action plans. We will imitate this by allowing the agent to suggest candidate paths, and informing it where these paths go wrong (if they do). You'll need to add this tool to the list of tools.
 
 We don't want to provide the agent the links/content of every page when it does this lookahead, as then we'd just be reimplementing a smaller version of the game *inside the game*. Instead, we'll let the agent suggest paths without seeing any content or links, and then let it know if this path works. It's very likely that a suggested link will — at some point — not be accessible from one of the pages, but this tool will still be useful to help the agent plan.
 
 ```python
-class test_path_tool():
+class TestPathTool():
     """
     Implements a tool that allows the agent to test paths from the current state of the game.
 
@@ -395,8 +376,8 @@ class test_path_tool():
     def description(self) -> dict:
         return {}
 
-test_path_tool_inst = test_path_tool()
-wiki_game_tools = [get_content_tool_inst, move_page_tool_inst, test_path_tool_inst]
+TestPathTool_inst = TestPathTool()
+wiki_game_tools = [get_content_tool_inst, move_page_tool_inst, TestPathTool_inst]
 ```
 
 Now run your own tests on your different agents on path to see if the `test_path` tool has improved the agent's performance.

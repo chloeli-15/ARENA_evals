@@ -25,6 +25,13 @@ def section():
         r'''
 # Building a Simple Arithemtic Agent
 
+> ### Learning Objectives
+> 
+> - Understand that a LLM agent is just a "glorified for-loop" (of the scaffolding program interacting with the LLM API).
+> - Learn how to use function calling to allow LLMs to use external tools.
+> - Understand the main functionalities of an LLM agent:  
+
+
 We will start by building a simple LLM agent that solves arithmetic problems. LLMs struggle with arithmetic, but we can drastically improve their performance by providing a simple calculation tool. We'll try the model with and without tools on this task, and see how significantly performance improves.
 
 To build this, we will implement 4 things:
@@ -460,8 +467,9 @@ You should spend up to 20-25 minutes on this exercise.
 
 Build out the following simple agent class by filling in `get_response()` and `execute_tool_calls()` functions.
 
-- `get_response()` should make a query to the chat API and return the response message from the model (it should be able to either use tool calling or not, depending on the `use_tool` argument).
-- `execute_tool_calls()` should execute the tool calls in the message and return a list of tool responses as strings (we can format them correctly in `run()`).
+- `get_response()`: This should make an API call and return the `ChatCompletionMessage`from the model. It should be able to either use tool calling or not, depending on the `use_tool` argument).
+- `execute_tool_calls()`: This should execute the tool calls in the message and return a list of tool responses as strings (we can format them correctly in `run()`).
+- `run()`: This should define the main execution logic for running 1 loop of the agent. As this is largely determined by the task, this method in `SimpleAgent` is just a dummy method and should be overridden in specific agent classes.
 
 ```python
 class SimpleAgent:
