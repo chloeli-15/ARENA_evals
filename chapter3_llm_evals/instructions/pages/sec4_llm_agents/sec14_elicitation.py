@@ -20,7 +20,7 @@ def section():
 
     st.markdown(
         r'''
-# 4️⃣ Elicitation
+# Elicitation
 
 You may have observed that while the above implementation of `WikiAgent` succeeds at Albert Einstein → Aristotle, it fails at more complex tasks. However, this doesn't mean that GPT-4o-mini does not have the capability to perform better on this task, but this capability might be blocked because we:
 
