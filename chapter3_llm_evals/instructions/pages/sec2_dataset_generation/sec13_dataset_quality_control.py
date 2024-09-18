@@ -77,7 +77,7 @@ rubric += "For each question, give a reason for the score, the integer score wra
 
 You should:
 * Define the `score_defn`. We recommend using a 10-point scale (or somewhere between 5-12). 
-* Define `eval_examples` for few-shot prompting: A list of `user` and `assistant` messages, where the `user` message contains the question, and `assistant` message contains the score it deserves and the resason. Create questions 
+* Define `eval_examples` for few-shot prompting: A list of `user` and `assistant` messages, where the `user` message contains the question, and `assistant` message contains the score it deserves and the reason. 
 * Define a `threshold` for the action to take (The default action is to reject questions below threshold.)
 
 As before, we stored the rubric in custom `EvalPrompts` class for easy access by our API call functions. Edit the class attributes directly to define the rubric and examples.
@@ -220,7 +220,7 @@ def generate_model_score(client:OpenAI,
 ```python
 # For scoring, set temp to zero because we only want to most probable/accurate score
 config.temperature = 0.0
-score, response = generate_model_score("What's for dinner?", config, eval_prompts, verbose=True)
+score, response = generate_model_score(client=client, user="What's for dinner?", config=config, prompts=eval_prompts, verbose=True)
 print(f"Score: {score} \nResponse: {response}")
 ```
 
@@ -374,7 +374,7 @@ def query_evaluator(client, dataset: List[dict], config: Config, prompts: EvalPr
             # Evaluate each question in the chunk
             for question in chunk:
                 assert question is not None, "Question content cannot be None"
-                score, response = generate_model_score(client, str(question), config, prompts)
+                score, response = generate_model_score(client=client, question=str(question), config=config, prompts=prompts)
 
                 question["score"] = score
                 question["model_response"] = response
