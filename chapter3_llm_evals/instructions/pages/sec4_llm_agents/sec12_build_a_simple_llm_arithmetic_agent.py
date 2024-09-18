@@ -9,8 +9,10 @@ def section():
     <li class='margtop'><a class='contents-el' href='#introduction'>Introduction</a></li>
     <li class='margtop'><a class='contents-el' href='#content-learning-objectives'>Content & Learning Objectives</a></li>
     <li><ul class="contents">
-        <li><a class='contents-el' href='#1-Intro to Inspect'>Intro to Inspect</a></li>
-        <li><a class='contents-el' href='#2-mcq-benchmarks-exploration'>MCQ Benchmarks: Exploration</a></li>
+        <li><a class='contents-el' href='#1-intro-to-llm-agents'>Intro to LLM Agents</a></li>
+        <li><a class='contents-el' href='#2-simple-arithmetic-agent'>Simple Arithmetic Agent</a></li>
+        <li><a class='contents-el' href='#3-wikiagent'>WikiAgent</a></li>
+        <li><a class='contents-el' href='#4-elicitation'>Elicitation</a></li>
     </ul></li>
     <li class='margtop'><a class='contents-el' href='#setup'>Setup</a></li>
 </ul>""",
@@ -21,7 +23,7 @@ def section():
 
     st.markdown(
         r'''
-# Build a Simple Arithemtic Agent
+# Building a Simple Arithemtic Agent
 
 We will start by building a simple LLM agent that solves arithmetic problems. LLMs struggle with arithmetic, but we can drastically improve their performance by providing a simple calculation tool. We'll try the model with and without tools on this task, and see how significantly performance improves.
 
@@ -536,7 +538,7 @@ Importance: 🔵🔵🔵🔵🔵
 You should spend up to 20-25 minutes on this exercise.
 ```
 
-Now build our agent that will interact with the `arithmeticGame` (with a calculator tool). Fill in the methods in the class below.
+Now build our agent that will interact with the `ArithmeticTask` (with a calculator tool). Fill in the methods in the class below.
 
 ```python
 class ArithmeticAgent(SimpleAgent):
@@ -653,9 +655,9 @@ Try implementing the agent_loop below with and without tools, to see how much be
 
 
 ```python
-Arithmetic_Task_1 = ArithmeticTask(31.1, 8)
-Arithmetic_Agent_1 = ArithmeticAgent(
-    task=Arithmetic_Task_1, verbose=True, tools=[Calculator]
+arithmetic_task_1 = ArithmeticTask(31.1, 8)
+arithmetic_agent_1 = ArithmeticAgent(
+    task=arithmetic_task_1, verbose=True, tools=[Calculator]
 )
 
 
@@ -671,13 +673,13 @@ def agent_loop(agent, task, num_loops: int = 10):
     pass
 
 
-agent_loop(Arithmetic_Agent_1, Arithmetic_Task_1)
+agent_loop(arithmetic_agent_1, arithmetic_task_1)
 ```
 
 If we want to see how the model performed at the task, then we can print all the messages from the `ChatHistory` as follows:
 
 ```python
-for message in Arithmetic_Agent_1.chat_history:
+for message in arithmetic_agent_1.chat_history:
     try:
         print(f"""{str(message.role)}:\n {str(message.content)}\n""")
     except:

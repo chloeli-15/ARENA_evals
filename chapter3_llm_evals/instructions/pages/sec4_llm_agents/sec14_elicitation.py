@@ -22,26 +22,22 @@ def section():
         r'''
 # Elicitation
 
-You may have observed that while the above implementation of `WikiAgent` succeeds at Albert Einstein → Aristotle, it fails at more complex tasks. However, this doesn't mean that GPT-4o-mini does not have the capability to perform better on this task, but this capability might be blocked because we:
+You may have observed that while the above implementation of `WikiAgent` succeeds at Albert Einstein → Aristotle, it fails at more difficult tasks. However, this doesn't mean that GPT-4o-mini does not have the capability to perform better on this task, but this capability might be blocked because we:
 
 - Prompted the model poorly
-
-- Stored the history poorly.
-
+- Stored the history poorly
 - Didn't give the model sufficient tools to accomplish the task.
+- ...
 
-- et cetera...
-
-In general, it is hard to show that a model does not have a capability, even if *we* failed to demonstrate this capability. For example, it took *3.5 years* after the release of GPT-2 (and 2.5 years after the release of GPT-3) for people to discover that [chain-of-thought reasoning](https://arxiv.org/abs/2201.11903) massively improves model performance (which allows the completion of significantly more complex tasks). A potential failure case for AI safety is that people discover similar breakthroughs that significantly increase model performance with minimal additional training, and this is not accounted for in our safety evaluations. Thus, LLM agent evals aim to elicit the best capability we possibly can, until we feel we've managed to gain [**evidence of absence**](https://en.wikipedia.org/wiki/Evidence_of_absence), **not** just **absence of evidence**.
+In general, it is hard to show that a model does not have a capability, even if we failed to demonstrate this capability. For example, it took 3.5 years after the release of GPT-2 (and 2.5 years after the release of GPT-3) for people to discover that [chain-of-thought reasoning](https://arxiv.org/abs/2201.11903) massively improves model performance, which enabled the same models to complete significantly harder tasks. LLM agent evals aim to elicit the best capability we possibly can, until we feel we've managed to gain [**evidence of absence**](https://en.wikipedia.org/wiki/Evidence_of_absence), **not** just **absence of evidence**.
 
 
-Broadly speaking, there are two categories of elicitation, narrow elicitation and general elicitation:
+Broadly speaking, there are two categories of elicitation:
 
-1. Narrow elicitation: methods that improve model performance on a particular task, or small class of tasks, but won't necessarily impact model performance in general across many tasks. 
-    - E.g. Give the model access to the content of arbitrary wikipedia articles - This will improve performance on this task significantly, but wouldn't generalize to other tasks.
-
-2. General elicitation: methods that improve model performance on a wide array of possible tasks. 
-    - E.g. Chain-of-thought prompting - This tends to improve model performance on a wide array of tasks. These sorts of elicitation methods are the ones we're most interested in, as if researchers find an improvement to models that is roughly as easy and effective as chain-of-thought prompting, then we would see a very rapid increase in risk from AI.
+1. **Narrow elicitation**: Task-specific methods that improve model performance on a particular task or small class of tasks, but likely won't impact model performance in general across many tasks. 
+    - E.g. A tool that gives the model access to the content of arbitrary wikipedia articles. This will improve performance on this task significantly, but wouldn't generalize to other tasks.
+2. **General elicitation**: Task-agnostic methods that improve model performance on a wide array of possible tasks. 
+    - E.g. Chain-of-thought prompting: This tends to improve model performance on a wide array of tasks. These sorts of elicitation methods are the ones we're most interested in, as if researchers find an improvement to models that is roughly as easy and effective as chain-of-thought prompting, then we would see a very rapid increase in risk from AI.
 
 
 We will try:
@@ -96,9 +92,9 @@ Try and design prompts that improve the performance of the wikipedia agent. You 
 See if you can significantly improve performance. There's a test task below that you should aim to be able to solve with improved prompting.
 
 ```python
-class WikiGame(BaseWikiGame):
+class WikiGamePrompting(WikiGame):
     """
-    Inherits from BaseWikiGame and adds improved prompting.
+    Inherits from WikiGame and adds improved prompting.
 
     Attributes:
         starting_page (str): The title of the starting page (inherited)
@@ -159,18 +155,18 @@ class WikiGame(BaseWikiGame):
         return {}
 ```
 
-Your `BaseWikiGame` and `WikiAgent` may not work on the example path "Linux" -> "Dana Carvey". But with improved prompting, you should be able to get the agent to solve this task!
+Your `WikiGame` and `WikiAgent` may not work on the example path "Linux" -> "Dana Carvey". But with improved prompting, you should be able to get the agent to solve this task!
 
 ```python
-# Original BaseWikiGame and WikiAgent
-game = BaseWikiGame("Linux", "Dana Carvey")
+# Original WikiGame and WikiAgent
+game = WikiGame("Linux", "Dana Carvey")
 agent = WikiAgent(game, model="gpt-4o-mini", tools=wiki_game_tools)
 agent_loop(agent, game, 30)
 ```
 
 ```python
 #Improved WikiGame and WikiAgent
-game = WikiGame("Linux", "Dana Carvey")
+game = WikiGamePrompting("Linux", "Dana Carvey")
 agent = WikiAgent(game, model="gpt-4o-mini", tools=wiki_game_tools)
 agent_loop(agent, game, 30)
 ```
@@ -192,9 +188,9 @@ Chain-of-thought prompting confers significant benefits to model performance, an
 Remember that if you're calling the model without tools, OpenAI won't automatically provide the model with a description of the tools in its system message, so we'll have to ensure that the tool descriptions are in the `system_instruction` we provide (this will lead to some redundancy when the model takes an action, but this seems to be okay). This means that from now on we will have to feed both the *task* and the *agent* the list of tools the agent can use.
 
 ```python
-class WikiGameReAct(WikiGame):
+class WikiGameReAct(WikiGamePrompting):
     """
-    Inherits from WikiGame and adds the ReAct framework.
+    Inherits from WikiGamePrompting and adds the ReAct framework.
 
     Attributes:
         starting_page (str): The title of the starting page (inherited)
@@ -338,11 +334,11 @@ def agent_loop_ReAct(game, agent, num_loops = 10):
     """
     pass
 ```
-Your `WikiAgent` and `WikiGame` with only improved prompting might not be able to solve "Drupe" → "17th parallel north" (or might not be able to solve it very effectively or reliably). However, your ReAct agent should be able to solve this path.
+Your `WikiAgent` and `WikiGamePrompting` with only improved prompting might not be able to solve "Drupe" → "17th parallel north" (or might not be able to solve it very effectively or reliably). However, your ReAct agent should be able to solve this path.
 
 ```python
 # WikiGame and WikiAgent with improved prompting
-game = WikiGame("Drupe", "17th parallel north")
+game = WikiGamePrompting("Drupe", "17th parallel north")
 agent = WikiAgent(task=game, tools=wiki_game_tools)
 agent_loop(agent, game, 40)
 ```
