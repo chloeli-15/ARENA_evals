@@ -688,8 +688,15 @@ class WikiGame:
         Returns:
             dict: The starting instructions. The "role" is "system" for system messages.
         """
-        # TODO
-        return {}
+
+        return {
+            'role': 'system',
+            'content': f"""You are an AI agent playing the Wikipedia game.
+            Your goal is to get in as few steps as possible to the target Wikipedia
+            page {self.goal_page} from the starting page {self.starting_page}.
+            At each step, you choose a link from the current page to take you
+            closer to the goal.."""
+        }
 
     @property
     def on_page_instruction(self) -> dict:
@@ -699,8 +706,25 @@ class WikiGame:
         Returns:
             dict: The instructions for the current page. The "role" is "user" for user messages.
         """
-        # TODO
-        return {}
+        return {
+            'role': 'user',
+            'content': f"""
+                Current page title: 
+                [START TITLE]
+                {self.current_page.title}
+                [END TITLE]\n
+                Summary of current page: 
+                [START SUMMARY]
+                {self.current_page.summary}
+                [END SUMMARY]
+                \n\n
+                Choose from the following links the page that will move you closest
+                 to the goal page {self.goal_page.title}:
+                [START LINKS]
+                {self.get_permitted_links()}
+                [END LINKS]
+            """
+        }
 
     @property
     def next_step_instruction(self) -> dict:
@@ -711,7 +735,12 @@ class WikiGame:
             dict: The instructions for the next step. The "role" is "user" for user messages.
         """
         # TODO
-        return {}
+        return {
+            'role': 'user',
+            'content': """
+                What is the next best step?
+            """
+        }
 
     # ========================= Task State management (to implement) =========================
 
@@ -722,7 +751,206 @@ class WikiGame:
         Returns:
             bool: True if the agent has won, False otherwise.
         """
-        # TODO
-        pass
+
+        return self.current_page.pageid == self.goal_page.pageid
 
 tests.run_wiki_game_tests(WikiGame)
+# %%
+class GetContentTool():
+    name: str = "get_content"
+
+    @staticmethod
+    def execute(task: WikiGame | Any) -> str:
+        """
+        Get all the content for the wikipedia page you are currently on. Anything which corresponds to a link is wrapped in <link></link> tags.
+
+        Args:
+            task (WikiGame | Any): The current task object.
+
+        Returns:
+            str: The content of the page with links wrapped
+        """
+        content = task.current_page.content
+        permitted_links = get_permitted_links(task.current_page)
+        for word in sorted(permitted_links, key=len, reverse=True):
+            content = re.sub(
+                r"""(\s|[,.)!?;:'"])(""" + re.escape(word) + r""")(\s|[,.)!?;:'"s])""",
+                r"\1<link>\2</link>\3",
+                content,
+                count=1,
+                flags=re.IGNORECASE,
+            )
+        return content
+
+    @property
+    def description(self):
+        """
+        Provides the description of the GetContentTool.
+
+        Returns:
+            dict: The description of the GetContentTool for the API
+        """
+
+        return {
+            "type": "function",
+            "function": {
+                "name": self.name,
+                "description": 'This tool allows you to get the content of the page, any link in the page will be wrapped in <link></link> tags.',
+            },
+        }
+
+
+class MovePageTool():
+    name: str = "move_page"
+
+    @staticmethod
+    def execute(new_page: str, task: Any) -> str:
+        """
+        Changes your current page to a specified new page which is accessible via a link from the current page. You can only call this function once at a time, as it will take you to a different page.
+
+        Args:
+            task (WikiGame): The current task object.
+            new_page (str): The title of the new page to move to.
+
+        Returns:
+            str: A message indicating the result of the move
+        """
+        new_page = new_page.replace("_"," ")
+        if WikiGame.is_permitted_link(new_page):
+            task.page_history.append(task.current_page.title)
+            task.current_page = WikiGame.get_page(new_page)
+            return f"Successfuly moved to page {task.current_page.title}"
+        return f"Link provided {new_page} is not a valid link."
+
+    @property
+    def description(self):
+        """
+        Provides the description of the MovePageTool
+
+        Returns:
+            dict: The description of the MovePageTool for the API
+        """
+        return {
+            "type": "function",
+            "function": {
+                "name": self.name,
+                "description": 'Give a link as argument, and move to the page corresponding to this link.',
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "link": {
+                            "type": "string",
+                            "description": "The link you want to move to.",
+                        }
+                    },
+                    "required": ["link"],
+                    "additionalProperties": False,
+                },
+            },
+        }
+
+
+get_content_tool_inst = GetContentTool()
+move_page_tool_inst = MovePageTool()
+wiki_game_tools = [get_content_tool_inst, move_page_tool_inst]
+# %%
+class WikiAgent(SimpleAgent):
+    """
+    Inherits from SimpleAgent and adds the ability to handle tool calls and refusals in the Wikipedia game context.
+
+    Attributes:
+        model (str): The model used for generating responses (inherited)
+        tools (List[Any]): List of tools (inherited)
+        client (OpenAI): OpenAI client for API calls (inherited)
+        task (Any): The current task being executed
+        chat_history (List[dict]): History of interactions (inherited)
+
+    Methods:
+        get_response(use_tool: bool = True) -> ChatCompletionMessage:
+            Get response from the model (inherited)
+
+        execute_tool_calls(message: ChatCompletionMessage) -> List[str]:
+            Execute tool calls from the model's response (inherited)
+
+        run(with_tool: bool = True) -> bool:
+            Run one loop of the Wikipedia agent (modified below)
+
+    """
+
+    def __init__(
+        self,
+        task: Any,
+        tools: List[Any],
+        model="gpt-4o-mini",
+        chat_history: List[dict] = None,
+        verbose: bool = True,
+    ):
+        super().__init__(model=model, tools=tools, task=task)
+
+        self.chat_history = chat_history if chat_history else []
+        self.full_chat_history = (
+            chat_history if chat_history else []
+        )  # All messages that have been sent in the chat history.
+        self.verbose = verbose
+        self.start()
+
+    # ========================= Memory (to implement) =========================
+
+    def update_history(
+        self, message: str | ChatCompletionMessage | List[str | ChatCompletionMessage]
+    ):
+        """
+        Update self.chat_history and self.full_chat_history with a message or list of messages.
+
+        Args:
+            message (str | List[str]): The message to add to the chat history
+        """
+        pass
+
+    def reset_history(self):
+        """
+        Empty self.chat_history of the agent.
+        """
+        pass
+
+    # ========================= Observation parsing (to implement) =========================
+    def handle_tool_calls(self, response: ChatCompletionMessage):
+        """
+        Handles tool_calls in the wikipedia game context:
+            - Executes the tool calls using execute_tool_calls
+            - Appends the original tool call & tool_responses to the chat_history
+            - If the agent has moved to a new page, resets the chat_history
+            - If not, get the next_step_message instruction from the task and append it to chat_history
+
+        Args:
+            response (ChatCompletionMessage): The response from the model
+        """
+        pass
+
+    def handle_refusal(self, response: ChatCompletionMessage):
+        """
+        Handles refusals in the wikipedia game context:
+
+        Args:
+            response (ChatCompletionMessage): The response from the model
+        """
+        pass
+
+    # ========================= Implementation logic (to implement) =========================
+    def start(self):
+        """
+        A function to put the starting instructions in agent.chat_history when the agent starts a new page or starts the game.
+        """
+        pass
+
+    def run(self):
+        """
+        This is the main function that runs the agent in the wikipedia game for 1 loop. It:
+            - Gets the current task instruction
+            - Gets the response from the model
+            - Handles the response in the cases:
+                - tool calls (using handle_tool_calls)
+                - refusals (using handle_refusal)
+                - no tool calls (using update_history)
+        """
+        pass
