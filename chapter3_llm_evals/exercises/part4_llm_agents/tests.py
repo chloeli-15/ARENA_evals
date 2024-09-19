@@ -28,6 +28,9 @@ from utils import evaluate_expression, apply_user_format, apply_assistant_format
 
 #%%
 
+from part4_llm_agents import solutions
+
+
 import math
 from typing import List, Dict
 
