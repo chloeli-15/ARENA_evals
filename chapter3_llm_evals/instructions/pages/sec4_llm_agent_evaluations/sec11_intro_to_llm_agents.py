@@ -49,9 +49,9 @@ The LLM interacts with scaffolding program to complete a task according to the f
 
 1. The LLM receives input (task description, current state, available actions etc.) from the scaffolding program
 2. The LLM processes the input and outputs an action (e.g. "Use calculator tool")
-4. The scaffolding program executes the action the agent took and returns the outcome (e.g. it would run `calculate()` in the background for an LLM using a calculator, and then return the function output to the agent)
-5. The LLM receive the results and decides the next action
-6. Repeating the cycle until the task is complete
+3. The scaffolding program executes the action the agent took, and returns the outcome (e.g. it would run `calculate()` in the background for an LLM using a calculator, and then return the function output to the agent)
+4. The LLM receive the results and decides the next action
+5. Repeating the cycle until the task is complete
 
 
 [Insert METR diagram]
@@ -102,7 +102,7 @@ Points to make - "Why evaluate LLM agents":
     - Can be limited by primitive tools 
     - Can have bugs
     - ...
-- For a model that fails to solve a hacking task, thus deemed safe, there might exist simple fixes (e.g. better prompts, better file manipulation tools) that unlock this dangerous capability. 
+- For a model that fails to solve a hacking task, and is thus deemed safe, there might exist simple fixes (e.g. better prompts, better file manipulation tools) that unlock this dangerous capability. 
 - 
 - Final point about "quantifying" the amount of scaffolding to make eval results more quantitative
     - Apollo "Science of Evals" 

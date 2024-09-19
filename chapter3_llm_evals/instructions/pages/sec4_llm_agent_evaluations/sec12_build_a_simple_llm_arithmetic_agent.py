@@ -33,13 +33,11 @@ To build this, we will implement 4 things:
 
 In general, ... [description of how to think about designing task and agent in generation, include decision factors] probably good to include a diagram here 
 
-We build task
-We build tool
+In general, when designing an agent, we will build two classes:
+- The `Task` class, which handles the task and the agent's interaction with it.
+- The `Agent` class, which handles the agent's interaction with the LLM API.
 
-We build scaffold
-We build agent
-
-We loop things.
+The Task should contain an implementation of the task that we're going to run, and the Agent should handle the interaction with the LLM API. Beyond that, exactly how the scaffolding is divided between the two classes comes down mostly to design choices. We could have a very minimal Task class and a very complex Agent class, or a very minimal Agent class and a very complex Task class, or we could split the difference. We've decided to split the difference, so that neither of our classes grow to become too complex, but for example [METR's task standard](https://github.com/METR/task-standard/blob/main/STANDARD.md) puts most of the scaffolding in the Task.
 
 ## Defining the Task
 
