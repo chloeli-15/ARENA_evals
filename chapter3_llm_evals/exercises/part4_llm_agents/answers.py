@@ -100,6 +100,7 @@ class ArithmeticTask:
         """
         self.is_solved[self.get_current_task] = True
         self.current_task_number = (self.current_task_number + 1) % len(self.operations)
+
 # %%
 class CalculateTool():
     """
@@ -162,7 +163,7 @@ class CalculateTool():
         }
     
 from part4_llm_agents import tests
-tests.run_calculate_tool_tests(CalculateTool)
+# tests.run_calculate_tool_tests(CalculateTool)
 
 # %%
 
@@ -171,18 +172,18 @@ Calculator = CalculateTool()
 
 #%%
 
-messages = [{"role": "user", "content": "Calculate 2+3"}]
+# messages = [{"role": "user", "content": "Calculate 2+3"}]
 client = establish_client_OpenAI()
 
-response = client.chat.completions.create(
-    model="gpt-4o-mini",
-    messages=messages,
-    tools=[Calculator.description],
-    tool_choice="auto",
-)
+# response = client.chat.completions.create(
+#     model="gpt-4o-mini",
+#     messages=messages,
+#     tools=[Calculator.description],
+#     tool_choice="auto",
+# )
 
-print(response.choices[0].message.content)
-print(response.choices[0].message.tool_calls)
+# print(response.choices[0].message.content)
+# print(response.choices[0].message.tool_calls)
 
 # %%
 def apply_tool_call_format(
@@ -205,35 +206,35 @@ def apply_tool_call_format(
     }
 
 
-messages = [{"role": "user", "content": "Calculate 5/3. Be precise."}]
-response = client.chat.completions.create(
-    model="gpt-4o-mini",
-    messages=messages,
-    tools=[Calculator.description],
-    tool_choice="auto",
-)
+# messages = [{"role": "user", "content": "Calculate 5/3. Be precise."}]
+# response = client.chat.completions.create(
+#     model="gpt-4o-mini",
+#     messages=messages,
+#     tools=[Calculator.description],
+#     tool_choice="auto",
+# )
 
-messages.extend(
-    [
-        response.choices[0].message,
-        apply_tool_call_format(
-            response.choices[0].message.tool_calls[0],
-            Calculator.execute(
-                json.loads(
-                    response.choices[0].message.tool_calls[0].function.arguments
-                )["expression"]
-            ),
-        ),
-    ]
-)
+# messages.extend(
+#     [
+#         response.choices[0].message,
+#         apply_tool_call_format(
+#             response.choices[0].message.tool_calls[0],
+#             Calculator.execute(
+#                 json.loads(
+#                     response.choices[0].message.tool_calls[0].function.arguments
+#                 )["expression"]
+#             ),
+#         ),
+#     ]
+# )
 
-response_to_tool_calls = client.chat.completions.create(
-    model="gpt-4o-mini",
-    messages=messages,
-    tools=[Calculator.description],
-    tool_choice="auto",
-)
-print(response_to_tool_calls.choices[0].message.content)
+# response_to_tool_calls = client.chat.completions.create(
+#     model="gpt-4o-mini",
+#     messages=messages,
+#     tools=[Calculator.description],
+#     tool_choice="auto",
+# )
+# print(response_to_tool_calls.choices[0].message.content)
 
 # %%
 
@@ -513,15 +514,15 @@ def agent_loop(agent, task, num_loops: int = 10):
             print("\nAll tasks solved.")
             break
 
-Arithmetic_Task_1 = ArithmeticTask(31.1, 8)
-Arithmetic_Agent_1 = ArithmeticAgent(
-    task=Arithmetic_Task_1, verbose=True, tools=[Calculator]
-)
+# Arithmetic_Task_1 = ArithmeticTask(31.1, 8)
+# Arithmetic_Agent_1 = ArithmeticAgent(
+#     task=Arithmetic_Task_1, verbose=True, tools=[Calculator]
+# )
 
-for message in Arithmetic_Agent_1.chat_history:
-    try:
-        print(f"""{str(message.role)}:\n {str(message.content)}\n""")
-    except:
-        print(f""" {message["role"]}:\n {message["content"]}\n""")
+# for message in Arithmetic_Agent_1.chat_history:
+#     try:
+#         print(f"""{str(message.role)}:\n {str(message.content)}\n""")
+#     except:
+#         print(f""" {message["role"]}:\n {message["content"]}\n""")
 
-agent_loop(Arithmetic_Agent_1, Arithmetic_Task_1)
+# agent_loop(Arithmetic_Agent_1, Arithmetic_Task_1)
