@@ -17,6 +17,7 @@ import math
 import re
 import sys
 from pathlib import Path
+from dotenv import load_dotenv
 # Make sure exercises are in the path; 
 chapter = r"chapter3_llm_evals"
 exercises_dir = Path(f"{os.getcwd().split(chapter)[0]}/{chapter}/exercises").resolve()
@@ -25,6 +26,7 @@ if str(exercises_dir) not in sys.path: sys.path.append(str(exercises_dir))
 os.chdir(exercises_dir)
 from utils import countrylist
 from utils import evaluate_expression, apply_user_format, apply_assistant_format, establish_client_anthropic, establish_client_OpenAI, retry_with_exponential_backoff
+
 MAIN = __name__ == '__main__'
 # Test the function
 
@@ -1475,7 +1477,7 @@ if MAIN:
 
 #%%
 
-class get_accessible_page_summary_tool(Tool):
+class GetAccessiblePageSummaryTool():
     """
     Implements a tool that allows the agent to get the summary of a Wikipedia page (you should use the get_page_summary function from the agent class)
     """
@@ -1532,7 +1534,7 @@ class get_accessible_page_summary_tool(Tool):
         }
 
 if MAIN:
-    get_accessible_page_summary_tool_inst = get_accessible_page_summary_tool()
+    get_accessible_page_summary_tool_inst = GetAccessiblePageSummaryTool()
     wiki_game_tools = [GetContentTool_inst, MovePageTool_inst, TestPathTool_inst, get_accessible_page_summary_tool_inst]
 
 #%%
@@ -1545,7 +1547,7 @@ if MAIN:
 
 #%%
 
-class get_page_content():
+class GetAnyPageContent():
     """
     Implements a tool that allows the agent to get the content of any Wikipedia page (not wrapped in link tags).
     """
@@ -1608,8 +1610,8 @@ class get_page_content():
             },
         }
 if MAIN:
-    get_page_content_tool_inst = get_page_content()
-    wiki_game_tools = [GetContentTool_inst, MovePageTool_inst, TestPathTool_inst, get_page_content_tool_inst]
+    get_any_page_content_tool_inst = GetAnyPageContent()
+    wiki_game_tools = [GetContentTool_inst, MovePageTool_inst, TestPathTool_inst, get_any_page_content_tool_inst]
 
 #%%
 

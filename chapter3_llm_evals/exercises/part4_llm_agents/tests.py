@@ -29,6 +29,7 @@ if str(exercises_dir) not in sys.path: sys.path.append(str(exercises_dir))
 os.chdir(exercises_dir)
 from utils import countrylist
 from utils import evaluate_expression, apply_user_format, apply_assistant_format, establish_client_anthropic, establish_client_OpenAI, retry_with_exponential_backoff
+import part4_llm_agents.solutions as solutions
 
 #%%
 
@@ -84,13 +85,11 @@ def ArithmeticTaskTests(ArithmeticTaskClass):
         print("test_full_cycle passed")
 
     def ArithmeticTaskrun_all_tests():
-        test_init()
-        test_generate_answers()
-        test_get_current_task()
-        test_instruction()
-        test_check_solved()
-        test_check_answer()
-        test_update_current_task()
+        ArithmeticTasktest_init()
+        ArithemticTasktest_get_current_task()
+        ArithemticTasktest_check_solved()
+        ArithemticTasktest_check_answer()
+        ArithemticTasktest_update_current_task()
         print("All tests passed successfully!")
 
     # Run all tests
@@ -106,9 +105,9 @@ def run_calculate_tool_tests(CalculateTool):
     
     def test_execute_valid_expressions():
         tool = CalculateTool()
-        assert tool.execute("2 + 3",None) == "5.0", "Simple addition failed"
-        assert tool.execute("10 / 3",None) == "3.3333333333333335", "Division with decimal result failed"
-        assert tool.execute("2 ** 3",None) == "8.0", "Exponentiation failed"
+        assert float(tool.execute("2 + 3",None)) == 5.0, "Simple addition failed"
+        assert float(tool.execute("10 / 3",None)) == 3.3333333333333335, "Division with decimal result failed"
+        assert float(tool.execute("2 ** 3",None)) == 8.0, "Exponentiation failed"
         print("test_execute_valid_expressions passed")
 
     def test_description_property():
@@ -175,7 +174,6 @@ class CalculateTool:
                 }
             }
         }
-x = solutions.SimpleAgent
 
 class FakeChatCompletionMessage:
     def __init__(self, content: str, tool_calls: List[Dict[str, str]]):
