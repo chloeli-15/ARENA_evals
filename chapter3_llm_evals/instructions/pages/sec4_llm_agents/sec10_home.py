@@ -36,44 +36,55 @@ Links to other chapters: [**(0) Fundamentals**](https://arena3-chapter0-fundamen
 
 ## Introduction
 
-# Intro to LLM Agents
+Over the next two days, we'll be working with LLM agents. These consist of a scaffolding programs interacting with an LLM API. We'll also build two tasks, a simple and a complex one, in order to see how LLM agents act.
 
-#### What is an LLM agent?
-<!---
-Points to make:
-- "LLM agent" - a "scaffolding" program (i.e. Python program) that interacts with an LLM API. Include a version of METR "Evaluating Language-Model Agents on Realistic Autonomous Tasks" Figure 2
-    - Define scaffolding
-- More schematic breakdown of possible scaffolding: "tools" (describe what this means, what "tool calling" is), "memory" (Probably better move to "Build Agent" section! I've expanded this section there)
-- Mention list of examples of prominent LLM agents:
-    - [Minecraft LM Agent](https://arxiv.org/abs/2305.16291)
-    - [AutoGPT](https://autogpt.net/) and [LangChain](https://www.langchain.com/)
+We'll begin by learning building a simple Arithmetic Task and Arithmetic Agent. This should teach you the basics of function calling via the OpenAI API (Anthropic's API has minor differences, but operates in essentially the same way). Then, once we're comfortable with function calling and the general setup of LLM agents and tasks, we'll move on to building a more complex agent that plays the [Wikipedia Game](https://en.wikipedia.org/wiki/Wikipedia:Wiki_Game).
 
-==========================
---->
-An LLM **agent** consists of **a scaffolding program interacting with an LLM API**. This typically involves a loop of the following steps:
+Then we'll explore a variety of elicitation methods. These are methods for getting the best capabilities out of models, and is crucial for evaluating LLM agents. Elicitation tries to answer the question "Can the model do this?" Unforunately, we'll almost never be able to *prove* that the model doesn't have a capability, and will only be able to say that with some effort, we couldn't *get* the model show this capability. This means we'll have to put a lot of effort into trying to exhibit the behavior in models (to have the highest confidence when we make a claim that the model can't exhibit this behavior). This will involve:
+- Improving our prompting
+- Improving our tools
+- Improving the way the histories are stored
+- Ensuring the model can access good information.
 
-1. The scaffolding program sends instructions to the LLM, typically containing information on the task goal, the actions available to the LLM, and relevant task information. 
-2. The LLM processes the input and outputs an action in text (e.g. "calls" the `calculate()` tool in text). 
-3. The scaffolding program executes the action and returns the outcome (e.g. it runs the `calculate()` function in the background and returns the output to the agent).
-4. The LLM observes the results and decides the next action.
-5. Repeating the cycle until the task is complete
+Each exercise will have a difficulty and importance rating out of 5, as well as an estimated maximum time you should spend on these exercises and sometimes a short annotation. You should interpret the ratings & time estimates relatively (e.g. if you find yourself spending about 50% longer on the exercises than the time estimates, adjust accordingly). Please do skip exercises / look at solutions if you don't feel like they're important enough to be worth doing, and you'd rather get to the good stuff!
 
-The two basic components of scaffolding are:
-- Tool calling: This allows LLMs to use tools by providing a text description of the tool. The LLM can choose to use this tool by "calling" it in its text output. If it uses a tool, the scaffolding will execute this tool on the LLM's behalf (e.g. by running a python function, sending request to an external API etc.) and return the result of this tool call to the agent.
-- Prompting: This describes the task state to the LLM, assists it in its tool use, or instruct it to use chain-of-thought to give the LLM more "thinking time" etc.
+## Content & Learning Objectives
 
-<details><summary><b>Examples of LLM Agents</b></summary>
+#### 1️⃣ Intro to LLM Agents
 
-- [Voyager](https://arxiv.org/abs/2305.16291) (Minecraft LLM Agent)
+> ##### Learning objectives
+>- Understand why we want to evaluate LLM agents.
+>- Red resources about LLM agent evaluations to understand the current state of the field.
+>- Understand the common failure modes of LLM agents.
+>
 
-- [AutoGPT](https://autogpt.net/)
+#### 2️⃣ Simple Arithmetic Agent
 
-- [LangChain](https://www.langchain.com/)
+> ##### Learning objectives
+>- Understand that a LLM agent is just a "glorified for-loop" (of the scaffolding program interacting with the LLM API).
+>- Learn how to use function calling to allow LLMs to use external tools.
+>- Understand the main functionalities of an LLM agent.
+>
 
-</details>
+#### 3️⃣ More Complex Agent: WikiGame
 
-<!-- [Insert METR diagram]-->
+> ##### Learning objectives
+>- Get comfortable building a more complex task
+>- Understand how to build a more complex agent
+>- Observe the failure modes of a more complex agent
 
+#### 4️⃣ Elicitation
+
+> ##### Learning objectives
+>- Understand the importance of elicitation in evaluating LLM agents
+>- Understand the different methods of elicitation
+>- Understand how to improve prompting, tools, history storage, and information access in LLM agents
+
+#### 5️⃣ Bonus
+> ##### Learning objectives
+>- Implement additional tools for elicitation
+>- Explore some of your own ideas for elicitation
+>- Explore some of the current research in elicitation
 
 #### Why evaluate LLM agents?
 

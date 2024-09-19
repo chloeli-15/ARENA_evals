@@ -28,6 +28,11 @@ def section():
         r"""
 # Intro to LLM Agents
 
+> ### Learning objectives
+>- Understand why we want to evaluate LLM agents.
+>- Red resources about LLM agent evaluations to understand the current state of the field.
+>- Understand the common failure modes of LLM agents.
+>
 ## What is an LLM agent?
 <!---
 Points to make:
@@ -117,6 +122,11 @@ We know today that LLMs are being used as more than just chatbots. Since the rel
 - [Large Language Models can Strategically Deceive their Users when Put Under Pressure](https://arxiv.org/pdf/2311.07590) (Scheurer et al., Apollo Research, ICLR 2024)
 - [LLM Powered Autonomous Agents](https://lilianweng.github.io/posts/2023-06-23-agent/) (Lilian Weng, OpenAI Safety Team, 2023)
 - [AXRP Episode 34 - AI Evaluations with Beth Barnes](https://www.alignmentforum.org/posts/vACr4DExfeRMaCoo7/axrp-episode-34-ai-evaluations-with-beth-barnes) (Daniel Filan, 2024)
+-[Reflexion: Language Agents with Verbal Reinforcement Learning](https://arxiv.org/pdf/2303.11366) (Shinn et al., 2023)
+- [Answering Questions by Meta-Reasoning over Multiple Chains of Thought](https://arxiv.org/pdf/2304.13007) (Yoran et al., 2024)
+- [Toolformer: Language Models Can Teach Themselves to Use Tools](https://arxiv.org/pdf/2302.04761) (Schick et al., META AI Research, 2023)
+- [OpenAI Function Calling Guide](https://platform.openai.com/docs/guides/function-calling)
+- [Anthropic Function Calling Guide](https://docs.anthropic.com/en/docs/build-with-claude/tool-use)
 
 </details>
 

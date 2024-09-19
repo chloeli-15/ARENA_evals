@@ -22,6 +22,12 @@ def section():
         r'''
 # Elicitation
 
+> ### Learning objectives
+>- Understand the importance of elicitation in evaluating LLM agents
+>- Understand the different methods of elicitation
+>- Understand how to improve prompting, tools, history storage, and information access in LLM agents
+
+
 You may have observed that while the above implementation of `WikiAgent` succeeds at Albert Einstein → Aristotle, it fails at more difficult tasks. However, this doesn't mean that GPT-4o-mini does not have the capability to perform better on this task, but this capability might be blocked because we:
 
 - Prompted the model poorly
@@ -152,7 +158,88 @@ class WikiGamePrompting(WikiGame):
         return {}
 ```
 
-Your `WikiGame` and `WikiAgent` may not work on the example path "Linux" -> "Dana Carvey". But with improved prompting, you should be able to get the agent to solve this task!
+<details><summary>Solution:</summary>
+
+This isn't a perfect solution, but is an example of improved prompting to that in the solution in the basic `WikiGame` class.
+
+```python
+class WikiGamePrompting(WikiGame):
+    """
+    Inherits from WikiGame and adds improved prompting.
+
+    Attributes:
+        starting_page (str): The title of the starting page (inherited)
+        goal_page (str): The title of the goal page (inherited)
+        current_page (WikipediaPage): The current Wikipedia page (inherited)
+        page_history (List[str]): The history of pages visited (inherited)
+
+    Methods:
+        get_page(title: str) -> WikipediaPage: Get a Wikipedia page object given a title (inherited)
+
+        get_page_summary(page: WikipediaPage | None = None) -> str: Get the summary of a Wikipedia page (inherited)
+
+        get_permitted_links(title: Optional[str] = None) -> list[str]: Get permitted links for the current page (inherited)
+
+        is_permitted_link(link: str) -> bool: Check if a link is permitted (inherited)
+
+        system_instruction -> dict: Generate the starting instructions for the game (modified below)
+
+        on_page_instruction -> dict: Generate instructions for the current page (modified below)
+
+        next_step_instruction -> dict: Generate instructions for the next step (modified below)
+
+        check_win() -> bool: Check if the game has been won (inherited)
+
+    """
+
+    @property
+    def system_instruction(self):
+        """
+        Provide improved starting instructions for the game.
+
+        Returns:
+            dict: The starting instructions. "role" is "system" for system messages.
+        """
+        return {
+            "role": "system",
+            "content": f"You are a wikipedia-racing AI. Your goal is to reach {self.goal_page.title} by accessing links from wikipedia pages. Your current page is {self.current_page.title}.",
+        }
+
+    @property
+    def on_page_instruction(self):
+        """
+        Provide improved instructions for the current page.
+
+        Returns:
+            dict: The instructions for the current page. "role" is "user" for user messages.
+        """
+        return {
+            "role": "user",
+            "content": f"""You are currently on page: {self.current_page.title}. Make sure you start by reasoning about what steps you should take to get to the article on {self.goal_page.title}. When coming up with a strategy, make sure to pay attention to the path you have already taken, and if your current strategy doesn't seem to be working out, try something else. In case you're unsure, {self.goal_page.title} has the following summary:\n\n[Begin Summary]\n{self.get_page_summary(self.goal_page)}\n[End Summary]\n\nThe path you have taken so far is {" -> ".join(self.page_history)}.
+            """,
+        }
+
+    @property
+    def next_step_instruction(self):
+        """
+        Provide improved instructions for the next step.
+
+        Returns:
+            dict: The instructions for the next step. "role" is "user" for user messages.
+        """
+
+        return {
+            "role": "user",
+            "content": f"What's your next step to get to {self.goal_page.title}?",
+        }
+```
+
+</details>
+
+
+
+
+Your `WikiGame` and `WikiAgent` may not work on the example path "Linux" -> "Dana Carvey". But with sufficiently improved prompting, you should be able to get the agent to solve this task!
 
 ```python
 # Original WikiGame and WikiAgent
@@ -300,7 +387,141 @@ class WikiAgentReAct(WikiAgent):
         pass
 ```
 
-You may have to rewrite your `agent_loop`.
+<details><summary>Solution:</summary>
+
+```python
+class WikiGameReAct(WikiGamePrompting):
+    """
+    Inherits from WikiGame and adds the ReAct framework.
+
+    Attributes:
+        starting_page (str): The title of the starting page (inherited)
+        goal_page (str): The title of the goal page (inherited)
+        current_page (WikipediaPage): The current Wikipedia page (inherited)
+        page_history (List[str]): The history of pages visited (inherited)
+
+    Methods:
+
+        get_page(title: str) -> WikipediaPage: Get a Wikipedia page object given a title (inherited)
+
+        get_page_summary(page: WikipediaPage | None = None) -> str: Get the summary of a Wikipedia page (inherited)
+
+        get_permitted_links(title: Optional[str] = None) -> list[str]: Get permitted links for the current page (inherited)
+
+        is_permitted_link(link: str) -> bool: Check if a link is permitted (inherited)
+
+        system_instruction -> dict: Generate the starting instructions for the game (inherited)
+
+        on_page_instruction -> dict: Generate instructions for the current page (inherited)
+
+        next_step_instruction -> dict: Generate instructions for the next step (inherited)
+
+        check_win() -> bool: Check if the game has been won (inherited)
+
+    """
+
+    def __init__(self, starting_page: str, goal_page: str, tools=None):
+        super().__init__(starting_page, goal_page)
+        self.tools = tools
+
+    @property
+    def system_instruction(self):
+        """
+        Provided a description of the tools in the system message. When generate is called with tools this is redundant, but when generate is called without tools, this is useful.
+
+        Returns:
+            dict: The starting instructions. "role" is "system" for system messages.
+        """
+        tool_descriptions = "\n".join([tool.description["function"]["name"] + ":" + tool.description["function"]["description"] for tool in self.tools])
+        return {
+            "role": "system",
+            "content": f"""You are a wikipedia-racing AI. Your goal is to reach {self.goal_page.title} by accessing links from wikipedia pages. Your current page is {self.current_page.title}. You have access to {str(len(self.tools))} tools, which are:\n{tool_descriptions}""",
+        }
+
+
+class WikiAgentReAct(WikiAgent):
+    """
+    Inherits from WikiAgent and adds the ReAct framework.
+
+    Attributes:
+        model (str): The model used for generating responses (inherited)
+        tools (List[Any]): List of tools (inherited)
+        client (OpenAI): OpenAI client for API calls (inherited)
+        task (Any): The current task being executed (inherited)
+        chat_history (List[dict]): History of interactions (inherited)
+
+    Methods:
+        get_response(use_tool: bool = True) -> ChatCompletionMessage: Get response from the model (inherited)
+
+        execute_tool_calls(message: ChatCompletionMessage) -> List[str]: Execute tool calls from the model's response (inherited)
+
+        run(with_tool: bool = True) -> bool: Run one loop of the Wikipedia agent (inherited)
+
+        update_history(message : str | ChatCompletionMessage | List[str | ChatCompletionMessage]): Update self.chat_history and self.full_chat_history with a message or list of messages. (inherited)
+
+        reset_history(): Empty self.chat_history of the agent. (inherited)
+
+        handle_tool_calls(response: ChatCompletionMessage): Handles tool_calls in the wikipedia game context. (inherited)
+
+        handle_refusal(response: ChatCompletionMessage): Handles refusals in the wikipedia game context. (inherited)
+
+        start(): A function to put the starting instructions in agent.chat_history when the agent starts a new page or starts the game. (inherited)
+
+        run(): This function runs the agent in the wikipedia game context. (inherited)
+
+
+    """
+
+    def generate_reason(self) -> ChatCompletionMessage:
+        # Get the model to reason about the current state of the game and add the response to the messages (you may not want to give it tools for this)
+        self.chat_history.append(
+            apply_user_format(
+                "Think carefully about your current situation and what actions you want to take to get closer to"
+                + self.task.goal_page.title
+                + "."
+            )
+        )
+        response = self.get_response(use_tool=False)
+        return response
+
+    def generate_action(self) -> ChatCompletionMessage:
+        # Get the model to generate an action based on the reasoning and add the response to the messages
+        self.chat_history.append(apply_user_format("What action do you want to take?"))
+        response = self.get_response(use_tool=True)
+        return response
+
+    def generate_reason_and_action(self):
+        """
+        Generate a reason, store this in history, then generate and return an action.
+        """
+        reason = self.generate_reason()
+        self.update_history(apply_assistant_format(reason.content))
+        print("\nModel response ('Reason'):", reason.content)
+
+        action = self.generate_action()
+
+        return action
+
+    def run(self):
+        """
+        Run one loop of the agent.
+
+        This function should:
+            - Generate a Reason and Action
+            - Handle the tool calls, refusals, and no tool calls in the model response
+        """
+        response = self.generate_reason_and_action()
+
+        if response.tool_calls:
+            self.handle_tool_calls(response)
+        elif response.refusal:
+            self.handle_refusal(response)
+```
+
+</details>
+
+
+You may have to rewrite your `agent_loop` (depending on how you implemented it originally).
 
 ```python
 def agent_loop_ReAct(game, agent, num_loops = 10):
@@ -314,6 +535,28 @@ def agent_loop_ReAct(game, agent, num_loops = 10):
     """
     pass
 ```
+
+<details><summary>Solution:</summary>
+
+```python
+def agent_loop_ReAct(game, agent, num_loops = 10):
+    """
+    Run the agent loop for a given number of loops with the ReAct framework.
+
+    Args:
+        agent (WikiReActAgent): The agent to run
+        game (WikiGameReAct): The game to play
+        num_loops (int): The number of loops to run
+    """
+    agent.start()
+    for i in range(num_loops):
+        if game.check_win():
+            print("Success")
+            return
+        agent.run()
+```
+</details>
+
 Your `WikiAgent` and `WikiGamePrompting` with only improved prompting might not be able to solve "Drupe" → "17th parallel north" (or might not be able to solve it very effectively or reliably). However, your ReAct agent should be able to solve this path.
 
 ```python
@@ -382,6 +625,77 @@ TestPathTool_inst = TestPathTool()
 wiki_game_tools = [get_content_tool_inst, move_page_tool_inst, TestPathTool_inst]
 ```
 
+<details><summary>Solution:</summary>
+
+```python
+class TestPathTool():
+    """
+    Implements a tool that allows the agent to test paths from the current state of the game.
+
+    Attributes:
+        name (str): The name of the tool
+
+    Methods:
+        execute(task: Any, path: str) -> str: Test if a given path is valid.
+
+        description -> dict: Provides the description of the test_path tool for the API
+    """
+    
+    name = "test_path"
+
+    def execute(self, task: Any, path: str) -> str:
+        """
+        Test if a given path is valid.
+
+        Args:
+            path (str): A string representing a path, e.g., "Barack Obama -> Indonesia -> India"
+
+        Returns:
+            str: A message indicating whether the path is valid or where it fails.
+        """
+        path_nodes = [node.strip() for node in path.split("->")]
+        
+        if not path_nodes:
+            return "ERROR: Empty path provided."
+        
+        if path_nodes[0] != task.current_page.title:
+            return f"ERROR: The path should start with the current page: {task.current_page.title}"
+        
+        for i in range(len(path_nodes) - 1):
+            current_node = path_nodes[i]
+            next_node = path_nodes[i + 1]
+            
+            permitted_links = set(link.lower() for link in task.get_permitted_links(current_node))
+            
+            if next_node.lower() not in permitted_links:
+                return f"This path works until {next_node}, which is not accessible from {current_node}"
+        
+        return "This path is valid."
+    
+    @property
+    def description(self):
+        return {
+            "type" : "function",
+            "function" : {
+                "name" : "test_path",
+                "description" : "Accepts a test path string in the form \"current_page -> page1 -> page2 -> ... -> pageN\" and if the path does not work, then it returns where the path goes wrong, if the path does work it returns \"success.\" Be careful that path titles can be sensitive to plurals or rephrasings. This tool is especially useful to check longer plans.",
+                "parameters" : {
+                    "type" : "object",
+                    "properties": {
+                        "path" : {
+                            "type" : "string",
+                            "description" : "The path you want to test, formatted as \" current_page -> page1 -> page2 -> ... -> pageN\"."
+                        },
+                    },
+                    "required" : ["path"]
+                }
+            }
+        }
+```
+
+</details>
+
+
 Now run your own tests on your different agents on path to see if the `TestPathTool` tool has improved the agent's performance.
 
 ```python
@@ -400,6 +714,8 @@ If your agent isn't using the test path tool, you may want to go back and modify
 ```c
 Difficulty: 🔴🔴⚪⚪⚪
 Importance: 🔵🔵⚪⚪⚪
+
+You should spend up to 10-15 mins on this exercise.
 ```
 
 You may have noticed that the agent performs significantly worse as a result of the fact that we decided to reset the chat history every time the agent encounters a new page. It often comes up with plans and doesn't follow through on them. We can fix this issue by letting the agent see the entirety of its chat history.
@@ -444,7 +760,61 @@ class WikiAgentChatHistory(WikiAgentReAct):
         """
         # TODO
         pass
-```                     
+```
+
+<details><summary>Solution:</summary>
+
+```python
+class WikiAgentChatHistory(WikiAgentReAct):
+    """
+    Inherits from WikiAgentReAct and adds the ability to store and retrieve chat history.
+
+    Attributes:
+        model (str): The model used for generating responses (inherited)
+        tools (List[Any]): List of tools (inherited)
+        client (OpenAI): OpenAI client for API calls (inherited)
+        task (Any): The current task being executed (inherited)
+        chat_history (List[dict]): History of interactions (inherited)
+        full_chat_history (List[dict]): Full history of interactions
+
+    Methods:
+        get_response(use_tool: bool = True) -> ChatCompletionMessage: Get response from the model (inherited)
+
+        execute_tool_calls(message: ChatCompletionMessage) -> List[str]: Execute tool calls from the model's response (inherited)
+
+        run(with_tool: bool = True) -> bool: Run one loop of the Wikipedia agent (inherited)
+
+        update_history(message : str | ChatCompletionMessage | List[str | ChatCompletionMessage]): Update self.chat_history and self.full_chat_history with a message or list of messages. (inherited)
+
+        reset_history(): Empty self.chat_history of the agent. (modified below)
+
+        handle_tool_calls(response: ChatCompletionMessage): Handles tool_calls in the wikipedia game context. (inherited)
+
+        handle_refusal(response: ChatCompletionMessage): Handles refusals in the wikipedia game context. (inherited)
+
+        start(): A function to put the starting instructions in agent.chat_history when the agent starts a new page or starts the game. (inherited)
+
+        run(): This function runs the agent in the wikipedia game context. (inherited)
+
+        store_chat_history(): Store the current chat history in the full chat history.
+
+        retrieve_chat_history(): Retrieve the full chat history.
+    """
+    def reset_history(self):
+        """
+        Replace the output of get_content tool with an indication that wikipedia content was output when the agent moves to a new page
+        """
+        for message in self.chat_history:
+            if isinstance(message, dict):
+                if message["role"] == "tool" and message["name"] == "get_content" and message["content"] != "Wikipedia content was output here.":
+                    message["content"] = "Wikipedia content was output here."
+                else:
+                    pass
+            else:
+                pass
+```
+
+</details>
 
 See how your agent performs now:
 
