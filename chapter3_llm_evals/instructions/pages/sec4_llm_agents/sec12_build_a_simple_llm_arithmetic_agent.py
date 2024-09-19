@@ -646,6 +646,13 @@ class ArithmeticAgent(SimpleAgent):
         """
         return float(response[startpoint:endpoint])
 ```
+<details><summary>Note on <code>handle_refusal()</code></summary>
+
+The `ChatCompletionMessage` object contains a `refusal` attribute that can be used to determine if the model has refused to answer. If the model has refused to answer, the `refusal` will contain this content and we can print this out. We have included this for completeness, but it is not necessary to implement this function because it almost never occurs in the WikiGame.
+
+See the [OpenAI API documentation](https://platform.openai.com/docs/guides/function-calling/edge-cases) for more information on the `refusal` attribute.
+
+</details>
 
 ### Exercise - Run the task via an agent_loop 
 ```c
