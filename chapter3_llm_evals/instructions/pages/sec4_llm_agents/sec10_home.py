@@ -92,6 +92,8 @@ Each exercise will have a difficulty and importance rating out of 5, as well as 
 ```python
 import json
 import os
+import sys
+from pathlib import Path
 
 import wikipedia
 from wikipedia import WikipediaPage
@@ -106,6 +108,8 @@ from typing import Literal, Optional, Dict, List, Any
 from abc import abstractmethod
 import math
 import re
+import openai
+from dotenv import load_dotenv
 
 #Make sure exercises are in the path
 exercises_dir = Path(f"{os.getcwd().split(chapter)[0]}/{chapter}/exercises").resolve()
