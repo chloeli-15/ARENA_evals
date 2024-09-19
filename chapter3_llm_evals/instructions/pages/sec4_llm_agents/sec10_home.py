@@ -86,105 +86,14 @@ Each exercise will have a difficulty and importance rating out of 5, as well as 
 >- Explore some of your own ideas for elicitation
 >- Explore some of the current research in elicitation
 
-#### Why evaluate LLM agents?
-
-<!--
-Points to make - "Why evaluate LLM agents":
-- overall note: I think this could heavily be based on this [video](https://www.youtube.com/watch?v=KO72xvYAP-w) from METR
-- The purpose of agent evals is to **unlock and measure the full capabilities of a model**, to avoid underestimating the model and to better estimate the **ceiling** of their capability and potential to cause harm. 
-- Models often fail in easily-fixable ways. For example, when it is solving a hacking task, it
-    - Can refuse due to ethics or (claimed) inability 
-    - Can give up and ask the user for help 
-    - Can get stuck in loops 
-    - Can hallucinate facts or conclusions [only partly fixable] 
-    - Can be limited by primitive tools 
-    - Can have bugs
-    - ...
-- For a model that fails to solve a hacking task, thus deemed safe, there might exist simple fixes (e.g. better prompts, better file manipulation tools) that unlock this dangerous capability. 
-- 
-- Final point about "quantifying" the amount of scaffolding to make eval results more quantitative
-    - Apollo "Science of Evals" 
-    - GDM quantify bits
--->
-
-There are at least two reasons for why we might want to evaluate LLM agents.
-
-1. **Measuring the maximum capabilities of a model**
-
-For estimating safety risks, we want to measure the **ceiling** of dangerous capabilities. LLMs on their own often fail in easy-to-fix ways, as you will see. For example:
-
-- They often claim to be incapable of tasks that they can actually perform.
-- They can easily get stuck in loops.
-- They can give up and ask the user for help
-- They can hallucinate facts, or even misunderstand their own prior reasoning and hallucinate a faulty conclusion.
-- They can be limited by primitive tools.
-- They can be overly or underly sensitive to information in their prompts.
-- They can have bugs.
-
-This means that when a model fails to accomplish a task, it may still have the raw capability to succeed, but just require simple fixes that will unlock this capability. We want to eliminate the possibility of large capability improvements from relatively little effort, because this means our evals would have underestimated the true capability and risks associated with a model. Therefore, we want to try hard to elicit their raw capabilities via scaffolding, so that we can evaluate LLMs at their *best*.
-
-
-2. **Measuring the alignment of LLMs in agentic scenarios**
-
-We do not know if our current alignment techniques (e.g. supervised fine-tuning, RLHF) for aligning LLM chatbots will still work when LLMs are acting as agents in more complex scenarios. It is possible that these methods will not generalize well to agentic scenarios, and we want to test this.
-
-We know today that LLMs are being used as more than just chatbots. Since the release of ChatGPT, the use of LLMs as agentic systems has grown signficantly. These agents started off rather disappointingly initially, when they were based on GPT-3.5. However as more powerful LLMs come out and AI companies ensure their LLMs are better at tool-use, these agents are improving rapidly.
-
-
-<details><summary>Further resources on LLM agent evaluations</summary>
-
-- [Evaluating Language-Model Agents on Realistic Autonomous Tasks](https://evals.alignment.org/Evaluating_LMAs_Realistic_Tasks.pdf) (Kinniment et al., ARC Evaluations Team (now METR), 2023)
-- [Large Language Models can Strategically Deceive their Users when Put Under Pressure](https://arxiv.org/pdf/2311.07590) (Scheurer et al., Apollo Research, ICLR 2024)
-- [LLM Powered Autonomous Agents](https://lilianweng.github.io/posts/2023-06-23-agent/) (Lilian Weng, OpenAI Safety Team, 2023)
-- [AXRP Episode 34 - AI Evaluations with Beth Barnes](https://www.alignmentforum.org/posts/vACr4DExfeRMaCoo7/axrp-episode-34-ai-evaluations-with-beth-barnes) (Daniel Filan, 2024)
-
-</details>
-
-## Content & Learning Objectives
-
-
-#### 1️⃣ Intro to Inspect
-
-> ##### Learning objectives
->
-> - Understand the big picture of how Inspect works.
-> - Understand the components of a `Task` object.
-> - Turn our json dataset into an Inspect dataset.
-> - Understand the role of solvers and scorers in Inspect.
-
-
-#### 2️⃣ Writing Solvers
-
-> ##### Learning objectives
-> 
-> - Understand what solvers are and how to build one.
-> - Understand how prompting affects model responses to your questions.
-> - Think of how you want your evaluation to proceed and write solvers for this.
-
-#### 3️⃣ Writing Tasks and Evaluating
-
-> ##### Learning objectives
->
-> - Understand why we have to shuffle choices in MCQs.
-> - Understand how to write a task in Inspect to carry out our evaluation
-> - Get baselines on our model to determine whether it can understand the questions we're asking.
-> - Run a task on our model, and check the results.
->
-
-
-#### 4️⃣ Bonus: Log Files and Plotting
-
->
-> - Understand how Inspect stores log files.
-> - Extract the key data from log files.
-> - Plot the results of the evaluation.
->
 
 ## Setup
 
 ```python
 import json
 import os
+import sys
+from pathlib import Path
 
 import wikipedia
 from wikipedia import WikipediaPage
@@ -199,6 +108,8 @@ from typing import Literal, Optional, Dict, List, Any
 from abc import abstractmethod
 import math
 import re
+import openai
+from dotenv import load_dotenv
 
 #Make sure exercises are in the path
 exercises_dir = Path(f"{os.getcwd().split(chapter)[0]}/{chapter}/exercises").resolve()
