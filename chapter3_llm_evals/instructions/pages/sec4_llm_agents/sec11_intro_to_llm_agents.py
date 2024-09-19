@@ -62,8 +62,9 @@ The two basic components of scaffolding are:
 
 </details>
 
-<!-- [Insert METR diagram]-->
+<img src="https://raw.githubusercontent.com/chloeli-15/ARENA_img/refs/heads/main/img/ch3-llm-agent.png" width="800">
 
+Diagram based on METR's ["Evaluating Language-Model Agents on Realistic Autonomous Tasks", Figure 2](https://arxiv.org/pdf/2312.11671)
 
 ## Why evaluate LLM agents?
 

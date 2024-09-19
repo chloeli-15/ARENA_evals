@@ -40,7 +40,23 @@ To build this, we will implement 4 things:
 - The `ArithmeticAgent` class handles interacting with the LLM API, doing the calculation, and keeping track of the overall task progress.
 - The `agent_loop()` function defines the interaction loop between the task and the agent to execute the task.
 
-<!-- note about separability -->
+
+In general, most LLM agents share these core components:
+
+<img src="https://raw.githubusercontent.com/chloeli-15/ARENA_img/refs/heads/main/img/ch3-sec4-agent-overview.png" width="1000">
+
+
+1. **LLM API interface**: A basic function that makes API calls (e.g. `get_response()`). <!-- (IN AGENT)-->
+2. **Actions/Tools**: A set of actions the agent can take. <!-- (MOSTLY IN TASK)-->
+3. **Task State Management**: Keeping track of the current state of the task and any relevant context. <!-- (IN TASK MOSTLY)-->
+4. **Memory**: A way to store and retrieve information from past interactions (i.e. chat history). The simplest implemention is usually to store the list of past chat messages in a `chat_history` class attribute. <!-- (IN AGENT)-->
+5. **Observation Parser**: Functions to parse and interpret the results of actions and update the state. <!-- (IN TASK MOSTLY)-->
+6. **Decision/Execution Logic**: The rules or algorithms used to choose actions based on the current state and LLM output. <!-- (KIND OF IN BETWEEN)-->
+7. **Task-Specific Information**: Any additional information or functions specific to the task at hand. <!-- (IN TASK)-->
+
+
+These components are implemented across the `Task`, `Agent`, and `Tool` classes. However, the specific breakdown of these components in our implementation is a design choice and can vary depending on the task. While some seem more natural (e.g. LLM API interface goes into `Agent`, task state management goes into task), others can vary (e.g. Tools can be functions within the Task or the Agent, as opposed to being separate classes; observation parsing could go either way). In general, we want to maximize separability and minimize interfaces/dependencies, so that we can easily swap out the agent for the same task, or vice versa. 
+
 
 ## Task
 
@@ -441,19 +457,6 @@ response = client.chat.completions.create(
 
 ```
 ## Agent
-
-Most LLM agents share these core components:
-
-1. **LLM API interface**: A basic function that makes API calls (e.g. `get_response()`). <!-- (IN AGENT)-->
-2. **Actions/Tools**: A set of actions the agent can take. <!-- (MOSTLY IN TASK)-->
-3. **Task State Management**: Keeping track of the current state of the task and any relevant context. <!-- (IN TASK MOSTLY)-->
-4. **Memory**: A way to store and retrieve information from past interactions (i.e. chat history). The simplest implemention is usually to store the list of past chat messages in a `chat_history` class attribute. <!-- (IN AGENT)-->
-5. **Observation Parser**: Functions to parse and interpret the results of actions and update the state. <!-- (IN TASK MOSTLY)-->
-6. **Decision/Execution Logic**: The rules or algorithms used to choose actions based on the current state and LLM output. <!-- (KIND OF IN BETWEEN)-->
-7. **Task-Specific Information**: Any additional information or functions specific to the task at hand. <!-- (IN TASK)-->
-
-These components are spread across the task
-[Diagram]
 
 We will first implement a `SimpleAgent` class that is not specific to the `ArithmeticTask`, so that we can see the key components of an generic LLM agent.
 

@@ -186,6 +186,8 @@ def get_permitted_links(current_page: WikipediaPage) -> list[str]:
 ```
 ## LLM Agent for WikiGame
 
+<img src="https://raw.githubusercontent.com/chloeli-15/ARENA_img/refs/heads/main/img/ch3-wiki-task-overview.png" width="1000">
+
 ### Exercise - Build the WikiGame task
 ```c
 Difficulty: 🔴🔴🔴🔴⚪
