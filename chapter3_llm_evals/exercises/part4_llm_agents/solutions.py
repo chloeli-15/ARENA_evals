@@ -53,7 +53,7 @@ class ArithmeticTask:
             Dict[str, float]: A dictionary with the expression as key and the correct answer as value
         """
         return {
-            f"{self.num1} {op} {self.num2}": eval(f"{self.num1} {op} {self.num2}")
+            f"{self.num1} {op} {self.num2}": evaluate_expression(f"{self.num1} {op} {self.num2}")
             for op in self.operations
         }
 
@@ -68,14 +68,14 @@ class ArithmeticTask:
         return f"{str(self.num1)} {self.operations[self.current_task_number]} {str(self.num2)}"
 
     @property
-    def current_task_instruction(self) -> str:
+    def instruction(self) -> str:
         """
         Gets a string containing instructions for the current task for the agent. (This will be fed to the agent as a user prompt)
 
         Returns:
             str: A string containing the instructions for the current task
         """
-        return f"Calculate the result of the following expression: {self.get_current_task}. Give your final answer in the format: <answer>NUMBER</answer>, where NUMBER is a numerical value"
+        return f"Calculate the result of the following expression: {str(self.num1)} {self.operations[self.current_task_number]} {str(self.num2)}. Give your final answer in the format: <answer>NUMBER</answer>, where NUMBER is a numerical value"
 
     def check_solved(self) -> bool:
         """
@@ -129,6 +129,18 @@ class Tool:
 
 
 class CalculateTool():
+    """
+    
+    A tool that calculates the result of an arithmetic expression input as a string and returns as a string.
+
+    Attributes:
+        name (str): The name of the tool
+
+    Methods:
+        - execute(task: Any, input: str) -> str: Executes the tool on the input and returns the result as a string.
+        - description() -> str: Returns a description of the tool.
+    
+    """
     name = "calculate"
 
     @staticmethod
@@ -214,35 +226,36 @@ def apply_tool_call_format(
         "content": content,  # e.g. "5"
     }
 #%%
-messages = [{"role": "user", "content": "Calculate 5/3. Be precise."}]
-response = client.chat.completions.create(
-    model="gpt-4o-mini",
-    messages=messages,
-    tools=[Calculator.description],
-    tool_choice="auto",
-)
+if MAIN:
+    messages = [{"role": "user", "content": "Calculate 5/3. Be precise."}]
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=messages,
+        tools=[Calculator.description],
+        tool_choice="auto",
+    )
 
-messages.extend(
-    [
-        response.choices[0].message,
-        apply_tool_call_format(
-            response.choices[0].message.tool_calls[0],
-            Calculator.execute(
-                json.loads(
-                    response.choices[0].message.tool_calls[0].function.arguments
-                )["expression"]
+    messages.extend(
+        [
+            response.choices[0].message,
+            apply_tool_call_format(
+                response.choices[0].message.tool_calls[0],
+                Calculator.execute(
+                    json.loads(
+                        response.choices[0].message.tool_calls[0].function.arguments
+                    )["expression"]
+                ),
             ),
-        ),
-    ]
-)
+        ]
+    )
 
-response_to_tool_calls = client.chat.completions.create(
-    model="gpt-4o-mini",
-    messages=messages,
-    tools=[Calculator.description],
-    tool_choice="auto",
-)
-print(response_to_tool_calls.choices[0].message.content)
+    response_to_tool_calls = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=messages,
+        tools=[Calculator.description],
+        tool_choice="auto",
+    )
+    print(response_to_tool_calls.choices[0].message.content)
 #%%
 class SimpleAgent:
     def __init__(
@@ -314,7 +327,7 @@ class SimpleAgent:
             str: The response from the model
         """
         print(f"Running SimpleAgent...")
-        instruction = self.task.current_task_instruction
+        instruction = self.task.instruction
         self.chat_history.append(apply_user_format(instruction))
         response = self.get_response(use_tool=with_tool)
         return response
@@ -353,7 +366,7 @@ class ArithmeticAgent(SimpleAgent):
         self,
         model: Literal["gpt-4o-mini"] = "gpt-4o-mini",
         task: Any = None,
-        tools: Optional[List[Any]] = [Calculator],
+        tools: Optional[List[Any]] = None,
         chat_history: List[dict] = None,
         verbose: bool = True,
     ):
@@ -461,7 +474,7 @@ class ArithmeticAgent(SimpleAgent):
         - managing task state: staying on the same task or moving to the next task at the end of the loop
         """
         # Get the task instruction
-        instruction = self.task.current_task_instruction
+        instruction = self.task.instruction
         if self.verbose:
             print("\nUSER:", instruction)
         self.chat_history.append(apply_user_format(instruction))
@@ -535,27 +548,28 @@ if MAIN:
 # %%
 if MAIN:
     for message in Arithmetic_Agent_1.chat_history:
-    try:
-        print(f"""{str(message.role)}:\n {str(message.content)}\n""")
-    except:
-        print(f""" {message["role"]}:\n {message["content"]}\n""")
+        try:
+            print(f"""{str(message.role)}:\n {str(message.content)}\n""")
+        except:
+            print(f""" {message["role"]}:\n {message["content"]}\n""")
 
 #%%
 # Retrieve a Wikipedia page from its title
-page = wikipedia.page("Large language model")
+if MAIN:
+    page = wikipedia.page("Large language model")
 
-# Access basic page information
-print("Title:", page.title)
-print("\nURL", page.url)
-print(f"\nSummary (word count {len( page.summary.split())}):", page.summary)
-print(
-    f"\nContent (word count {len( page.content.split())}):",
-    page.content[:1000],
-    "......",
-)
-print(
-    f"""\nLinks (link count {len(page.links)}): [{", ".join(page.links[:7])}, ......]"""
-)
+    # Access basic page information
+    print("Title:", page.title)
+    print("\nURL", page.url)
+    print(f"\nSummary (word count {len( page.summary.split())}):", page.summary)
+    print(
+        f"\nContent (word count {len( page.content.split())}):",
+        page.content[:1000],
+        "......",
+    )
+    print(
+        f"""\nLinks (link count {len(page.links)}): [{", ".join(page.links[:7])}, ......]"""
+    )
 
 #%%
 
@@ -565,6 +579,7 @@ if MAIN:
     #This too
     page = wikipedia.page("Animalss", auto_suggest=False)
 
+#%%
 if MAIN:
     # Fixes PageError by allowing redirects
 
@@ -578,6 +593,7 @@ if MAIN:
     except DisambiguationError as e:
         page = wikipedia.page(e.options[0])
     print(page.title)
+
 #%%
 
 def get_page(title: str) -> WikipediaPage:
@@ -784,33 +800,12 @@ class WikiGame:
             "content": f"What's your next step?",
         }
 
-    def get_instructions(self, system: bool, on_page: bool, next_step: bool) -> str:
-        """
-        Generate instruction messages based on the current game state.
-
-        Args:
-            system (bool): Whether to include system instructions.
-            on_page (bool): Whether to include on-page instructions.
-            next_step (bool): Whether to include next-step instructions.
-
-        Returns:
-            list[str]: A list of instruction messages.
-        """
-        messages = []
-        if system:
-            messages.append(self.system_instruction)
-        if on_page:
-            messages.append(self.on_page_instruction)
-        if next_step:
-            messages.append(self.next_step_instruction)
-        return messages
-
     def check_win(self) -> bool:
         return self.current_page == self.goal_page
 
 #%%
 
-class get_content_tool():
+class GetContentTool():
     name = "get_content"
 
     @staticmethod
@@ -858,7 +853,7 @@ class get_content_tool():
         }
 
 
-class move_page_tool():
+class MovePageTool():
     name = "move_page"
 
     @staticmethod
@@ -908,9 +903,9 @@ class move_page_tool():
         }
 
 if MAIN:
-    get_content_tool_inst = get_content_tool()
-    move_page_tool_inst = move_page_tool()
-    wiki_game_tools = [get_content_tool_inst, move_page_tool_inst]
+    GetContentTool_inst = GetContentTool()
+    MovePageTool_inst = MovePageTool()
+    wiki_game_tools = [GetContentTool_inst, MovePageTool_inst]
 
 #%%
 
@@ -1099,7 +1094,7 @@ def agent_loop(agent, game, num_loops=10):
 if MAIN:
     game = WikiGame("Albert Einstein", "Aristotle")
     agent = WikiAgent(task=game, tools=wiki_game_tools)
-    agent_loop(agent, game, 10)
+    agent_loop(agent, game, 30)
 
 #%%
 if MAIN:
@@ -1135,8 +1130,6 @@ class WikiGamePrompting(WikiGame):
         on_page_instruction -> dict: Generate instructions for the current page (modified below)
 
         next_step_instruction -> dict: Generate instructions for the next step (modified below)
-
-        get_instructions(system: bool, on_page: bool, next_step: bool) -> str: Generate instruction messages based on the current game state (inherited)
 
         check_win() -> bool: Check if the game has been won (inherited)
 
@@ -1223,8 +1216,6 @@ class WikiGameReAct(WikiGamePrompting):
 
         next_step_instruction -> dict: Generate instructions for the next step (inherited)
 
-        get_instructions(system: bool, on_page: bool, next_step: bool) -> str: Generate instruction messages based on the current game state (inherited)
-
         check_win() -> bool: Check if the game has been won (inherited)
 
     """
@@ -1296,7 +1287,7 @@ class WikiAgentReAct(WikiAgent):
     def generate_action(self) -> ChatCompletionMessage:
         # Get the model to generate an action based on the reasoning and add the response to the messages
         self.chat_history.append(apply_user_format("What action do you want to take?"))
-        response = self.get_response()
+        response = self.get_response(use_tool=True)
         return response
 
     def generate_reason_and_action(self):
@@ -1359,72 +1350,73 @@ if MAIN:
 
 #%%
 
-if MAIN:
-    class test_path_tool():
+
+class TestPathTool():
+    """
+    Implements a tool that allows the agent to test paths from the current state of the game.
+
+    Attributes:
+        name (str): The name of the tool
+
+    Methods:
+        execute(task: Any, path: str) -> str: Test if a given path is valid.
+
+        description -> dict: Provides the description of the test_path tool for the API
+    """
+    
+    name = "test_path"
+
+    def execute(self, task: Any, path: str) -> str:
         """
-        Implements a tool that allows the agent to test paths from the current state of the game.
+        Test if a given path is valid.
 
-        Attributes:
-            name (str): The name of the tool
+        Args:
+            path (str): A string representing a path, e.g., "Barack Obama -> Indonesia -> India"
 
-        Methods:
-            execute(task: Any, path: str) -> str: Test if a given path is valid.
-
-            description -> dict: Provides the description of the test_path tool for the API
+        Returns:
+            str: A message indicating whether the path is valid or where it fails.
         """
+        path_nodes = [node.strip() for node in path.split("->")]
         
-        name = "test_path"
-
-        def execute(self, task: Any, path: str) -> str:
-            """
-            Test if a given path is valid.
-
-            Args:
-                path (str): A string representing a path, e.g., "Barack Obama -> Indonesia -> India"
-
-            Returns:
-                str: A message indicating whether the path is valid or where it fails.
-            """
-            path_nodes = [node.strip() for node in path.split("->")]
-            
-            if not path_nodes:
-                return "ERROR: Empty path provided."
-            
-            if path_nodes[0] != task.current_page.title:
-                return f"ERROR: The path should start with the current page: {task.current_page.title}"
-            
-            for i in range(len(path_nodes) - 1):
-                current_node = path_nodes[i]
-                next_node = path_nodes[i + 1]
-                
-                permitted_links = set(link.lower() for link in task.get_permitted_links(current_node))
-                
-                if next_node.lower() not in permitted_links:
-                    return f"This path works until {next_node}, which is not accessible from {current_node}"
-            
-            return "This path is valid."
+        if not path_nodes:
+            return "ERROR: Empty path provided."
         
-        @property
-        def description(self):
-            return {
-                "type" : "function",
-                "function" : {
-                    "name" : "test_path",
-                    "description" : "Accepts a test path string in the form \"current_page -> page1 -> page2 -> ... -> pageN\" and if the path does not work, then it returns where the path goes wrong, if the path does work it returns \"success.\" Be careful that path titles can be sensitive to plurals or rephrasings. This tool is especially useful to check longer plans.",
-                    "parameters" : {
-                        "type" : "object",
-                        "properties": {
-                            "path" : {
-                                "type" : "string",
-                                "description" : "The path you want to test, formatted as \" current_page -> page1 -> page2 -> ... -> pageN\"."
-                            },
+        if path_nodes[0] != task.current_page.title:
+            return f"ERROR: The path should start with the current page: {task.current_page.title}"
+        
+        for i in range(len(path_nodes) - 1):
+            current_node = path_nodes[i]
+            next_node = path_nodes[i + 1]
+            
+            permitted_links = set(link.lower() for link in task.get_permitted_links(current_node))
+            
+            if next_node.lower() not in permitted_links:
+                return f"This path works until {next_node}, which is not accessible from {current_node}"
+        
+        return "This path is valid."
+    
+    @property
+    def description(self):
+        return {
+            "type" : "function",
+            "function" : {
+                "name" : "test_path",
+                "description" : "Accepts a test path string in the form \"current_page -> page1 -> page2 -> ... -> pageN\" and if the path does not work, then it returns where the path goes wrong, if the path does work it returns \"success.\" Be careful that path titles can be sensitive to plurals or rephrasings. This tool is especially useful to check longer plans.",
+                "parameters" : {
+                    "type" : "object",
+                    "properties": {
+                        "path" : {
+                            "type" : "string",
+                            "description" : "The path you want to test, formatted as \" current_page -> page1 -> page2 -> ... -> pageN\"."
                         },
-                        "required" : ["path"]
-                    }
+                    },
+                    "required" : ["path"]
                 }
             }
-    test_path_tool_inst = test_path_tool()
-    wiki_game_tools = [get_content_tool_inst, move_page_tool_inst, test_path_tool_inst]
+        }
+if MAIN:
+    TestPathTool_inst = TestPathTool()
+    wiki_game_tools = [GetContentTool_inst, MovePageTool_inst, TestPathTool_inst]
 
 #%%
 class WikiAgentChatHistory(WikiAgentReAct):
@@ -1541,14 +1533,15 @@ class get_accessible_page_summary_tool(Tool):
 
 if MAIN:
     get_accessible_page_summary_tool_inst = get_accessible_page_summary_tool()
-    wiki_game_tools = [get_content_tool_inst, move_page_tool_inst, test_path_tool_inst, get_accessible_page_summary_tool_inst]
+    wiki_game_tools = [GetContentTool_inst, MovePageTool_inst, TestPathTool_inst, get_accessible_page_summary_tool_inst]
 
 #%%
 
 if MAIN:
-    wiki_game_tools = [get_content_tool_inst, move_page_tool_inst, test_path_tool_inst, get_accessible_page_summary_tool_inst]
-    agent = WikiAgentReAct(game, model="gpt-4o-mini", tools = wiki_game_tools)
-    game = WikiGameHistory("William Pitt the Younger", "Central Vietnam", tools = wiki_game_tools)
+    wiki_game_tools = [GetContentTool_inst, MovePageTool_inst, TestPathTool_inst, get_accessible_page_summary_tool_inst]
+    game = WikiGameReAct("William Pitt the Younger", "Central Vietnam", tools = wiki_game_tools)
+    agent = WikiAgentChatHistory(game, model="gpt-4o-mini", tools = wiki_game_tools)
+    agent_loop_ReAct(game, agent, 30)
 
 #%%
 
@@ -1616,18 +1609,18 @@ class get_page_content():
         }
 if MAIN:
     get_page_content_tool_inst = get_page_content()
-    wiki_game_tools = [get_content_tool_inst, move_page_tool_inst, test_path_tool_inst, get_page_content_tool_inst]
+    wiki_game_tools = [GetContentTool_inst, MovePageTool_inst, TestPathTool_inst, get_page_content_tool_inst]
 
 #%%
 
 if MAIN:
-    agent = WikiAgentReAct(game, model="gpt-4o-mini", tools = wiki_game_tools)
-    game = WikiGameHistory("49th Fighter Training Squadron", "Rosenhan experiment", tools = wiki_game_tools)
+    game = WikiGameReAct("49th Fighter Training Squadron", "Rosenhan experiment", tools = wiki_game_tools)
+    agent = WikiAgentChatHistory(game, model="gpt-4o-mini", tools = wiki_game_tools)
     agent_loop_ReAct(game, agent, 30)
 
 #%%
 
-class WikiGameRules(WikiGameHistory):
+class WikiGameRules(WikiGameReAct):
     """
     Inherits from WikiGameHistory and adds the ability to store and display the rules of the game.
 
@@ -1653,8 +1646,6 @@ class WikiGameRules(WikiGameHistory):
 
         next_step_instruction -> dict: Generate instructions for the next step (inherited)
 
-        get_instructions(system: bool, on_page: bool, next_step: bool) -> str: Generate instruction messages based on the current game state (inherited)
-
         check_win() -> bool: Check if the game has been won (inherited)
     """
 
@@ -1662,6 +1653,7 @@ class WikiGameRules(WikiGameHistory):
         super().__init__(starting_page, goal_page, tools)
         self.rules = rules if rules else None
 
+    @property
     def system_instruction(self):
         """
         Provide improved starting instructions for the game.
@@ -1669,6 +1661,7 @@ class WikiGameRules(WikiGameHistory):
         Returns:
             dict: The starting instructions. "role" is "system" for system messages.
         """
+        tool_descriptions = "\n".join([tool.description["function"]["name"] + ":" + tool.description["function"]["description"] for tool in self.tools])
         if self.rules:
             return {
             "role" : "system",
@@ -1680,6 +1673,7 @@ class WikiGameRules(WikiGameHistory):
             "content" : f"""You are a wikipedia-racing AI. Your goal is to reach {self.goal_page.title} by accessing links from wikipedia pages. Your current page is {self.current_page.title}. You have access to {str(len(self.tools))} tools, which are:\n{tool_descriptions}"""
         }
 
+    @property
     def on_page_instruction(self):
         """
         Provide improved instructions for the current page.
@@ -1693,9 +1687,9 @@ class WikiGameRules(WikiGameHistory):
         }
 #%%
 
-class move_page_tool_rules(move_page_tool):
+class MovePageTool_rules(MovePageTool):
     """
-    Inherits from move_page_tool and adds the ability to check the rules of the game.
+    Inherits from MovePageTool and adds the ability to check the rules of the game.
     """
 
     @staticmethod
@@ -1712,6 +1706,10 @@ class move_page_tool_rules(move_page_tool):
         """
         new_page_normalized = new_page.replace("_", " ")
         if task.is_permitted_link(new_page_normalized):
+            if "no countries" in task.rules and any("countries in" in category for category in task.get_page(new_page_normalized).categories.lower()):
+                return f"Couldn't move page to {new_page}. This page is in the category of countries."
+            if "no pages above length 30000" in task.rules and len(task.get_page(new_page_normalized).content) > 30000:
+                return f"Couldn't move page to {new_page}. This page is above the maximum length of 30000 characters."
             task.current_page = task.get_page(new_page_normalized)
             task.page_history.append(task.current_page.title)
             return f"Moving page to {task.current_page.title}"
@@ -1743,10 +1741,15 @@ class move_page_tool_rules(move_page_tool):
                 },
             },
         }
+if MAIN:
+    MovePageTool_rules_inst = MovePageTool_rules()
+    wiki_game_tools = [GetContentTool_inst, MovePageTool_rules_inst, TestPathTool_inst, get_page_content_tool_inst, get_accessible_page_summary_tool_inst]
 
 #%%
 if MAIN:
-    game = WikiGameRules("Nuclear Liabilities Fund", "Dana Carvey", rules=["no countries"], tools=wiki_game_tools)
+    
+    game = WikiGameRules("Nuclear Liabilities Fund", "Dana Carvey", rules=["no pages above length 30000"], tools=wiki_game_tools)
     agent = WikiAgentReAct(task=game, tools=wiki_game_tools)
     agent_loop_ReAct(game, agent, 30)
 
+# %%

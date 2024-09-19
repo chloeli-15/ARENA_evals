@@ -25,12 +25,11 @@ def section():
         r'''
 # Building a Simple Arithemtic Agent
 
-> ### Learning Objectives
-> 
-> - Understand that a LLM agent is just a "glorified for-loop" (of the scaffolding program interacting with the LLM API).
-> - Learn how to use function calling to allow LLMs to use external tools.
-> - Understand the main functionalities of an LLM agent:  
-
+> ### Learning objectives
+>- Understand that a LLM agent is just a "glorified for-loop" (of the scaffolding program interacting with the LLM API).
+>- Learn how to use function calling to allow LLMs to use external tools.
+>- Understand the main functionalities of an LLM agent.
+>
 
 We will start by building a simple LLM agent that solves arithmetic problems. LLMs struggle with arithmetic, but we can drastically improve their performance by providing a simple calculation tool. We'll try the model with and without tools on this task, and see how significantly performance improves.
 
@@ -80,8 +79,6 @@ We will build a toy task called `ArithmeticTask`. This task takes in two numbers
 - Check if a given answer is correct
 - Update the current problem if the model answer was correct, or after a certain number of attempts
 - Check if all problems have been solved
-
-</details>
 
 ```python
 class ArithmeticTask:
@@ -149,11 +146,13 @@ class ArithmeticTask:
         """
         pass
 
+tests.ArithmeticTaskTests(ArithmeticTask)
 
 x = ArithmeticTask(10, 15)
 for problem, answer in x.correct_answers.items():
     print(f"{problem} = {answer}")
 ```
+
 <details><summary>Aside - What is <code>@property</code>?</summary>
 
 The `@property` decorator in python is used to define methods that behave like they were attributes.
@@ -183,6 +182,85 @@ print(s.perimeter) # Output: 16
 Using `@property` in this case helps with:
 1. Making the intent of the code clearer
 2. Making it slightly easier to access these "properties" of the class
+
+</details>
+
+<details><summary>Solution:</summary>
+
+```python
+class ArithmeticTask:
+    def __init__(self, num1: int | float, num2: int | float):
+        self.num1 = num1
+        self.num2 = num2
+        self.operations: List[str] = ["+", "-", "*", "/", "%", "//"]
+        self.correct_answers: Dict[str, float] = self._generate_answers()
+        self.is_solved: Dict[str, bool] = {expr: False for expr in self.correct_answers}
+        self.current_task_number = 0
+
+    def _generate_answers(self) -> Dict[str, float]:
+        """
+        Generates a dictionary the correct answers for all possible tasks
+
+        Returns:
+            Dict[str, float]: A dictionary with the expression as key and the correct answer as value
+        """
+        return {
+            f"{self.num1} {op} {self.num2}": evaluate_expression(f"{self.num1} {op} {self.num2}")
+            for op in self.operations
+        }
+
+    @property
+    def get_current_task(self) -> str:
+        """
+        Gets the current task for the agent
+
+        Returns:
+            str: A string containing the current task
+        """
+        return f"{str(self.num1)} {self.operations[self.current_task_number]} {str(self.num2)}"
+
+    @property
+    def instruction(self) -> str:
+        """
+        Gets a string containing instructions for the current task for the agent. (This will be fed to the agent as a user prompt)
+
+        Returns:
+            str: A string containing the instructions for the current task
+        """
+        return f"Calculate the result of the following expression: {str(self.num1)} {self.operations[self.current_task_number]} {str(self.num2)}. Give your final answer in the format: <answer>NUMBER</answer>, where NUMBER is a numerical value"
+
+    def check_solved(self) -> bool:
+        """
+        Checks if all tasks have been solved
+
+        Returns:
+            bool: True if all tasks have been solved, False otherwise
+        """
+        return all(self.is_solved.values())
+
+    def check_answer(self, model_answer: str) -> bool:
+        """
+        Checks if the model's answer is correct
+
+        Args:
+            model_answer (str): The model's answer
+
+        Returns:
+            bool: True if the model's answer is correct, False otherwise
+        """
+
+        correct_answer = self.correct_answers[self.get_current_task]
+        return math.isclose(
+            float(model_answer), correct_answer, rel_tol=1e-5, abs_tol=1e-8
+        )
+
+    def update_current_task(self):
+        """
+        Sets is_solved for the current task to True and increments self.current_task_number by one
+        """
+        self.is_solved[self.get_current_task] = True
+        self.current_task_number = (self.current_task_number + 1) % len(self.operations)
+```
 
 </details>
 
@@ -317,9 +395,77 @@ class CalculateTool():
 
         return {}
 
+tests.run_calculate_tool_tests(CalculateTool)
 
 Calculator = CalculateTool()
 ```
+
+<details><summary>Solution:</summary>
+
+```python
+class CalculateTool():
+    """
+    
+    A tool that calculates the result of an arithmetic expression input as a string and returns as a string.
+
+    Attributes:
+        name (str): The name of the tool
+
+    Methods:
+        - execute(task: Any, input: str) -> str: Executes the tool on the input and returns the result as a string.
+        - description() -> str: Returns a description of the tool.
+    
+    """
+    name = "calculate"
+
+    @staticmethod
+    def execute(expression: str, task: Any = None) -> str:
+        """
+        Evaluates the string expression in Python using `evaluate_expression()` and returns the result as a string
+
+        Args:
+            expression (str): The arithmetic expression to evaluate
+            task (Any): Not used in this function
+
+        Returns:
+            str: The result of the arithmetical expression as a string
+        """
+        try:
+            return str(evaluate_expression(expression))
+        except (SyntaxError, NameError, ZeroDivisionError) as e:
+            return f"Error: {str(e)}"
+
+    @property
+    def description(self):
+        """
+        Provides the description of the tool
+
+        Returns:
+            dict: The description of the tool
+        """
+
+        return {
+            "type": "function",
+            "function": {
+                "name": self.name,
+                "description": 'Calculates the result of an arithmetic expression. For example, you could provide an input in the form "2+3" and the function would return 5. Or you could provide an expression like "10/3" and the function would return 3.3333333333333335.',
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "expression": {
+                            "type": "string",
+                            "description": "The arithmetic expression that you want to be evaluated.",
+                        }
+                    },
+                    "required": ["expression"],
+                    "additionalProperties": False,
+                },
+            },
+        }
+```
+
+
+</details>
 
 You can pass the tool to the model by providing the tool description to the `tools` parameter of the API call. This input has to be a list. The following code provides a standard example of this.
 
@@ -456,6 +602,43 @@ response = client.chat.completions.create(
 # TODO: Return the tool call responses back to the model
 
 ```
+
+<details><summary>Solution:</summary>
+
+```python
+messages = [{"role": "user", "content": "Calculate 5/3. Be precise."}]
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=messages,
+        tools=[Calculator.description],
+        tool_choice="auto",
+    )
+
+    messages.extend(
+        [
+            response.choices[0].message,
+            apply_tool_call_format(
+                response.choices[0].message.tool_calls[0],
+                Calculator.execute(
+                    json.loads(
+                        response.choices[0].message.tool_calls[0].function.arguments
+                    )["expression"]
+                ),
+            ),
+        ]
+    )
+
+    response_to_tool_calls = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=messages,
+        tools=[Calculator.description],
+        tool_choice="auto",
+    )
+    print(response_to_tool_calls.choices[0].message.content)
+```
+
+</details>
+
 ## Agent
 
 We will first implement a `SimpleAgent` class that is not specific to the `ArithmeticTask`, so that we can see the key components of an generic LLM agent.
@@ -532,9 +715,92 @@ class SimpleAgent:
         self.chat_history.append(apply_user_format(instruction))
         response = self.get_response(use_tool=with_tool)
         return response
+
+tests.test_execute_tool_calls(SimpleAgent, CalculateTool, ArithmeticTask)
 ```
 
-Try to execute the tool calls
+<details><summary>Solution:</summary>
+
+```python
+class SimpleAgent:
+    def __init__(
+        self,
+        task: Any = None,
+        model: Literal["gpt-4o-mini"] = "gpt-4o-mini",
+        tools: Optional[List[Any]] = None,
+        chat_history: Optional[List[dict]] = None,
+    ):
+        self.model = model
+        self.task = task
+        self.tools = tools
+        self.client = OpenAI()
+        self.chat_history = chat_history if chat_history else []
+
+    @retry_with_exponential_backoff
+    def get_response(self, use_tool: bool = True) -> ChatCompletionMessage:
+        """
+        Get the response from the model via an API call, with the option of tool calling.
+
+        Args:
+            use_tool (bool): Whether to use tool calling or not
+
+        Returns:
+            ChatCompletionMessage: The response from the model
+        """
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=self.chat_history,
+            tools=[tool.description for tool in self.tools] if use_tool else None,
+            tool_choice="auto" if use_tool else None,
+        )
+        return response.choices[0].message
+
+    def execute_tool_calls(self, message: ChatCompletionMessage) -> List[str]:
+        """
+        Execute the tool calls in the message and return a list of tool_responses.
+
+        Args:
+            message (ChatCompletionMessage): The message containing the tool calls
+
+        Returns:
+            List[str]: A list of tool responses (as strings)
+        """
+        tool_calls = message.tool_calls
+
+        tool_responses = []
+        for tool_call in tool_calls:
+            if not self.task:
+                raise ValueError("Task is not set. Cannot execute tool calls.")
+            func = next(
+                (tool for tool in self.tools if tool.name == tool_call.function.name),
+            )
+            arguments = json.loads(tool_call.function.arguments)
+            tool_response = func.execute(**arguments, task=self.task)
+            tool_responses.append(tool_response)
+
+        return tool_responses
+
+    def run(self, with_tool: bool = True) -> ChatCompletionMessage:
+        """
+        Default implementation of run method.
+        This can be overridden in subclasses for specific behavior.
+
+        Args:
+            with_tool (bool): Whether to use tool calling or not
+
+        Returns:
+            str: The response from the model
+        """
+        print(f"Running SimpleAgent...")
+        instruction = self.task.instruction
+        self.chat_history.append(apply_user_format(instruction))
+        response = self.get_response(use_tool=with_tool)
+        return response
+```
+
+</details>
+
+The code below should execute the tool calls:
 
 ```python
 my_simple_agent = SimpleAgent(ArithmeticTask(10, 15), tools=[Calculator])
@@ -657,6 +923,194 @@ See the [OpenAI API documentation](https://platform.openai.com/docs/guides/funct
 
 </details>
 
+<details><summary>Solution:</summary>
+
+```python
+class ArithmeticAgent(SimpleAgent):
+    """
+    ArithmeticAgent class for doing simple arithmetic tasks.
+
+    Inherits from SimpleAgent which includes the following attributes and methods:
+
+    Attributes:
+        model (str): The model used for generating responses (inherited)
+        tool_descriptions (List[dict]): List of tool descriptions (inherited)
+        client (OpenAI): OpenAI client for API calls (inherited)
+        task (Any): The current task being executed (inherited)
+        chat_history (List[dict]): History of interactions (inherited)
+
+    Methods:
+        get_response(use_tool: bool = True) -> ChatCompletionMessage:
+            Get response from the model (inherited)
+
+        execute_tool_calls(message: ChatCompletionMessage) -> List[str]:
+            Execute tool calls from the model's response (inherited)
+
+        run(with_tool: bool = True) -> bool:
+            Run one loop of the Wikipedia agent
+    """
+
+    def __init__(
+        self,
+        model: Literal["gpt-4o-mini"] = "gpt-4o-mini",
+        task: Any = None,
+        tools: Optional[List[Any]] = None,
+        chat_history: List[dict] = None,
+        verbose: bool = True,
+    ):
+        super().__init__(model=model, task=task, tools=tools, chat_history=chat_history)
+        self.verbose = verbose
+
+    def handle_tool_calls(self, response: ChatCompletionMessage):
+        """
+        Handle the tool calls from the model response. This function should:
+        - Execute the tool calls
+        - Append the tool calls and responses to the chat history
+
+        Args:
+            response (ChatCompletionMessage): The response from the model
+        """
+        if self.verbose:
+            print("\nTool calls:", response.tool_calls)
+
+        # Append response to chat history
+        self.chat_history.append(response)
+
+        # Execute the tool calls and append tool responses to chat history
+        tool_calls = response.tool_calls
+        try:
+            tool_responses = self.execute_tool_calls(response)
+            for tool_call, tool_response in zip(tool_calls, tool_responses):
+                self.chat_history.append(
+                    apply_tool_call_format(tool_call, tool_response)
+                )
+                if self.verbose:
+                    print(f"\nTool call: {tool_call.function.name}, ARGS: {tool_call.function.arguments}")
+                    print(f"Tool response: {tool_response}")
+        except Exception as e:
+            print(f"\nError handling tool calls: {e}")
+
+    def handle_refusal(self, response: ChatCompletionMessage):
+        """
+        Handle the refusal from the model response. This function should only be called if the model refuses to answer and should:
+        - Append the refusal to the chat history
+        - Update the task state
+
+        Args:
+            response (ChatCompletionMessage): The response from the model
+        """
+        if self.verbose:
+            print("\nModel Refusal:", response.refusal)
+        self.chat_history.append(apply_assistant_format(response.refusal))
+        self.task.update_current_task()
+
+    def generate_and_check_final_answer(self) -> Literal["Correct", "Incorrect"]:
+        """
+        This function should:
+        - Get the model to generate a final answer to the question (after it has seen the tool response)
+        - Then check this final answer against the correct answer.
+        - If the answer is correct, update the task state.
+        - Then append to chat history (and return) "Correct" if the answer is correct and "Incorrect" if the answer is incorrect.
+
+        Args:
+            None
+
+        Returns:
+            str: "Correct" or "Incorrect"
+        """
+
+        # Get the final response from the model after tool responses
+
+        response = self.get_response(use_tool=False)
+        self.chat_history.append(apply_assistant_format(response.content))
+
+        # Check the answer
+        try:
+            model_answer = self.parse_answer(response)
+
+            if self.task.check_answer(model_answer):
+                self.chat_history.append(apply_user_format("Correct."))
+
+                if self.verbose:
+                    print("\nUser: Correct.")
+
+                # Update to the next task
+                self.task.update_current_task()
+
+                return "Correct"
+
+            else:
+                self.chat_history.append(apply_user_format("Incorrect."))
+                if self.verbose:
+                    print("\nUser: Incorrect.")
+                return "Incorrect"
+                # Retry the task
+
+        # Ends the task if there's an error parsing the model answer
+        except Exception as e:
+            if self.verbose:
+                print(f"\nError parsing model answer: {e}")
+            raise
+
+    def run(self, with_tool: bool):
+        """
+        Run one loop of the agent, which involves:
+        - getting a task
+        - getting a response from the model
+        - handling the model response, including tool calls, refusals, no tool calls, parsing and checking final answers, errors.
+        - managing memory: storing the history of messages to self.chat_history
+        - managing task state: staying on the same task or moving to the next task at the end of the loop
+        """
+        # Get the task instruction
+        instruction = self.task.instruction
+        if self.verbose:
+            print("\nUSER:", instruction)
+        self.chat_history.append(apply_user_format(instruction))
+
+        # Get the response from the model
+        response = self.get_response(use_tool=with_tool)
+
+        if self.verbose:
+            print("\nModel response:", response.content)
+
+        # Handle the response
+        ## If model makes tool calls, handle the tool calls
+        if response.tool_calls:
+            self.handle_tool_calls(response)
+
+            # Then get the final answer from the model
+            self.generate_and_check_final_answer()
+
+        ## If no tool call: Handle edge cases
+
+        ### Check if there's a refusal to answer:
+        elif response.refusal:
+            self.handle_refusal(response)
+
+        else:
+            self.generate_and_check_final_answer()
+
+    def parse_answer(self, message: ChatCompletionMessage) -> float:
+        """
+        Extract the numerical answer from the string output of the model
+
+        Args:
+            message (ChatCompletionMessage): The response from the model
+
+        Returns:
+            float: The numerical answer extracted from the model
+        """
+        response = message.content
+        if response.find("<answer>") != -1:
+            startpoint = response.find("<answer>") + 8
+            endpoint = response.find("</answer>")
+            return float(response[startpoint:endpoint])
+```
+
+</details>
+
+
+
 ### Exercise - Run the task via an agent_loop 
 ```c
 Difficulty: 🔴⚪⚪⚪⚪
@@ -693,6 +1147,28 @@ def agent_loop(agent, task, num_loops: int = 10):
 
 agent_loop(arithmetic_agent_1, arithmetic_task_1)
 ```
+
+<details><summary>Solution:</summary>
+
+```python
+def agent_loop(agent, task, num_loops: int = 10):
+    """
+    Run the agent loop for a given number of loops
+
+    Args:
+        agent (ArithmeticAgent): The agent to run
+        task (ArithmeticTask): The task to solve
+        num_loops (int): The number of loops to run
+    """
+    for i in range(num_loops):
+        if not task.check_solved():
+            agent.run(with_tool=False)
+        else:
+            print("\nAll tasks solved.")
+            break
+```
+
+</details>
 
 If we want to see how the model performed at the task, then we can print all the messages from the `ChatHistory` as follows:
 
