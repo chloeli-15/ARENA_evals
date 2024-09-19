@@ -86,18 +86,23 @@ def print_xml(xml_string: str) -> None:
     Returns:
         str: The pretty printed XML string.
     """
-    # Parse the XML string into a DOM object
-    dom = xml.dom.minidom.parseString(xml_string)
+    try:
+        # Parse the XML string into a DOM object
+        dom = xml.dom.minidom.parseString(xml_string)
 
-    # Convert the DOM object back to a string with pretty printing
-    pretty_xml_as_string = dom.toprettyxml(indent="  ")
+        # Convert the DOM object back to a string with pretty printing
+        pretty_xml_as_string = dom.toprettyxml(indent="  ")
 
-    # truncate if insanely long
-    max_length_to_show = 256
-    if len(pretty_xml_as_string) > max_length_to_show:
-        pretty_xml_as_string = pretty_xml_as_string[:max_length_to_show] + "..."
+        # truncate if insanely long
+        max_length_to_show = 256
+        if len(pretty_xml_as_string) > max_length_to_show:
+            pretty_xml_as_string = pretty_xml_as_string[:max_length_to_show] + "..."
 
-    print(pretty_xml_as_string)
+        print(pretty_xml_as_string)
+    except Exception:
+        # No-op if parsing fails
+        print("Failed to parse given `xml_string` as XML")
+        pass
 
 
 # %%
@@ -205,7 +210,10 @@ class FunctionCallManager:
         result = tool_def_with_callable.callable_fn(*request.arguments.values())
 
         # Return the result wrapped in a ToolUseResponse
-        response = tool_utils.ToolUseResponse(return_value=str(result))
+        response = tool_utils.ToolUseResponse(
+            function=request.function,
+            return_value=str(result),
+        )
 
         rich.print(f"Executed request. Tool response: {response}")
 
@@ -666,9 +674,7 @@ func_call_manager = FunctionCallManager(
             tool_definition=tool_utils.ToolDefinition(
                 function="move_to_wikipedia_page_from_current_page",
                 description=r"""
-Changes your current page to a specified new page which is accessible via a link from the current page.
-
-The title of the new page you want to move to should be formatted the way the title appears on wikipedia (e.g. to move to the wikipedia page for the United States of America, you should enter "United States"). Underscores are not necessary.
+Changes your current page to a specified new page which is accessible via the <link></link> tags of the current page from the current page.
 """,
                 arguments=["title_of_page_to_move_to"],
                 return_description="returns a message indicating success or failure of the move",
@@ -686,6 +692,9 @@ The title of the new page you want to move to should be formatted the way the ti
 #
 # TODO(bschoen): Can the model do it with just links?
 
+# %%
+
+messages = messages[:-1]
 
 # %%
 
@@ -715,7 +724,7 @@ def generate_wikipedia_race_instructions(
 
     {tool_definitions_list_str}
 
-    Remember that you can _only_ move to the current page's <link></link> tags.
+    Remember that you can _only_ move to the current page's <link></link> tags. You will likely want to plan a few moves ahead, as the returned content for the current page will only be available for a single turn.
 
     Let's begin!
     """
@@ -729,7 +738,6 @@ wikipedia_race_instructions = generate_wikipedia_race_instructions(
 )
 
 print(wikipedia_race_instructions)
-# %%
 
 messages.append(
     {
@@ -745,11 +753,6 @@ print(json.dumps(messages, indent=2))
 # %%
 
 message_content_text = call_model_and_update_messages(openai_client, messages)
-
-# %%
-
-# ???
-assert tool_utils.has_tool_use_request(message_content_text)
 
 # %%
 
@@ -871,6 +874,37 @@ def reset_player_state_and_messages_from_new_page_if_moved(
     return
 
 
+def replace_past_wiki_content_messages_with_summary_if_no_longer_used(
+    messages: list[openai.types.chat.ChatCompletionMessageParam],
+) -> None:
+
+    # replace any wiki content messages with a small placeholder value
+    # unless they're the most recent message (since those haven't been processed
+    # by the model yet)
+
+    for message_index, message in enumerate(messages):
+
+        message_content_text = message["content"]
+
+        tool_use_response = tool_utils.try_parse_tool_use_response(message_content_text)
+
+        if tool_use_response:
+            # note: we don't just use length of return value as it parses poorly
+            print(
+                f"tool_use_response: {tool_use_response.function} @ message index {message_index} / {len(messages)}"
+            )
+
+            if tool_use_response.function == "get_current_wikipedia_page_content":
+
+                # if it's not the last message, we replace it with a summary
+                if message_index < len(messages) - 1:
+
+                    print(f"Replacing message index {message_index} / {len(messages)} with summary")
+                    messages[message_index][
+                        "content"
+                    ] = "[Wikipedia content was output here, replaced by user due to token length]"
+
+
 # %%
 
 
@@ -891,11 +925,7 @@ def step(
         messages,
     )
 
-    reset_player_state_and_messages_from_new_page_if_moved(
-        wiki_game_player=wiki_game_player,
-        func_call_manager=func_call_manager,
-        messages=messages,
-    )
+    replace_past_wiki_content_messages_with_summary_if_no_longer_used(messages)
 
 
 print("Stepping...")
@@ -929,4 +959,8 @@ reset_player_state_and_messages_from_new_page_if_moved(
     func_call_manager=func_call_manager,
     messages=messages,
 )
+# %%
+
+replace_past_wiki_content_messages_with_summary_if_no_longer_used(messages)
+
 # %%

@@ -3,7 +3,7 @@
 
 import re
 import xml.etree.ElementTree as ET
-from typing import List
+from typing import List, Optional
 import dataclasses
 
 
@@ -70,6 +70,7 @@ Here are the available tools, please use them to add 14 and 21.
 # Example User Response To Tool Use Request:
 
 <tool-use-response>
+<function>add</function>
 <return>35</return>
 </tool-use-response>
 
@@ -115,7 +116,19 @@ class ToolUseRequest:
 
 @dataclasses.dataclass(frozen=True)
 class ToolUseResponse:
+    function: str  # this is only needed because makes tracking easier later
     return_value: str
+
+
+class DesiredTagNotFoundError(Exception):
+    pass
+
+
+# Use a custom function to convert to string without modifying <link> tags
+def _custom_tostring(elem: ET.Element) -> str:
+    xml_str = ET.tostring(elem, encoding="unicode")
+    # Replace escaped < and > characters within <link> tags
+    return re.sub(r"&lt;link&gt;(.*?)&lt;/link&gt;", r"<link>\1</link>", xml_str)
 
 
 def parse_tool_definitions(xml_string: str) -> ToolDefinitionList:
@@ -153,13 +166,7 @@ def unparse_tool_definitions(tools: ToolDefinitionList) -> str:
             ET.SubElement(tool_elem, Tags.ARGUMENT).text = arg
         ET.SubElement(tool_elem, Tags.RETURN).text = tool.return_description
 
-    # Use a custom function to convert to string without modifying <link> tags
-    def custom_tostring(elem):
-        xml_str = ET.tostring(elem, encoding="unicode")
-        # Replace escaped < and > characters within <link> tags
-        return re.sub(r"&lt;link&gt;(.*?)&lt;/link&gt;", r"<link>\1</link>", xml_str)
-
-    return add_newlines_to_xml(custom_tostring(root))
+    return add_newlines_to_xml(_custom_tostring(root))
 
 
 def parse_tool_use_request(xml_string: str) -> ToolUseRequest:
@@ -183,23 +190,45 @@ def unparse_tool_use_request(request: ToolUseRequest) -> str:
     ET.SubElement(root, Tags.FUNCTION).text = request.function
     for key, value in request.arguments.items():
         ET.SubElement(root, Tags.ARGUMENT).text = f"{key}={value}"
-    return add_newlines_to_xml(ET.tostring(root, encoding="unicode"))
+    return add_newlines_to_xml(_custom_tostring(root))
 
 
-def has_tool_use_request(xml_string: str) -> bool:
-    root = ET.fromstring(xml_string)
-    return root.find(Tags.TOOL_USE_REQUEST).text is not None
+def try_parse_tool_use_response(xml_string: str) -> Optional[ToolUseResponse]:
+    try:
+        # Try to parse the XML string
+        root = ET.fromstring(xml_string)
+
+        # Check if the root tag is 'tool-use-response'
+        if root.tag != Tags.TOOL_USE_RESPONSE:
+            return None
+
+        # If we've made it this far, the string can be parsed as a ToolUseResponse
+        return parse_tool_use_response(xml_string)
+
+    except (ET.ParseError, AttributeError):
+
+        return None
 
 
 def parse_tool_use_response(xml_string: str) -> ToolUseResponse:
     root = ET.fromstring(xml_string)
-    return ToolUseResponse(return_value=root.find(Tags.RETURN).text or "")
+
+    # Extract the function and return value from the XML
+    function = root.find(Tags.FUNCTION).text or ""
+    return_value = root.find(Tags.RETURN).text or ""
+
+    # Return the ToolUseResponse with both function and return_value
+    return ToolUseResponse(function=function, return_value=return_value)
 
 
 def unparse_tool_use_response(response: ToolUseResponse) -> str:
     root = ET.Element(Tags.TOOL_USE_RESPONSE)
+
+    # Add function and return value to the XML
+    ET.SubElement(root, Tags.FUNCTION).text = response.function
     ET.SubElement(root, Tags.RETURN).text = response.return_value
-    return add_newlines_to_xml(ET.tostring(root, encoding="unicode"))
+
+    return add_newlines_to_xml(_custom_tostring(root))
 
 
 def test_tool_use_parsing_str() -> None:
@@ -228,13 +257,13 @@ def test_tool_use_parsing_str() -> None:
         Parsed tool use response: ToolUseResponse(return_value='Hello, John Doe! Welcome to our company!')
 
         Unparsed tool use response:
-        <tool-use-response><return>Hello, John Doe! Welcome to our company!</return></tool-use-response>
+        <tool-use-response><function>greet</function><return>Hello, John Doe! Welcome to our company!</return></tool-use-response>
 
         --- Response 2 ---
         Parsed tool use response: ToolUseResponse(return_value='Search results for "Python programming best practices": 1. Write readable code. 2. Use virtual environments. 3. Follow PEP 8 guidelines.')
 
         Unparsed tool use response:
-        <tool-use-response><return>Search results for "Python programming best practices": 1. Write readable code. 2. Use virtual environments. 3. Follow PEP 8 guidelines.</return></tool-use-response>
+        <tool-use-response><function>search</function><return>Search results for "Python programming best practices": 1. Write readable code. 2. Use virtual environments. 3. Follow PEP 8 guidelines.</return></tool-use-response>
 
     """
     tool_defs_xml = """
@@ -290,11 +319,13 @@ def test_tool_use_parsing_str() -> None:
     tool_use_responses = [
         """
         <tool-use-response>
+            <function>greet</function>
             <return>Hello, John Doe! Welcome to our company!</return>
         </tool-use-response>
         """,
         """
         <tool-use-response>
+            <function>search</function>
             <return>Search results for "Python programming best practices": 1. Write readable code. 2. Use virtual environments. 3. Follow PEP 8 guidelines.</return>
         </tool-use-response>
         """,
@@ -368,6 +399,7 @@ def test_tool_use_parsing_int() -> None:
     # Example tool use response
     tool_use_response_xml = """
     <tool-use-response>
+        <function>add</function>
         <return>35</return>
     </tool-use-response>
     """
