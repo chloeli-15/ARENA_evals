@@ -10,8 +10,10 @@ def section():
     <li class='margtop'><a class='contents-el' href='#introduction'>Introduction</a></li>
     <li class='margtop'><a class='contents-el' href='#content-learning-objectives'>Content & Learning Objectives</a></li>
     <li><ul class="contents">
-        <li><a class='contents-el' href='#1-Intro to Inspect'>Intro to Inspect</a></li>
-        <li><a class='contents-el' href='#2-mcq-benchmarks-exploration'>MCQ Benchmarks: Exploration</a></li>
+        <li><a class='contents-el' href='#1-intro-to-llm-agents'>Intro to LLM Agents</a></li>
+        <li><a class='contents-el' href='#2-simple-arithmetic-agent'>Simple Arithmetic Agent</a></li>
+        <li><a class='contents-el' href='#3-wikiagent'>WikiAgent</a></li>
+        <li><a class='contents-el' href='#4-elicitation'>Elicitation</a></li>
     </ul></li>
     <li class='margtop'><a class='contents-el' href='#setup'>Setup</a></li>
 </ul>""",
@@ -20,7 +22,7 @@ def section():
 
     st.markdown(
         r'''
-# Building a More Complex Task: WikiGame
+# Building a More Complex Agent: WikiGame
 
 We will now build a more complicated task. This won't be instantly solvable by LLMs with simple tool calls and will require us to elicit better capabilities from models.
 
@@ -98,43 +100,10 @@ except DisambiguationError as e:
 print(page.title)
 ```
 
-The above code gives a `DisambiguationError` because the title "Python" can correspond to multiple pages. Then there is a `PageError` for "Animalss" as there is no Wikipedia name with that title.
+- `DisambiguationError`: This was raised because the title "Python" can correspond to multiple pages. 
+- `PageError`: This was raised for "Animalss" as there is no Wikipedia page with that title.
 
-To handle these errors, we have implemented a simple function `get_page` for you to get the page object for a particular page title. This handles `RedirectError` (and in some cases `PageError`) by setting `redirect=True`. The function also handles `DisambiguationError` by choosing the first option in the list of potential pages we could be referring to.
-
-We handle any `PageError` not fixed by the above by setting `auto_suggest=True`, and letting wikipedia guess at the page we mean (this is a last resort, and hopefully won't be necessary).
-
-<details><summary>What do <code>redirect</code> and <code>auto_suggest</code> do?</summary>
-
-**Redirect**
-
-The keyword `redirect` tells the API to allow Wikipedia to provide redirections. This happens when you reference an article in a manner which is slightly different than how it is stored in Wikipedia. This rarely happens when we will use the wikipedia API, as we will access pages based on how they are stored in Wikipedia, but as an example:
-```python
-page = wikipedia.page("huMan", redirect = True, auto_suggest=False)
-```
-will return a `WikipediaPage` object for the "Human" page. However,
-```python
-page = wikipedia.page("huMan", redirect=False, auto_suggest=False)
-```
-will return a `PageError` (since there is a page called "Human" but not "huMan"). The Wikipedia API will generally access the correct page if there is a capitalization issue on the first letter, but a capitalization error in the middle of the word will raise an error (unless `redirect=True`).
-
-<br>
-
-**Auto suggest**
-
-The keyword `auto_suggest` tells the API to allow Wikipedia to provide suggestions. This allows a lot more than `redirect` does, since `redirect` is only for the "obvious" cases (e.g. "huMan" → "Human", "U.S. President" → "President of the United States", etc.). When `auto_suggest` is true, it would allow something like "president of states" → "President of the United States", "gogle" → "Google"; both of which would raise an error if `redirect = True, auto_suggest = False`.
-
-However, `auto_suggest` can sometimes be *too* permissive and lead to errors, for example:
-
-```python
-page = wikipedia.page("Human", redirect= False, auto_suggest=True)
-```
-will return a `WikipediaPage` object for the "Man" page. This is clearly not what we were trying to access, and the `auto_suggest` has gotten carried away in this case.
-
-If `redirect = True` and `auto_suggest=True`, then `auto_suggest` takes priority.
-</details>
-
-
+We have implemented a simple function `get_page()` for you to get the page object for a particular page title with error handling.
 
 ```python
 def get_page(title: str) -> WikipediaPage:
@@ -155,15 +124,48 @@ def get_page(title: str) -> WikipediaPage:
         return wikipedia.page(title, auto_suggest=True, redirect=True)
 ```
 
-### Exercise - Get permitted links from a wikipedia page
+
+<details><summary>What do kwargs <code>redirect</code> and <code>auto_suggest</code> in <code>wikipedia.page()</code> do?</summary>
+
+`redirect`
+
+- This kwarg enables redirecting when you reference an article title with **slight** differences to how it is stored in Wikipedia. For example, the Wikipedia API will generally access the correct page if there is a capitalization error on the first letter, but not for capitalization errors in the middle of the word if `redirect = False`:
+```python
+# This returns a WikipediaPage object for the "Human" page
+page = wikipedia.page("huMan", redirect = True, auto_suggest=False)
+
+# This raises a PageError since there is no page called "huMan"
+page = wikipedia.page("huMan", redirect=False, auto_suggest=False)
+```
+- By default, we should set `redirect = True` in the `wikipedia.page()` function.
+
+`auto_suggest`
+
+- This kwarg enables the API to provide suggestions. This allows a lot more than `redirect` does, since `redirect` is only for the "obvious" cases (e.g. "huMan" → "Human", "U.S. President" → "President of the United States", etc.). When `auto_suggest` is true, it would allow something like "president of states" → "President of the United States", "gogle" → "Google"; both of which would raise an error if `redirect = True, auto_suggest = False`.
+- However, `auto_suggest` can sometimes be *too* permissive and lead to errors. For example, the below code will return a `WikipediaPage` object for the "Man" page. This is clearly not what we were trying to access, and the `auto_suggest` has gotten carried away in this case:
+
+```python
+page = wikipedia.page("Human", redirect= False, auto_suggest=True)
+```
+
+- If `redirect = True` and `auto_suggest=True`, then `auto_suggest` takes priority. 
+- **By default, we should set `auto_suggest` to `False` unless it is used as a last resort to resolve an error!**
+
+</details>
+
+### Exercise - Implement `get_permitted_links()`
 ```c
 Difficulty: 🔴⚪⚪⚪⚪
 Importance: 🔵🔵⚪⚪⚪
 
-You should spend up to 5-10 mins on this exercise.
+You should spend up to ~10 mins on this exercise.
 ```
+This is a quick exercise to familarize you with the Wikipedia API.
 
-When you get the links from a page using `page.links`, this will include every possible Wikipedia link that is accessible from the HTML on that page, including those that are not in the main page content (e.g. links in sidebars, links in footnotes etc.), which are either irrelevant or not permitted by the rules of the Wiki game. Write a simple `get_permitted_links` function, that only returns the links that can be found inside the main content. The resulting list of permitted links should be about a third as long as the list of links from the wikipedia API (with more variance for shorter articles as you would expect). 
+When you get the links from a page using `page.links`, this will include every possible Wikipedia link that is accessible from the HTML on that page, including those that are not in the main page content (e.g. links in sidebars, links in footnotes etc.), which are irrelevant or not permitted by the rules of the Wiki game. 
+
+Write a simple `get_permitted_links()` function. This should only return the links that can be found inside the main content. The resulting list of permitted links should be about a third as long as the list of links from `page.links`. 
+
 <!-- When writing this function, if you manage to get the links in a very effective way, then do that. But remember that Wikipedia is written by a large number of different contributors, often adhering to inconsistent stylings (especially for smaller articles). We just need to get something that **works well enough**. Put more time into doing this effectively if you want at the end, but as soon as something plausibly works, you should move on.
 
 <img src="https://imgs.xkcd.com/comics/code_lifespan_2x.png" width="400px" style = "margin-left: auto; margin-right: auto;display:block"></img> -->
@@ -182,22 +184,29 @@ def get_permitted_links(current_page: WikipediaPage) -> list[str]:
     """
     return []
 ```
-## Build WikiGame
+## LLM Agent for WikiGame
 
 ### Exercise - Build the WikiGame task
 ```c
 Difficulty: 🔴🔴🔴🔴⚪
 Importance: 🔵🔵🔵🔵⚪
 
-You should spend up to 25-30 mins on this exercise.
+You should spend up to 30-35 mins on this exercise.
 ```
 
-Implement the following class that instantiates the wikipedia game. When the model uses tools it will be making calls to this class, so make sure that the functions return messages you're happy for the model to see as a tool response, such as error messages if the tool doesn't work.
+Build the `WikiGame` class that instantiates the wikipedia game. This should contain the following functionalities:
+1. Keep track of task states
+2. Give task-specifc instructions
+3. Task-specific helper functions for calling the Wikipedia API. These less interesting methods have been provided for you, but you should read and understand what they do.
 
-Reuse your code from the `get_permitted_links()` function above in this class. Also some of the more uninteresting methods in this class have been implemented for you. You should still try to understand these methods to see how we're implementing the `WikiGame` class (this will help when we build the agent later).
+
+#### Providing information to the agent
+
+While models are trained on most of the Wikipedia content, a particular page may still be confused with something else, or be an article that was added after the training cutoff. Models also can't always accurately recall information in their training data if they only come up once or twice. So you should use the game's `get_summary()` function to provide details of the goal page to the agent in its initial message.
+
 
 ```python
-class BaseWikiGame:
+class WikiGame:
     def __init__(
         self,
         starting_page: str,
@@ -210,6 +219,8 @@ class BaseWikiGame:
             starting_page (str): The page the agent starts on.
             goal_page (str): The page the agent is trying to reach.
         """
+
+        # Task state variables
         self.page_history: List[str] = [starting_page]
         self.starting_page: WikipediaPage = self.get_page(starting_page)
         self.goal_page: WikipediaPage = self.get_page(goal_page)
@@ -289,51 +300,42 @@ class BaseWikiGame:
         """
         return link.lower() in (x.lower() for x in self.get_permitted_links())
 
-    # ========================= Task State Management (to implement) =========================
+    # ========================= Task-specific instructions (to implement) =========================
 
     @property
     def system_instruction(self) -> dict:
         """
-        Generate the starting instructions for the game.
+        Generate the starting instructions for the game, formatted as a system prompt.
 
         Returns:
-            dict: The starting instructions. "role" is "system" for system messages.
+            dict: The starting instructions. The "role" is "system" for system messages.
         """
+        # TODO
         return {}
 
     @property
     def on_page_instruction(self) -> dict:
         """
-        Generate instructions for the current page.
+        Tell the agent what page they are on and give a summary of the page, formatted as a user prompt.
 
         Returns:
-            dict: The instructions for the current page. "role" is "user" for user messages.
+            dict: The instructions for the current page. The "role" is "user" for user messages.
         """
+        # TODO
         return {}
 
     @property
     def next_step_instruction(self) -> dict:
         """
-        Generate instructions for the next step.
+        Ask the agent "What's the next step?" after making a tool call, formatted as a user prompt.
 
         Returns:
-            dict: The instructions for the next step. "role" is "user" for user messages.
+            dict: The instructions for the next step. The "role" is "user" for user messages.
         """
+        # TODO
         return {}
 
-    def get_instructions(self, system: bool, on_page: bool, next_step: bool) -> str:
-        """
-        Generate instruction messages based on the current game state.
-
-        Args:
-            system (bool): Whether to include system instructions.
-            on_page (bool): Whether to include on-page instructions.
-            next_step (bool): Whether to include next-step instructions.
-
-        Returns:
-            list[str]: A list of instruction messages.
-        """
-        return []
+    # ========================= Task State management (to implement) =========================
 
     def check_win(self) -> bool:
         """
@@ -342,46 +344,47 @@ class BaseWikiGame:
         Returns:
             bool: True if the agent has won, False otherwise.
         """
-        return False
+        # TODO
+        pass
 ```
 
-### Exercise - Build Tools for the Wiki Game
+### Exercise - Build Tools for the WikiGame
 ```c
-Difficulty: 🔴⚪⚪⚪⚪
+Difficulty: 🔴🔴⚪⚪⚪
 Importance: 🔵🔵🔵⚪⚪
 
-You should spend up to 10-15 mins on this exercise.
+You should spend up to 15-20 mins on this exercise.
 ```
 
-Fill in the following tool classes that the agent will need to use to accomplish this game.
-- For the `get_content_tool`, you should just fill in the description, since we've implemented the functionality for you.
-- For the `move_page_tool`, you should implement both the `execute()` function and the `description()` property.
+The basic WikiAgent will need these two tools at minimum to play the game:
+1. `GetContentTool`: This returns the full content of the current page, with all the wiki-links wrapped in `<link></link>` tags (as otherwise they are presented as strings and indistinguishable from normal text). As implementing this involves annoying regex, we have done this for you, but you should fill in the `description()` property.
+2. `MovePageTool`: This executes moving to a new given page when called and updates the `WikiGame` task state if successful. You should implement both the `execute()` function and the `description()` property.
 
-When formatting this tool list, refer back to the solution for you wrote for the arithmetic game, or else the docs are [here](https://platform.openai.com/docs/guides/function-calling).
+When formatting this tool list, refer back to the solution for you wrote for the arithmetic game, or the OpenAI docs [here](https://platform.openai.com/docs/guides/function-calling).
 
-<details><summary>Why not just use <code>page.links</code> to get a list of links directly?</summary>
+<details><summary>Why not just use <code>WikipediaPage.links()</code> to get a list of links directly?</summary>
 
-We don't just present a list of the accessible links, as this is not very faithful to the wikipedia game. The agent does perform somewhat better if we just give it a list of links, but the task of parsing the content of wikipedia pages and isolating the most important links is where the majority of the challenge of the wikipedia game lies.
+We don't just present a list of the accessible links, as this is not very faithful to the wikipedia game. The agent does perform somewhat better if we just give it a list of links, but the task of parsing the content of wikipedia pages and isolating the most important links is big part of the challenge of the wikipedia game.
 
 </details>
-<br>
-<details><summary>Notes on the <code>get_content()</code> tool</summary>
 
-The `get_content` function wraps all the texts that correspond to links in `<link></link>` tags (since otherwise they are presented as strings and indistinguishable from normal text, so the agent doesn't know what links to choose). However, since we identify links in the text via their names on wikipedia pages, there are certain articles that will never (or only very rarely) get flagged as links. For example, the page "Python (programming language)" is almost never referenced by its title, instead its almost always referenced by just "Python"; the same is true for towns, which are usually referenced on Wikipedia as e.g. "Juneau, Alaska", but these are almost always referred to as just "Juneau". For this reason, you should avoid having goal pages which are not referenced by their title (or else implement a better version of the function, but beware of simply extracting the HTML source from pages, `wikipediaPage.html` can take a very long time to run, and HTML formatting varies significantly on Wikipedia).
+<details><summary>Caveat for the <code>GetContentTool</code></summary>
+
+The `GetContentTool` wraps all the texts that correspond to links in `<link></link>` tags. However, since we identify links in the text via their names on wikipedia pages, there are certain articles that will never (or only very rarely) get flagged as links. For example, the page "Python (programming language)" is almost never referenced by its title, instead its almost always referenced by just "Python"; the same is true for towns, which are usually referenced on Wikipedia as e.g. "Juneau, Alaska", but these are almost always referred to as just "Juneau". For this reason, you should avoid having goal pages which are not referenced by their title (or else implement a better version of the function, but beware of simply extracting the HTML source from pages, `wikipediaPage.html` can take a very long time to run, and HTML formatting varies significantly on Wikipedia).
 
 </details>
 
 ```python
-class get_content_tool():
-    name = "get_content"
+class GetContentTool():
+    name: str = "get_content"
 
     @staticmethod
-    def execute(task: BaseWikiGame | Any) -> str:
+    def execute(task: WikiGame | Any) -> str:
         """
         Get all the content for the wikipedia page you are currently on. Anything which corresponds to a link is wrapped in <link></link> tags.
 
         Args:
-            task (BaseWikiGame | Any): The current task object.
+            task (WikiGame | Any): The current task object.
 
         Returns:
             str: The content of the page with links wrapped
@@ -401,16 +404,17 @@ class get_content_tool():
     @property
     def description(self):
         """
-        Provides the description of the get_content tool
+        Provides the description of the GetContentTool.
 
         Returns:
-            dict: The description of the tool for the API
+            dict: The description of the GetContentTool for the API
         """
+        # TODO
         return {}
 
 
-class move_page_tool():
-    name = "move_page"
+class MovePageTool():
+    name: str = "move_page"
 
     @staticmethod
     def execute(new_page: str, task: Any) -> str:
@@ -418,26 +422,29 @@ class move_page_tool():
         Changes your current page to a specified new page which is accessible via a link from the current page. You can only call this function once at a time, as it will take you to a different page.
 
         Args:
-            task (BaseWikiGame): The current task object.
+            task (WikiGame): The current task object.
             new_page (str): The title of the new page to move to.
 
         Returns:
             str: A message indicating the result of the move
         """
-        return ""
+        # TODO
+        pass
+
     @property
     def description(self):
         """
-        Provides the description of the move_page tool
+        Provides the description of the MovePageTool
 
         Returns:
-            dict: The description of the move_page tool for the API
+            dict: The description of the MovePageTool for the API
         """
+        # TODO
         return {}
 
 
-get_content_tool_inst = get_content_tool()
-move_page_tool_inst = move_page_tool()
+get_content_tool_inst = GetContentTool()
+move_page_tool_inst = MovePageTool()
 wiki_game_tools = [get_content_tool_inst, move_page_tool_inst]
 ```
 ### Exercise - Build a WikiAgent
@@ -445,27 +452,25 @@ wiki_game_tools = [get_content_tool_inst, move_page_tool_inst]
 🔴🔴🔴🔴⚪
 🔵🔵🔵🔵🔵
 
-You should spend up to 30-40 mins on this exercise.
+You should spend up to 40-60 mins on this exercise.
 ```
 
-Now that you have the `WikiGame` class and tools set up, build out a `WikiAgent` that can access these tools and solve the Wikipedia game. Build the agent so that it can be thrown into an agent loop (similar to the one we had for the arithmetic game) without much additional scaffolding. 
+We will now build a `WikiAgent` that can use these tools to solve the `WikiGame`. Build the agent so that it can be called via an agent loop, similar to the one we had for the arithmetic game. 
 
 There are a few further considerations in this case that we didn't have for the arithmetic game. 
 
-#### Context window considerations
+#### Context window constraint
 
-Since the agent will need to read (potentially very long) Wikipedia articles to interact with the game, the length of the context window becomes relevant. GPT-4o and GPT-4o-mini both have context windows of 128k tokens (which corresponds to ~96k words). For reference, the wikipedia page for the United States has around 10k words alone and the agent will often need to visit more than 10 articles in one run of the game, not counting its own output, which eventually adds up to be significant. We'll solve this for now by resetting the messages of the agent every time it reaches a new wikipedia page, and providing an updated `user_message` (and possibly `system_message`) so that the agent can locate itself, and then proceed with the game. We'll address different methods for solving this issue later, you can probably already think of some. So be careful to include the current page and goal page for the agent in the `user_message`.
+Since Wikipedia articles could be very long, the length of the LLM's context window becomes a constraint. GPT-4o and GPT-4o-mini both have context windows of 128k tokens (which corresponds to ~96k words). For reference, the wikipedia page for the United States has around 10k words alone and the agent will often need to visit more than 10 articles in one run of the game, not counting its own output, which eventually adds up to be significant. 
+
+We'll solve this for now by simply resetting the messages of the agent every time it reaches a new wikipedia page, and providing an updated set of instructions, so the agent can locate itself in the game. We'll address different methods for solving this issue later, you can probably already think of some. So be careful to include the current page and goal page for the agent in the instruction.
 
 Since we'll reset the `chat_history` attribute of the agent class each time it reaches a new page, we'll also store a `full_chat_history` property that won't get reset, so we can access the entire run of the game.
 
-#### Providing information to the agent
 
-There shouldn't be much on Wikipedia that the agent is completely unfamiliar with (AI companies *will* have scraped wikipedia), but it may be easily confused with something else, or be an article that was added before the training cutoff, and models can't always accurately recall information in their training data if they only come up once or twice. So you should use the game's get_summary function to provide details of the goal page to the agent in its initial message.
+#### Printing output
 
-
-#### Getting output from the agent
-
-In this case we'll have a lot more moving pieces than the `arithmeticGame` agent. In that case it was technically possible to print output directly from the agent loop. In this case, you should print output as it comes up in the agent class. If there's some chance you might not want to see this output, you should use the `verbose` flag to determine whether to print the output or not.
+The `WikiGame` is a lot longer than the `ArithmeticTask`, with a much larger volume of agent, task and tool messages. If there's some chance you might not want to see this output, you should use the `verbose` parameter to set whether to print the output or not.
 
 ```python
 class WikiAgent(SimpleAgent):
@@ -508,6 +513,8 @@ class WikiAgent(SimpleAgent):
         self.verbose = verbose
         self.start()
 
+    # ========================= Memory (to implement) =========================
+
     def update_history(
         self, message: str | ChatCompletionMessage | List[str | ChatCompletionMessage]
     ):
@@ -525,6 +532,7 @@ class WikiAgent(SimpleAgent):
         """
         pass
 
+    # ========================= Observation parsing (to implement) =========================
     def handle_tool_calls(self, response: ChatCompletionMessage):
         """
         Handles tool_calls in the wikipedia game context:
@@ -547,14 +555,16 @@ class WikiAgent(SimpleAgent):
         """
         pass
 
+    # ========================= Implementation logic (to implement) =========================
     def start(self):
         """
         A function to put the starting instructions in agent.chat_history when the agent starts a new page or starts the game.
         """
         pass
+
     def run(self):
         """
-        This function runs the agent in the wikipedia game context. It:
+        This is the main function that runs the agent in the wikipedia game for 1 loop. It:
             - Gets the current task instruction
             - Gets the response from the model
             - Handles the response in the cases:
@@ -567,13 +577,13 @@ class WikiAgent(SimpleAgent):
 
 ### Exercise - Run the task
 ```c
-Difficulty: 🔴⚪⚪⚪⚪
+Difficulty: 🔴🔴⚪⚪⚪
 Importance: 🔵🔵⚪⚪⚪
 
-You should spend up to 5 mins on this exercise.
+You should spend up to 10-15 mins on this exercise.
 ```
 
-Just like we did for the arithmetic agent, you should write an agent loop for the wikipedia agent (in this case you won't need to print output, as we handled it in the agent class so this function should be a very simple loop).
+Similar to the `ArithmeticAgent`, write an agent loop for the `WikiAgent`.
 
 ```python
 def agent_loop(agent, game, num_loops=10):
@@ -582,7 +592,7 @@ def agent_loop(agent, game, num_loops=10):
 
     Args:
         agent (WikiAgent): The agent to run
-        game (BaseWikiGame): The game to play
+        game (WikiGame): The game to play
         num_loops (int): The number of loops to run
     """
 
@@ -593,15 +603,21 @@ Your agent should be able to accomplish the following task:
 
 
 ```python
-game = BaseWikiGame("Albert Einstein", "Aristotle")
-agent = WikiAgent(task=game, tools=wiki_game_tools)
-agent_loop(agent, game, 10)
+game_1 = WikiGame("Barack Obama", "India")
+agent = WikiAgent(task=game_1, tools=wiki_game_tools)
+agent_loop(agent, game_1, 10)
+```
+
+```python
+game_2 = WikiGame("Albert Einstein", "Aristotle")
+agent = WikiAgent(task=game_2, tools=wiki_game_tools)
+agent_loop(agent, game_2, 10)
 ```
 
 
-Once you've seen that the agent can accomplish the above, try out some different articles.
+Once you've seen that the agent can accomplish the above, try out some different articles and see where the agent fails.
 
-Make sure to check the messages in the chat history to see the full conversation between the agent and the user, to ensure that the messages that are printed above are faithful to the actual chat history (it can be easy to make minor mistakes that mess up the agent's chat_history).
+Check the messages in the chat history to see the full conversation between the agent and the user, to ensure that the messages that are printed above are faithful to the actual chat history (it can be easy to make minor mistakes that mess up the agent's chat_history).
 
 ```python
 for message in agent.chat_history:

@@ -30,8 +30,8 @@ with st.sidebar:
     CHAPTER = sac.steps([
         sac.StepsItem(title='Home', icon="house"),
         sac.StepsItem(title='Intro to LLM Agents', subtitle='(5%)', icon="1-circle-fill"),
-        sac.StepsItem(title='Build a Simple LLM Arithemtic Agent', subtitle='(10%)', icon="2-circle-fill"),
-        sac.StepsItem(title='Building a more Complex Agent: Wiki Game', subtitle='(45%)', icon="3-circle-fill"),
+        sac.StepsItem(title='Simple Arithemtic Agent', subtitle='(10%)', icon="2-circle-fill"),
+        sac.StepsItem(title='More Complex Agent: WikiGame', subtitle='(45%)', icon="3-circle-fill"),
         sac.StepsItem(title='Elicitation', subtitle='(30%)', icon="4-circle-fill"),
         sac.StepsItem(title='Bonus' , subtitle='(10%)', icon="5-circle-fill"),
     ], size='small', return_index=True)

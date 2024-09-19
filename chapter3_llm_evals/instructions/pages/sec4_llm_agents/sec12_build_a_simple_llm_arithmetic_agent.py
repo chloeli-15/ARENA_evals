@@ -9,8 +9,10 @@ def section():
     <li class='margtop'><a class='contents-el' href='#introduction'>Introduction</a></li>
     <li class='margtop'><a class='contents-el' href='#content-learning-objectives'>Content & Learning Objectives</a></li>
     <li><ul class="contents">
-        <li><a class='contents-el' href='#1-Intro to Inspect'>Intro to Inspect</a></li>
-        <li><a class='contents-el' href='#2-mcq-benchmarks-exploration'>MCQ Benchmarks: Exploration</a></li>
+        <li><a class='contents-el' href='#1-intro-to-llm-agents'>Intro to LLM Agents</a></li>
+        <li><a class='contents-el' href='#2-simple-arithmetic-agent'>Simple Arithmetic Agent</a></li>
+        <li><a class='contents-el' href='#3-wikiagent'>WikiAgent</a></li>
+        <li><a class='contents-el' href='#4-elicitation'>Elicitation</a></li>
     </ul></li>
     <li class='margtop'><a class='contents-el' href='#setup'>Setup</a></li>
 </ul>""",
@@ -21,7 +23,14 @@ def section():
 
     st.markdown(
         r'''
-# Build a Simple Arithemtic Agent
+# Building a Simple Arithemtic Agent
+
+> ### Learning Objectives
+> 
+> - Understand that a LLM agent is just a "glorified for-loop" (of the scaffolding program interacting with the LLM API).
+> - Learn how to use function calling to allow LLMs to use external tools.
+> - Understand the main functionalities of an LLM agent:  
+
 
 We will start by building a simple LLM agent that solves arithmetic problems. LLMs struggle with arithmetic, but we can drastically improve their performance by providing a simple calculation tool. We'll try the model with and without tools on this task, and see how significantly performance improves.
 
@@ -458,8 +467,9 @@ You should spend up to 20-25 minutes on this exercise.
 
 Build out the following simple agent class by filling in `get_response()` and `execute_tool_calls()` functions.
 
-- `get_response()` should make a query to the chat API and return the response message from the model (it should be able to either use tool calling or not, depending on the `use_tool` argument).
-- `execute_tool_calls()` should execute the tool calls in the message and return a list of tool responses as strings (we can format them correctly in `run()`).
+- `get_response()`: This should make an API call and return the `ChatCompletionMessage`from the model. It should be able to either use tool calling or not, depending on the `use_tool` argument).
+- `execute_tool_calls()`: This should execute the tool calls in the message and return a list of tool responses as strings (we can format them correctly in `run()`).
+- `run()`: This should define the main execution logic for running 1 loop of the agent. As this is largely determined by the task, this method in `SimpleAgent` is just a dummy method and should be overridden in specific agent classes.
 
 ```python
 class SimpleAgent:
@@ -536,7 +546,7 @@ Importance: 🔵🔵🔵🔵🔵
 You should spend up to 20-25 minutes on this exercise.
 ```
 
-Now build our agent that will interact with the `arithmeticGame` (with a calculator tool). Fill in the methods in the class below.
+Now build our agent that will interact with the `ArithmeticTask` (with a calculator tool). Fill in the methods in the class below.
 
 ```python
 class ArithmeticAgent(SimpleAgent):
@@ -636,6 +646,13 @@ class ArithmeticAgent(SimpleAgent):
         """
         return float(response[startpoint:endpoint])
 ```
+<details><summary>Note on <code>handle_refusal()</code></summary>
+
+The `ChatCompletionMessage` object contains a `refusal` attribute that can be used to determine if the model has refused to answer. If the model has refused to answer, the `refusal` will contain this content and we can print this out. We have included this for completeness, but it is not necessary to implement this function because it almost never occurs in the WikiGame.
+
+See the [OpenAI API documentation](https://platform.openai.com/docs/guides/function-calling/edge-cases) for more information on the `refusal` attribute.
+
+</details>
 
 ### Exercise - Run the task via an agent_loop 
 ```c
@@ -653,9 +670,9 @@ Try implementing the agent_loop below with and without tools, to see how much be
 
 
 ```python
-Arithmetic_Task_1 = ArithmeticTask(31.1, 8)
-Arithmetic_Agent_1 = ArithmeticAgent(
-    task=Arithmetic_Task_1, verbose=True, tools=[Calculator]
+arithmetic_task_1 = ArithmeticTask(31.1, 8)
+arithmetic_agent_1 = ArithmeticAgent(
+    task=arithmetic_task_1, verbose=True, tools=[Calculator]
 )
 
 
@@ -671,13 +688,13 @@ def agent_loop(agent, task, num_loops: int = 10):
     pass
 
 
-agent_loop(Arithmetic_Agent_1, Arithmetic_Task_1)
+agent_loop(arithmetic_agent_1, arithmetic_task_1)
 ```
 
 If we want to see how the model performed at the task, then we can print all the messages from the `ChatHistory` as follows:
 
 ```python
-for message in Arithmetic_Agent_1.chat_history:
+for message in arithmetic_agent_1.chat_history:
     try:
         print(f"""{str(message.role)}:\n {str(message.content)}\n""")
     except:
