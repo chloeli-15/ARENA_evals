@@ -863,6 +863,10 @@ GetContentTool_inst = GetContentTool()
 MovePageTool_inst = MovePageTool()
 wiki_game_tools = [GetContentTool_inst, MovePageTool_inst]
 
-game_2 = WikiGame("Albert Einstein", "Aristotle")
-agent = WikiAgent(task=game_2, tools=wiki_game_tools)
+from part4_llm_agents.solutions import WikiGameReAct, WikiAgentReAct
+game_2 = WikiGameReAct("Kullback–Leibler_divergence", "Billie Eilish", wiki_game_tools)
+agent = WikiAgentReAct(task=game_2, tools=wiki_game_tools)
 agent_loop(agent, game_2, 30)
+
+# agent = WikiAgent(task=game, tools=wiki_game_tools)
+# agent_loop(agent, game, 40)

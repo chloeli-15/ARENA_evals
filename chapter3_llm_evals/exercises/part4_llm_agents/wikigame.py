@@ -3,6 +3,11 @@ from wikipedia import WikipediaPage
 from wikipedia import DisambiguationError, PageError
 from typing import Literal, Optional, Dict, List, Any
 
+SYSTEM_PROMPT = """
+You are a wikipedia-racing AI. Your aim is to reach the goal page by accessing links from a series of wikipedia pages. Your strategy is to consider which popular pages may bridge the gap towards your goal page.
+
+e.g. if you are on "Geoff Hinton" and want to get to "Goldeneye", you should first find your way to "Film"
+"""
 class WikiGame:
     def __init__(
         self,
@@ -107,7 +112,7 @@ class WikiGame:
         """
         return {
             "role": "system",
-            "content": "You are a wikipedia-racing AI. Your aim is to reach the goal page by accessing links from a series of wikipedia pages.",
+            "content": SYSTEM_PROMPT,
         }
 
     @property
@@ -139,3 +144,66 @@ class WikiGame:
     def check_win(self) -> bool:
         return self.current_page == self.goal_page
 
+class WikiGamePrompting(WikiGame):
+    """
+    Inherits from WikiGame and adds improved prompting.
+
+    Attributes:
+        starting_page (str): The title of the starting page (inherited)
+        goal_page (str): The title of the goal page (inherited)
+        current_page (WikipediaPage): The current Wikipedia page (inherited)
+        page_history (List[str]): The history of pages visited (inherited)
+
+    Methods:
+        get_page(title: str) -> WikipediaPage: Get a Wikipedia page object given a title (inherited)
+
+        get_page_summary(page: WikipediaPage | None = None) -> str: Get the summary of a Wikipedia page (inherited)
+
+        get_permitted_links(title: Optional[str] = None) -> list[str]: Get permitted links for the current page (inherited)
+
+        is_permitted_link(link: str) -> bool: Check if a link is permitted (inherited)
+
+        system_instruction -> dict: Generate the starting instructions for the game (modified below)
+
+        on_page_instruction -> dict: Generate instructions for the current page (modified below)
+
+        next_step_instruction -> dict: Generate instructions for the next step (modified below)
+
+        get_instructions(system: bool, on_page: bool, next_step: bool) -> str: Generate instruction messages based on the current game state (inherited)
+
+        check_win() -> bool: Check if the game has been won (inherited)
+
+    """
+
+    @property
+    def system_instruction(self):
+        """
+        Provide improved starting instructions for the game.
+
+        Returns:
+            dict: The starting instructions. "role" is "system" for system messages.
+        """
+        # TODO
+        return {}
+
+    @property
+    def on_page_instruction(self):
+        """
+        Provide improved instructions for the current page.
+
+        Returns:
+            dict: The instructions for the current page. "role" is "user" for user messages.
+        """
+        # TODO
+        return {}
+
+    @property
+    def next_step_instruction(self):
+        """
+        Provide improved instructions for the next step.
+
+        Returns:
+            dict: The instructions for the next step. "role" is "user" for user messages.
+        """
+        # TODO
+        return {}
