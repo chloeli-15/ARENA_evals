@@ -215,7 +215,7 @@ class FunctionCallManager:
             return_value=str(result),
         )
 
-        rich.print(f"Executed request. Tool response: {response}")
+        rich.print(f"Executed request. Tool response for {response.function}")
 
         return response
 
@@ -616,6 +616,12 @@ class WikiGamePlayer:
 
         return wikipedia_utils.get_page_content(self.state.current_page)
 
+    def get_permitted_links(self) -> str:
+
+        permitted_links: list[str] = wikipedia_utils.get_permitted_links(self.state.current_page)
+
+        return "\n".join(permitted_links)
+
 
 def test_wiki_game_player() -> None:
 
@@ -633,8 +639,6 @@ def test_wiki_game_player() -> None:
 
     assert not wiki_game_player.has_reached_goal_page()
 
-    # %%
-
     move_result = wiki_game_player.move_to_page("2004 Indian Ocean earthquake and tsunami")
 
     assert not wiki_game_player.has_reached_goal_page()
@@ -644,14 +648,9 @@ def test_wiki_game_player() -> None:
 
     assert not wiki_game_player.has_reached_goal_page()
 
-    # %%
-
     move_result = wiki_game_player.move_to_page("India")
 
     assert wiki_game_player.has_reached_goal_page()
-
-
-# %%
 
 
 wiki_game_player = WikiGamePlayer(
@@ -664,17 +663,17 @@ func_call_manager = FunctionCallManager(
         ToolDefinitionWithCallable(
             tool_definition=tool_utils.ToolDefinition(
                 function="get_current_wikipedia_page_content",
-                description=r"Get all the content for the wikipedia page you are currently on. Anything which corresponds to a link is wrapped in <link></link> tags.",
+                description=r"Get the list of links from the current page. These are the links you are allowed to move to from the current page.",
                 arguments=[],
-                return_description="returns full content of a given wikipedia page with links wrapped in <link></link> tags",
+                return_description="returns the titles of the links from the current page, each on their own line",
             ),
-            callable_fn=lambda: wiki_game_player.get_current_page_content(),
+            callable_fn=lambda: wiki_game_player.get_permitted_links(),
         ),
         ToolDefinitionWithCallable(
             tool_definition=tool_utils.ToolDefinition(
                 function="move_to_wikipedia_page_from_current_page",
                 description=r"""
-Changes your current page to a specified new page which is accessible via the <link></link> tags of the current page from the current page.
+Changes your current page to a specified new page. The new page MUST be one of the ones returned by `get_current_wikipedia_page_content`.
 """,
                 arguments=["title_of_page_to_move_to"],
                 return_description="returns a message indicating success or failure of the move",
@@ -701,6 +700,51 @@ messages = messages[:-1]
 print(json.dumps(messages, indent=2))
 # %%
 
+# note: used for finding which message to start from when resetting
+WIKIPEDIA_RACE_STARTING_STRING = f'We\'ll be playing "Wikipedia Race"'
+
+
+def reset_messages_to_before_wikipedia_race(
+    messages: list[openai.types.chat.ChatCompletionMessageParam],
+) -> None:
+
+    while WIKIPEDIA_RACE_STARTING_STRING not in messages[-1]["content"]:
+        messages.pop()
+
+    # pop the actual target string
+    messages.pop()
+
+
+def parse_tool_use_request_and_update_messages(
+    message_content_text: str,
+    func_call_manager: FunctionCallManager,
+    messages: list[openai.types.chat.ChatCompletionMessageParam],
+) -> None:
+
+    print("Message Content Text:")
+    print_xml(message_content_text)
+
+    tool_use_request = tool_utils.parse_tool_use_request(message_content_text)
+
+    print(f"tool_use_request: {tool_use_request}")
+
+    tool_use_response = func_call_manager.execute_tool(tool_use_request)
+
+    print(f"Tool Use Response for: {tool_use_response.function}")
+
+    tool_use_response_text = tool_utils.unparse_tool_use_response(tool_use_response)
+
+    # print("Tool Use Response Text:")
+    # print_xml(tool_use_response_text)
+
+    # add tool use response to messages (which we'll then send to model)
+    messages.append(
+        {
+            "role": "user",
+            "content": tool_use_response_text,
+        },
+    )
+
 
 def generate_wikipedia_race_instructions(
     wiki_game_player: WikiGamePlayer,
@@ -714,7 +758,7 @@ def generate_wikipedia_race_instructions(
 
     # TODO(bschoen): avoid loops
     wikipedia_race_instructions = rf"""
-    Great! Now let's try it out! We'll be playing "Wikipedia Race" where you try to navigate from the current page to the goal page using the functions provided.
+    Great! Now let's try it out! {WIKIPEDIA_RACE_STARTING_STRING} where you try to navigate from the current page to the goal page using the functions provided.
 
     The current game state is:
 
@@ -724,20 +768,20 @@ def generate_wikipedia_race_instructions(
 
     {tool_definitions_list_str}
 
-    Remember that you can _only_ move to the current page's <link></link> tags. You will likely want to plan a few moves ahead, as the returned content for the current page will only be available for a single turn.
-
-    Let's begin!
+    Remember, the goal is to reach the goal page in the minimum number of moves! Let's begin!
     """
 
     return wikipedia_race_instructions
 
+
+reset_messages_to_before_wikipedia_race(messages)
 
 wikipedia_race_instructions = generate_wikipedia_race_instructions(
     wiki_game_player,
     func_call_manager,
 )
 
-print(wikipedia_race_instructions)
+# print(wikipedia_race_instructions)
 
 messages.append(
     {
@@ -752,168 +796,10 @@ print(json.dumps(messages, indent=2))
 
 # %%
 
-message_content_text = call_model_and_update_messages(openai_client, messages)
 
-# %%
-
-tool_use_request = tool_utils.parse_tool_use_request(message_content_text)
-
-rich.print(f"tool_use_request: {tool_use_request}")
-
-# %%
-
-tool_use_response = func_call_manager.execute_tool(tool_use_request)
-
-rich.print(f"Tool Use Response: {tool_use_response}")
-
-# %%
-
-tool_use_response_text = tool_utils.unparse_tool_use_response(tool_use_response)
-
-rich.print(f"tool_use_response_text: {tool_use_response_text}")
-
-# %%
-
-# add tool use response to messages (which we'll then send to model)
-messages.append(
-    {
-        "role": "user",
-        "content": tool_use_response_text,
-    },
-)
-
-# %%
-
-message_content_text = call_model_and_update_messages(openai_client, messages)
-
-# %%
-
-
-def parse_tool_use_request_and_update_messages(
-    message_content_text: str,
-    messages: list[openai.types.chat.ChatCompletionMessageParam],
-) -> None:
-
-    print("Message Content Text:")
-    print_xml(message_content_text)
-
-    tool_use_request = tool_utils.parse_tool_use_request(message_content_text)
-
-    print(f"tool_use_request: {repr(tool_use_request)[:256]}")
-
-    tool_use_response = func_call_manager.execute_tool(tool_use_request)
-
-    print(f"Tool Use Response: {repr(tool_use_response)[:256]}")
-
-    tool_use_response_text = tool_utils.unparse_tool_use_response(tool_use_response)
-
-    print("Tool Use Response Text:")
-    print_xml(tool_use_response_text)
-
-    # add tool use response to messages (which we'll then send to model)
-    messages.append(
-        {
-            "role": "user",
-            "content": tool_use_response_text,
-        },
-    )
-
-
-def reset_player_state_and_messages_from_new_page_if_moved(
-    wiki_game_player: WikiGamePlayer,
-    func_call_manager: FunctionCallManager,
-    messages: list[openai.types.chat.ChatCompletionMessageParam],
-) -> None:
-
-    # actually, whenever state is updated, we can reset messages
-    if len(wiki_game_player.state.page_history) == 0:
-        rich.print("No new page history found, not resetting messages and player state")
-        return
-
-    if len(wiki_game_player.state.page_history) != 1:
-        raise ValueError(
-            f"We expect that this function is called immediately after player moves to a new page (which would give us a page history of length 1), but it's current length is {len(wiki_game_player.state.page_history)}"
-        )
-
-    # reset all state, essentially starting a new game from `current_page`
-    wiki_game_player.state = WikiGameState.from_start_and_goal_titles(
-        start_page_title=wiki_game_player.state.current_page.title,
-        goal_page_title=wiki_game_player.state.goal_page_title,
-    )
-
-    # now generate new instructions
-    new_instructions = generate_wikipedia_race_instructions(
-        wiki_game_player=wiki_game_player,
-        func_call_manager=func_call_manager,
-    )
-
-    # remove messages until we're back to the message before the game started
-    target_string = """We'll be playing "Wikipedia Race" """
-    while target_string not in messages[-1]["content"]:
-        messages.pop()
-
-    # pop the actual one with the target string
-    messages.pop()
-
-    # rich.print("Reset messages to before the game started")
-
-    # rich.print("Adding new instructions...")
-
-    messages.append(
-        {
-            "role": "user",
-            "content": new_instructions,
-        },
-    )
-
-    # print("Updated messages:")
-    # print(json.dumps(messages, indent=2))
-
-    # we can now continue playing from here, without sending massive content block for previous pages
-
-    return
-
-
-def replace_past_wiki_content_messages_with_summary_if_no_longer_used(
-    messages: list[openai.types.chat.ChatCompletionMessageParam],
-) -> None:
-
-    # replace any wiki content messages with a small placeholder value
-    # unless they're the most recent message (since those haven't been processed
-    # by the model yet)
-
-    for message_index, message in enumerate(messages):
-
-        message_content_text = message["content"]
-
-        tool_use_response = tool_utils.try_parse_tool_use_response(message_content_text)
-
-        if tool_use_response:
-            # note: we don't just use length of return value as it parses poorly
-            print(
-                f"tool_use_response: {tool_use_response.function} @ message index {message_index} / {len(messages)}"
-            )
-
-            if tool_use_response.function == "get_current_wikipedia_page_content":
-
-                # if it's not the last message, we replace it with a summary
-                if message_index < len(messages) - 1:
-
-                    print(f"Replacing message index {message_index} / {len(messages)} with summary")
-                    messages[message_index][
-                        "content"
-                    ] = "[Wikipedia content was output here, replaced by user due to token length]"
-
-
-# %%
-
-
-# %%
-
-
+# note: game player already updates itself via `fun_call_manager`
 def step(
     openai_client: openai.OpenAI,
-    wiki_game_player: WikiGamePlayer,
     func_call_manager: FunctionCallManager,
     messages: list[openai.types.chat.ChatCompletionMessageParam],
 ) -> None:
@@ -921,17 +807,15 @@ def step(
     message_content_text = call_model_and_update_messages(openai_client, messages)
 
     parse_tool_use_request_and_update_messages(
-        message_content_text,
-        messages,
+        message_content_text=message_content_text,
+        func_call_manager=func_call_manager,
+        messages=messages,
     )
-
-    replace_past_wiki_content_messages_with_summary_if_no_longer_used(messages)
 
 
 print("Stepping...")
 step(
     openai_client=openai_client,
-    wiki_game_player=wiki_game_player,
     func_call_manager=func_call_manager,
     messages=messages,
 )
@@ -943,24 +827,12 @@ else:
 
 # %%
 
-print_json(messages)
-
-
-# %%
-
-parse_tool_use_request_and_update_messages(
-    message_content_text,
-    messages,
+output_str = " -> ".join(
+    [wiki_game_player.state.start_page_title] + wiki_game_player.state.page_history
 )
 
-
-reset_player_state_and_messages_from_new_page_if_moved(
-    wiki_game_player=wiki_game_player,
-    func_call_manager=func_call_manager,
-    messages=messages,
-)
-# %%
-
-replace_past_wiki_content_messages_with_summary_if_no_longer_used(messages)
+print(output_str)
 
 # %%
+
+print()
