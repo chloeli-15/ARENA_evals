@@ -1,0 +1,72 @@
+{
+  "version": 2,
+  "status": "error",
+  "eval": {
+    "task": "benchmark_eval",
+    "task_version": 0,
+    "task_id": "VY3BAk437r6WxtCpBrfHS4",
+    "run_id": "Mt5CtoLyfkwJBp4hrsHSRn",
+    "created": "2024-09-18T14:34:59+00:00",
+    "dataset": {
+      "name": "lquestions_filtered_009",
+      "location": "data/logs/lquestions_filtered_009.json",
+      "samples": 10,
+      "shuffled": false
+    },
+    "model": "openai/gpt-4o-mini",
+    "task_attribs": {},
+    "task_args": {},
+    "model_args": {},
+    "config": {},
+    "revision": {
+      "type": "git",
+      "origin": "git@github.com:chloeli-15/ARENA_evals.git",
+      "commit": "75ebf31"
+    },
+    "packages": {
+      "inspect_ai": "0.3.27"
+    }
+  },
+  "plan": {
+    "name": "plan",
+    "steps": [
+      {
+        "solver": "multiple_choice_format",
+        "params": {
+          "template": "{question}\\n\\n{choices}"
+        }
+      },
+      {
+        "solver": "chain_of_thought",
+        "params": {
+          "template": "{prompt}\\n\\nBefore answering, think through how you want to answer the question. Make sure to think step-by-step and weigh all relevant concerns, and then arrive at a conclusive answer."
+        }
+      },
+      {
+        "solver": "generate",
+        "params": {}
+      },
+      {
+        "solver": "make_choice",
+        "params": {
+          "prompt": "Now provide your conclusion in the form ANSWER: $LETTER where $LETTER is one of A, B. Only output in this format."
+        }
+      },
+      {
+        "solver": "generate",
+        "params": {}
+      }
+    ],
+    "config": {}
+  },
+  "stats": {
+    "started_at": "2024-09-18T14:34:59+00:00",
+    "completed_at": "2024-09-18T14:35:00+00:00",
+    "model_usage": {}
+  },
+  "error": {
+    "message": "KeyError('question')",
+    "traceback": "Traceback (most recent call last):\n\n  File \"/opt/conda/envs/arena-env/lib/python3.11/site-packages/inspect_ai/_eval/task/run.py\", line 246, in task_run\n    sample_results = await asyncio.gather(*sample_coroutines)\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n  File \"/opt/conda/envs/arena-env/lib/python3.11/asyncio/tasks.py\", line 349, in __wakeup\n    future.result()\n\n  File \"/opt/conda/envs/arena-env/lib/python3.11/asyncio/tasks.py\", line 277, in __step\n    result = coro.send(None)\n             ^^^^^^^^^^^^^^^\n\n  File \"/opt/conda/envs/arena-env/lib/python3.11/site-packages/inspect_ai/_eval/task/run.py\", line 423, in task_run_sample\n    error = sample_error(ex)\n            ^^^^^^^^^^^^^^^^\n\n  File \"/opt/conda/envs/arena-env/lib/python3.11/site-packages/inspect_ai/_eval/task/error.py\", line 22, in __call__\n    raise ex\n\n  File \"/opt/conda/envs/arena-env/lib/python3.11/site-packages/inspect_ai/_eval/task/run.py\", line 395, in task_run_sample\n    state = await solver(state, generate)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n  File \"<ipython-input-14-3b9097cd6fb1>\", line 19, in solve\n    state.user_prompt.text = template.format(questions=state.user_prompt.text,\n                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nKeyError: 'question'\n",
+    "traceback_ansi": "\u001b[31m┌─\u001b[0m\u001b[31m──────────────────────────────\u001b[0m\u001b[31m \u001b[0m\u001b[1;31mTraceback \u001b[0m\u001b[1;2;31m(most recent call last)\u001b[0m\u001b[31m \u001b[0m\u001b[31m───────────────────────────────\u001b[0m\u001b[31m─┐\u001b[0m\n\u001b[31m│\u001b[0m \u001b[2;33m/opt/conda/envs/arena-env/lib/python3.11/site-packages/inspect_ai/_eval/task/\u001b[0m\u001b[1;33mrun.py\u001b[0m:\u001b[94m246\u001b[0m in       \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m \u001b[92mtask_run\u001b[0m                                                                                         \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m                                                                                                  \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m \u001b[2;33m/opt/conda/envs/arena-env/lib/python3.11/asyncio/\u001b[0m\u001b[1;33mtasks.py\u001b[0m:\u001b[94m349\u001b[0m in \u001b[92m__wakeup\u001b[0m                        \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m                                                                                                  \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m \u001b[2;33m/opt/conda/envs/arena-env/lib/python3.11/asyncio/\u001b[0m\u001b[1;33mtasks.py\u001b[0m:\u001b[94m277\u001b[0m in \u001b[92m__step\u001b[0m                          \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m                                                                                                  \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m \u001b[2;33m/opt/conda/envs/arena-env/lib/python3.11/site-packages/inspect_ai/_eval/task/\u001b[0m\u001b[1;33mrun.py\u001b[0m:\u001b[94m423\u001b[0m in       \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m \u001b[92mtask_run_sample\u001b[0m                                                                                  \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m                                                                                                  \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m \u001b[2;33m/opt/conda/envs/arena-env/lib/python3.11/site-packages/inspect_ai/_eval/task/\u001b[0m\u001b[1;33merror.py\u001b[0m:\u001b[94m22\u001b[0m in      \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m \u001b[92m__call__\u001b[0m                                                                                         \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m                                                                                                  \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m \u001b[2;33m/opt/conda/envs/arena-env/lib/python3.11/site-packages/inspect_ai/_eval/task/\u001b[0m\u001b[1;33mrun.py\u001b[0m:\u001b[94m395\u001b[0m in       \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m \u001b[92mtask_run_sample\u001b[0m                                                                                  \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m in \u001b[92msolve\u001b[0m:\u001b[94m19\u001b[0m                                                                                      \u001b[31m│\u001b[0m\n\u001b[31m└──────────────────────────────────────────────────────────────────────────────────────────────────┘\u001b[0m\n\u001b[1;91mKeyError: \u001b[0m\u001b[32m'question'\u001b[0m\n"
+  }
+}

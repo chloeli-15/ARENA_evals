@@ -22,6 +22,8 @@ from utils import import_json, save_json, retry_with_exponential_backoff, apply_
 def test_generate_formatted_response(test_fn: Callable, client):
     from part2_dataset_generation.solutions import Config, QuestionGeneration, Question
     config = Config(model="gpt-4o-mini", temperature=1)
+    
+    print(client, config)
 
     user_msg = "Generate a multiple choice question about ethics in business."
     
