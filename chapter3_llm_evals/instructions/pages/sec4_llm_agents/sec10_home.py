@@ -209,6 +209,7 @@ os.chdir(exercises_dir)
 from utils import import_json, save_json, retry_with_exponential_backoff, pretty_print_questions, load_jsonl, omit
 from utils import countrylist
 from utils import evaluate_expression, apply_user_format, apply_assistant_format, establish_client_anthropic, establish_client_OpenAI, retry_with_exponential_backoff
+import part4_llm_agents.tests as tests
 
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
