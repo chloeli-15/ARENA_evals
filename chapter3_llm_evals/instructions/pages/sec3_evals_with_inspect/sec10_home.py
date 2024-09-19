@@ -22,7 +22,7 @@ def section():
         r"""
 # [3.3] - Evals with Inspect
 
-### Colab: [**exercises**](https://colab.research.google.com/drive/1lDwKASSYGE4y_7DuGSqlo3DN41NHrXEw?usp=sharing) | [**solutions**](https://colab.research.google.com/drive/1bZkkJd8pAVnSN23svyszZ3f4WrnYKN_3?usp=sharing)
+<!-- ### Colab: [**exercises**](https://colab.research.google.com/drive/1lDwKASSYGE4y_7DuGSqlo3DN41NHrXEw?usp=sharing) | [**solutions**](https://colab.research.google.com/drive/1bZkkJd8pAVnSN23svyszZ3f4WrnYKN_3?usp=sharing)-->
 
 Please send any problems / bugs on the `#errata` channel in the [Slack group](https://join.slack.com/t/arena-uk/shared_invite/zt-28h0xs49u-ZN9ZDbGXl~oCorjbBsSQag), and ask any questions on the dedicated channels for this chapter of material.
 
@@ -90,11 +90,11 @@ Each exercise will have a difficulty and importance rating out of 5, as well as 
 
 ```python
 import os
+from pathlib import Path
 import json
 from typing import Literal
 from inspect_ai import Task, eval, task
 from inspect_ai.log import read_eval_log
-from utils import omit
 from inspect_ai.model import ChatMessage
 from inspect_ai.dataset import FieldSpec, json_dataset, Sample, example_dataset
 from inspect_ai.solver._multiple_choice import (
@@ -125,6 +125,7 @@ from inspect_ai.model import (
     get_model,
 )
 import random
+import sys
 import jaxtyping
 from itertools import product
 
@@ -136,7 +137,7 @@ if str(exercises_dir) not in sys.path: sys.path.append(str(exercises_dir))
 os.chdir(exercises_dir)
 
 from utils import import_json, save_json, retry_with_exponential_backoff, pretty_print_questions, load_jsonl, omit
-import exercises.part3_run_evals_with_inspect.tests as tests
+import part3_run_evals_with_inspect.tests as tests
 ```
                 
 """,

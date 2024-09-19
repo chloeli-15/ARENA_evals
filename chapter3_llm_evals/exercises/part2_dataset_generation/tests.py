@@ -68,6 +68,48 @@ def test_rubric(client, dataset, config, eval_prompts):
     ordered_dataset = sorted(scored_dataset, key=operator.itemgetter("score"), reverse=True)
     return ordered_dataset
 
+def test_filter_dataset(student_func: Callable):
+    # Test data
+    test_data = [
+        {"id": 1, "score": 75, "name": "Alice"},
+        {"id": 2, "score": 85, "name": "Bob"},
+        {"id": 3, "score": 90, "name": "Charlie"},
+        {"id": 4, "score": 70, "name": "David"},
+        {"id": 5, "score": 80, "name": "Eve"}
+    ]
+    
+    # Test cases
+    test_cases = [
+        {"score_field": "score", "threshold": 80, "than_threshold": ">", "expected_count": 2},
+        {"score_field": "score", "threshold": 80, "than_threshold": ">=", "expected_count": 3},
+        {"score_field": "score", "threshold": 75, "than_threshold": "==", "expected_count": 1},
+        {"score_field": "score", "threshold": 85, "than_threshold": "!=", "expected_count": 4},
+        {"score_field": "score", "threshold": 80, "than_threshold": "<", "expected_count": 2},
+        {"score_field": "score", "threshold": 80, "than_threshold": "<=", "expected_count": 3},
+    ]
+    
+    for i, case in enumerate(test_cases, 1):
+        result = student_func(test_data, case["score_field"], case["threshold"], case["than_threshold"], None)
+        
+        # Check if the result is a list
+        assert isinstance(result, list), f"Test case {i}: Result should be a list"
+        
+        # Check if the result has the correct number of items
+        assert len(result) == case["expected_count"], f"Test case {i}: Expected {case['expected_count']} items, got {len(result)}"
+        
+        # Check if all items in the result satisfy the condition
+        for item in result:
+            assert eval(f"item['{case['score_field']}'] {case['than_threshold']} {case['threshold']}"), \
+                f"Test case {i}: Item {item} does not satisfy the condition {case['score_field']} {case['than_threshold']} {case['threshold']}"
+    
+    # Test error handling
+    try:
+        student_func(test_data, "invalid_field", 80, ">", None)
+        assert False, "Function should raise ValueError for invalid score_field"
+    except ValueError:
+        pass
+    
+    print("All tests passed successfully!")
 
 if MAIN:
     POWER_SEEKING_TEST_QUESTIONS=import_json("./part2_dataset_generation/power_seeking_data/rubric_test_questions.json")
