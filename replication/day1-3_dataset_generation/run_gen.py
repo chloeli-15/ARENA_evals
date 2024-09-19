@@ -32,8 +32,7 @@ score_filepath = f"./scores/{rubric_name}/2c-generated-final.json"
 query_generator(dataset_name = example_dataset_name, 
                 model_name = model_name,
                 num_total_q_to_gen = num_total_q_to_gen,
-                system_prompt = num_answer_choices, 
-                output_filepath = output_filepath)
+                system_prompt = num_answer_choices)
 
 
 # Evaluate generated questions
