@@ -25,7 +25,7 @@ if str(exercises_dir) not in sys.path: sys.path.append(str(exercises_dir))
 os.chdir(exercises_dir)
 from utils import countrylist
 from utils import evaluate_expression, apply_user_format, apply_assistant_format, establish_client_anthropic, establish_client_OpenAI, retry_with_exponential_backoff
-
+import part4_llm_agents.solutions as solutions
 #%%
 
 import math
