@@ -1,14 +1,16 @@
+# %%
+import git
 import wandb
 from inspect_ai import Task, eval, task
 from inspect_ai.log import EvalConfig, EvalLog
 from inspect_ai.dataset import Sample, hf_dataset
 from inspect_ai.scorer import choice
 from inspect_ai.solver import multiple_choice, system_message
+import weave
 
 SYSTEM_MESSAGE = """
 Choose the most plausible continuation for the story.
 """
-
 
 def record_to_sample(record):
     return Sample(
@@ -18,24 +20,19 @@ def record_to_sample(record):
         metadata=dict(source_id=record["source_id"]),
     )
 
+dataset = hf_dataset(
+    path="hellaswag", split="validation", sample_fields=record_to_sample, trust=True
+)
+
+# %%
 
 @task
 def hellaswag():
-    # dataset
-    dataset = hf_dataset(
-        path="hellaswag", split="validation", sample_fields=record_to_sample, trust=True
-    )
-
-    # define task
     return Task(
-        dataset=dataset[:10],
+        dataset=dataset[:100],
         plan=[system_message(SYSTEM_MESSAGE), multiple_choice()],
         scorer=choice(),
     )
-
-
-import git
-
 
 def get_commit():
     repo = git.Repo(search_parent_directories=True)
@@ -44,9 +41,9 @@ def get_commit():
         commit_hash += "-dirty"
     return commit_hash
 
-
+# %%
 if __name__ == "__main__":
-    model = "openai/gpt-4o"
+    model = "openai/gpt-4o-mini"
     enable_wandb = True
     t = hellaswag
     if enable_wandb:
@@ -54,6 +51,7 @@ if __name__ == "__main__":
             project="arena_evals",
             tags=[model, t.__dict__["__registry_info__"].name, get_commit()],
         )
+        weave_client = weave.init("arena_evals")
         assert wandb_run is not None
     else:
         wandb_run = None
@@ -66,3 +64,7 @@ if __name__ == "__main__":
     if wandb_run:
         wandb_run.log({"accuracy": l.results.scores[0].metrics["accuracy"].value})
         wandb_run.save(f"logs/*{l.eval.task_id}.json")
+        wandb_run.finish()
+        weave.finish()
+
+# %%
