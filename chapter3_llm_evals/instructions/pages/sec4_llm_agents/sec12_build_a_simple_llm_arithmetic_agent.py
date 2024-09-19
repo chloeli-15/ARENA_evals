@@ -332,21 +332,23 @@ Python's `eval()` function evaluates an arbitrary string expression, and so allo
 Models like ChatGPT and Claude are fine-tuned to interpret and respond to `tool` descriptions appropriately, just like `user` and `system` messages. Below is an example of a typical tool description for the OpenAI API (see their [function calling guide](https://platform.openai.com/docs/guides/function-calling) for more details). Note that this may differ between APIs.
 
 ```python
-{
-    "name": "get_delivery_date",
-    "description": "Get the delivery date for a customer's order. Call this whenever you need to know the delivery date, for example when a customer asks 'Where is my package'",
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "order_id": {
-                "type": "string",
-                "description": "The customer's order ID.",
+{   
+    "type": "function",
+    "function":{
+        "name": "get_delivery_date",
+        "description": "Get the delivery date for a customer's order. Call this whenever you need to know the delivery date, for example when a customer asks 'Where is my package'",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "order_id": {
+                    "type": "string",
+                    "description": "The customer's order ID.",
+                },
             },
-        },
-        "required": ["order_id"],
-        "additionalProperties": false,
+            "required": ["order_id"],
+            "additionalProperties": false,
+        }
     }
-}
 ```
 
 <details><summary><b>Good practices for writing tool descriptions</b></summary>
