@@ -446,14 +446,129 @@ def power_seeking(system : bool = True, CoT : bool = False, self_critique_enable
         scorer= match()
     )
 # %%
+import itertools
+
 eval_model = "openai/gpt-4o-mini"
-logs = eval(
-    power_seeking(
-        system= True,
-        CoT= True,
-        self_critique_enabled= True
-    ),
-    # max_messages=10,
-    model = "openai/gpt-4o-mini", # Model to evaluate
-    log_dir = "./exercises/logs" # Add your log directory path here
-)
+combinations = itertools.product((True, False), (True, False), (True, False))
+for system, CoT, self_critique_enabled in combinations:
+    logs = eval(
+        power_seeking(
+            system= system,
+            CoT= CoT,
+            self_critique_enabled= self_critique_enabled
+        ),
+        model = "openai/gpt-4o-mini", # Model to evaluate
+        log_dir = "./exercises/logs" # Add your log directory path here
+    )
+
+# %%
+from inspect_ai.log import EvalLog
+
+log = read_eval_log("exercises/logs/2024-09-18T14-03-31+00-00_power-seeking_hUpfsv9nQZUGTm6rcFjodQ.json")
+
+# %%
+print("samples", type(log.samples[0]))
+
+# %%
+with open("exercises/logs/2024-09-18T14-03-31+00-00_power-seeking_hUpfsv9nQZUGTm6rcFjodQ.json") as f:
+    data = json.load(f)
+
+
+# %%
+def calculate_proportions(samples):
+    total_samples = len(samples)
+    yes_targets = 0
+    yes_answers = 0
+
+    for sample in samples:
+        # Check if the target is 'Yes.'
+        target_index = ord(sample['target'][0]) - ord('A')
+        if sample['choices'][target_index] == 'Yes.':
+            yes_targets += 1
+        
+        # Check if the answer maps to 'Yes.'
+        if sample['scores']['match']['value'] == 'I':
+            # 'I' means the answer is opposite of the target
+            answer_yes = sample['choices'][target_index] != 'Yes.'
+        else:  # 'C' case
+            # 'C' means the answer matches the target
+            answer_yes = sample['choices'][target_index] == 'Yes.'
+        
+        if answer_yes:
+            yes_answers += 1
+    
+    # Calculate proportions
+    target_proportion = yes_targets / total_samples
+    answer_proportion = yes_answers / total_samples
+    
+    return (target_proportion, answer_proportion)
+
+result = calculate_proportions(data['samples'][:3])
+print(result)
+
+# %%
+import json
+from collections import defaultdict
+
+def get_top_k_failures(file_names, k):
+    sample_failures = defaultdict(int)
+    sample_contents = {}
+    total_occurrences = defaultdict(int)
+
+    # Process all files
+    for file_name in file_names:
+        with open(file_name, 'r') as file:
+            data = json.load(file)
+            for sample in data['samples']:
+                sample_id = sample['id']
+                total_occurrences[sample_id] += 1
+                if sample['scores']['match']['value'] == 'C':
+                    sample_failures[sample_id] += 1
+                if sample_id not in sample_contents:
+                    sample_contents[sample_id] = sample['input'][0]['content']
+
+    # Calculate failure rates
+    failure_rates = {
+        sample_id: failures / total_occurrences[sample_id]
+        for sample_id, failures in sample_failures.items()
+    }
+
+    # Sort samples by failure rate and get top k
+    top_k_samples = sorted(failure_rates.items(), key=lambda x: x[1], reverse=True)[:k]
+
+    # Get the input contents for the top k samples
+    top_k_contents = [(sample_contents[sample_id], failure_rate) for sample_id, failure_rate in top_k_samples]
+
+    return top_k_contents
+# %%
+
+# Example usage:
+file_names_short = [
+    'exercises/logs/2024-09-18T16-21-41+00-00_power-seeking_YqJnSf8eYK7SgB4G2F7Scs.json',
+    'exercises/logs/2024-09-18T16-22-07+00-00_power-seeking_iBJQjkyta5DKYPXASf8cuV.json',
+    'exercises/logs/2024-09-18T16-22-21+00-00_power-seeking_G2eFkg8cABPnJK8AJ3aapX.json',
+    'exercises/logs/2024-09-18T16-22-37+00-00_power-seeking_j6CXAa5eCYA8yRwr2meATH.json',
+    'exercises/logs/2024-09-18T16-22-38+00-00_power-seeking_iPXP4v9Lc6cdkvJiaSth7F.json',
+    'exercises/logs/2024-09-18T16-23-02+00-00_power-seeking_ZAECeAB7XnbyvhouCFtbqt.json',
+    'exercises/logs/2024-09-18T16-23-12+00-00_power-seeking_TC4o4Za7dZ9B2LSXXN6RSx.json',
+    'exercises/logs/2024-09-18T16-23-22+00-00_power-seeking_BQRN65ofDkJKxb2LehfcSL.json',
+]
+file_names = [
+    "2024-09-18T16-50-10+00-00_power-seeking_McQGiaGstFiimWAhToAqEi.json",
+    "2024-09-18T17-02-21+00-00_power-seeking_nK2QzSaRqP57JYkHE8otzN.json",
+    "2024-09-18T17-06-50+00-00_power-seeking_gs8fJvXKEFkTEwUvrJL6gE.json",
+    "2024-09-18T17-11-16+00-00_power-seeking_FZUGXLRMgQj5vtsNMAmwP9.json",
+    "2024-09-18T17-11-52+00-00_power-seeking_ZwWzo3zKhcaugSuFzmrXsx.json",
+    "2024-09-18T17-22-55+00-00_power-seeking_GDTimWw7PcjP9d99qZEGxq.json",
+    "2024-09-18T17-27-30+00-00_power-seeking_U5T2x4SRE2fAwdKa2LSwQH.json",
+    "2024-09-18T17-32-08+00-00_power-seeking_QRCav7uszA8ZKbHxjfXRza.json"
+]
+file_names = ["exercises/logs/" + name for name in file_names]
+
+k = 1
+top_failures = get_top_k_failures(file_names, k)
+for content, failure_rate in top_failures:
+    print(failure_rate)
+    print(content)
+    print()
+# %%
