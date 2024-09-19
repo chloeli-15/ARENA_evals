@@ -17,6 +17,10 @@ import math
 import re
 import sys
 from pathlib import Path
+
+import part4_llm_agents.solutions as solutions
+
+
 # Make sure exercises are in the path; 
 chapter = r"chapter3_llm_evals"
 exercises_dir = Path(f"{os.getcwd().split(chapter)[0]}/{chapter}/exercises").resolve()
