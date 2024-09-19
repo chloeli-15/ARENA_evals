@@ -22,6 +22,7 @@ import math
 import re
 from pathlib import Path
 import sys
+from typing import Dict
 
 #Make sure exercises are in the path
 chapter=r"chapter3_llm_evals"
@@ -51,8 +52,10 @@ class ArithmeticTask:
         self.num2 = num2
         self.operations: List[str] = ["+", "-", "*", "/", "%", "//"]
         self.correct_answers: Dict[str, float] = self._generate_answers()
+        #iterate over keys
         self.is_solved: Dict[str, bool] = {expr: False for expr in self.correct_answers}
         self.current_task_number = 0
+        
 
     def _generate_answers(self) -> Dict[str, float]:
         """
@@ -72,7 +75,7 @@ class ArithmeticTask:
         
         ans={}
         for op in self.operations:
-            ans[op]=ops_dict[op](self.num1,self.num2)
+            ans[f"{self.num1} {op} {self.num2}"]=ops_dict[op](self.num1,self.num2)
         return ans
 
     """ this @proerty allows you to compute a value dynamically each time it's accessed. 
@@ -86,7 +89,7 @@ class ArithmeticTask:
         Returns:
             str: A string containing the current task
         """
-        return ""
+        return f"{self.num1} {self.operations[self.current_task_number]} {self.num2}"
 
     @property
     def current_task_instruction(self) -> str:
@@ -96,7 +99,9 @@ class ArithmeticTask:
         Returns:
             str: A string containing the instructions for the current task
         """
-        return ""
+        #""" is docstring, " is string
+        return f"""Calculate the result of the following expression: {str(self.num1)} {self.operations[self.current_task_number]} {str(self.num2)}.
+            Give your final answer in the format: <answer>NUMBER</answer>, where NUMBER is a numerical value"""
 
     def check_solved(self) -> bool:
         """
@@ -105,7 +110,7 @@ class ArithmeticTask:
         Returns:
             bool: True if all tasks have been solved, False otherwise
         """
-        return True
+        return all(self.is_solved.values())
 
     def check_answer(self, model_answer: str) -> bool:
         """
@@ -117,16 +122,24 @@ class ArithmeticTask:
         Returns:
             bool: True if the model's answer is correct, False otherwise
         """
-        return True
+        #call the self.get_current)task as a property, but kinda behaves like a function that is dynamically updated
+        return math.isclose(float(model_answer), self.correct_answers[self.get_current_task],rel_tol=1e-5, abs_tol=1e-8)
 
     def update_current_task(self):
         """
         Sets is_solved for the current task to True and increments self.current_task_number by one
         """
-        pass
+        self.is_solved[self.get_current_task]=True
+        #self.current_task_number+=1
+        self.current_task_number = (self.current_task_number +1) % len(self.operations)
+    
 
 tests.ArithmeticTaskTests(ArithmeticTask)
 
 x = ArithmeticTask(10, 15)
 for problem, answer in x.correct_answers.items():
     print(f"{problem} = {answer}")
+    
+#%%
+
+
