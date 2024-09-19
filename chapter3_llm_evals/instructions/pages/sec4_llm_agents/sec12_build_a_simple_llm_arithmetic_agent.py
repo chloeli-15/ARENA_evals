@@ -382,7 +382,7 @@ class CalculateTool():
             task (Any): Not used in this function
 
         Returns:
-            str: The result of the arithmetical expression as a string
+            dict: The result of the arithmetical expression as a string
         """
         return ""
 
