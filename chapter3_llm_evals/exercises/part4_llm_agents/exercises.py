@@ -911,7 +911,7 @@ class WikiAgent(SimpleAgent):
         """
         assert response.tool_calls
 
-        self.chat_history.append(response)
+        self.update_history(response)
 
         # Execute the tool calls
         results = self.execute_tool_calls(response)
@@ -1276,7 +1276,7 @@ class WikiAgentReAct(WikiAgent):
 # %%
 game = WikiGameReAct("Drupe", "17th parallel north", tools=wiki_game_tools)
 agent = WikiAgentReAct(task=game, tools=wiki_game_tools)
-agent_loop(agent, game, num_iters, result_list=prompting_result_list)
+# agent_loop(agent, game, num_iters, result_list=prompting_result_list)
 
 # %%
 class TestPathTool():
@@ -1360,4 +1360,72 @@ wiki_game_tools = [get_content_tool_inst, move_page_tool_inst, TestPathTool_inst
 # %%
 game = WikiGameReAct("Barack Obama", "India", tools = wiki_game_tools)
 agent = WikiAgentReAct(game, model="gpt-4o-mini", tools = wiki_game_tools)
-agent_loop(agent, game, 40)
+# agent_loop(agent, game, 40)
+
+# %%
+class WikiAgentChatHistory(WikiAgentReAct):
+    """
+    Inherits from WikiAgentReAct and adds the ability to store and retrieve chat history.
+
+    Attributes:
+        model (str): The model used for generating responses (inherited)
+        tools (List[Any]): List of tools (inherited)
+        client (OpenAI): OpenAI client for API calls (inherited)
+        task (Any): The current task being executed (inherited)
+        chat_history (List[dict]): History of interactions (inherited)
+        full_chat_history (List[dict]): Full history of interactions
+
+    Methods:
+        - get_response(use_tool: bool = True) -> ChatCompletionMessage: Get response from the model (inherited)
+        - execute_tool_calls(message: ChatCompletionMessage) -> List[str]: Execute tool calls from the model's response (inherited)
+        - update_history(message : str | ChatCompletionMessage | List[str | ChatCompletionMessage]): Update self.chat_history and self.full_chat_history with a message or list of messages. (inherited)
+        - reset_history(): Empty self.chat_history of the agent. (modified below)
+        - handle_tool_calls(response: ChatCompletionMessage): Handles tool_calls in the wikipedia game context. (inherited)
+        - handle_refusal(response: ChatCompletionMessage): Handles refusals in the wikipedia game context. (inherited)
+        - start(): A function to put the starting instructions in agent.chat_history when the agent starts a new page or starts the game. (inherited)
+        - run(): This function runs 1 loop of the agent in the wikipedia game. (inherited)
+        - store_chat_history(): Store the current chat history in the full chat history.
+        - retrieve_chat_history(): Retrieve the full chat history.
+    """
+    def reset_history(self):
+        """
+        Replace the output of the get_content tool responses with "Wikipedia Content was output here" when the agent moves to a new page.
+
+        This function should only be called if the agent moved to a new page. It should:
+            - Look through the messages in the chat history
+            - Determine if a message is a get_content tool call response
+            - Replace the output of the get_content tool response with "Wikipedia Content was output here"
+        """
+        for message in self.chat_history:
+            if isinstance(message, ChatCompletionMessage):
+                if message.role == "tool" and message.name == "get_content":
+                    message.content = "Wikipedia Content was output here"
+            else:
+                if message["role"] == "tool" and message["name"] == "get_content":
+                    message["content"] = "Wikipedia Content was output here"
+
+# %%
+game = WikiGameReAct("Drupe", "17th parallel north", tools = wiki_game_tools)
+agent = WikiAgentChatHistory(game, model="gpt-4o-mini", tools = wiki_game_tools, verbose = True)
+agent_loop(agent, game, 20)
+
+# %%
+# Pretty print the assistant outputs to explain reasoning
+for msg in agent.full_chat_history:
+    name = ""
+    if isinstance(msg, ChatCompletionMessage):
+        role = msg.role
+        content = msg.content
+        if hasattr(msg, name):
+            name = msg.name
+    else:
+        role = msg["role"]
+        content = msg["content"]
+        if "name" in msg:
+            name = msg["name"]
+    if role == "assistant":
+        print("________________________")
+        print(content)
+    if role == "tool":
+        print("________________________")
+        print(name)
