@@ -653,22 +653,22 @@ def get_page(title: str) -> WikipediaPage:
 
 
 # %%
-def get_permitted_links(current_page: WikipediaPage) -> list[str]:
-    """
-    Get "permitted" links (i.e. links that are in the content of the page) from a Wikipedia page.
+# def get_permitted_links(current_page: WikipediaPage) -> list[str]:
+#     """
+#     Get "permitted" links (i.e. links that are in the content of the page) from a Wikipedia page.
 
-    Args:
-        current_page (WikipediaPage): The current Wikipedia page
+#     Args:
+#         current_page (WikipediaPage): The current Wikipedia page
 
-    Returns:
-        list[str]: A list of permitted links from current_page
+#     Returns:
+#         list[str]: A list of permitted links from current_page
 
-    """
-    content_page_links = []
-    for link in page.links:
-        if link in page.content:
-            content_page_links.append(link)
-    return content_page_links
+#     """
+#     content_page_links = []
+#     for link in current_page.links:
+#         if link in page.content:
+#             content_page_links.append(link)
+#     return content_page_links
 
 
 # %%
@@ -798,7 +798,7 @@ class WikiGame:
         """
         page = self.current_page
         page_summary = self.get_page_summary(page)
-        instruction = f""""CURRENT PAGE: You are on this page {page.title}, PAGE SUMMARY: {page_summary}, GOAL PAGE: {self.goal_page}"""
+        instruction = f""""CURRENT PAGE: You are on this page {page.title}, PAGE SUMMARY: {page_summary}, GOAL PAGE: {self.goal_page.title}"""
         return apply_user_format(instruction)
 
     @property
@@ -810,7 +810,7 @@ class WikiGame:
             dict: The instructions for the next step. The "role" is "user" for user messages.
         """
         # Verify this instruction
-        next_instruction = "What is your next step?"
+        next_instruction = "What is your next step? If you want to move, please only move to a page, where the title of that page is enclosed by <link>title</link>"
         return apply_user_format(next_instruction)
 
     # ========================= Task State management (to implement) =========================
@@ -844,7 +844,8 @@ class GetContentTool:
             str: The content of the page with links wrapped
         """
         content = task.current_page.content
-        permitted_links = get_permitted_links(task.current_page)
+        permitted_links = task.get_permitted_links()
+        print("PERMITTED", permitted_links)
         for word in sorted(permitted_links, key=len, reverse=True):
             content = re.sub(
                 r"""(\s|[,.)!?;:'"])(""" + re.escape(word) + r""")(\s|[,.)!?;:'"s])""",
@@ -853,6 +854,7 @@ class GetContentTool:
                 count=1,
                 flags=re.IGNORECASE,
             )
+        print("CONTENT", content[:500])
         return content
 
     @property
@@ -898,8 +900,6 @@ class MovePageTool:
 
         # replace " " with "_"
         new_page_normalized = new_page.replace("_", " ")
-
-        print("CHECK", new_page_normalized)
         # check if valid or not
         if task.is_permitted_link(new_page_normalized):
             task.current_page = task.get_page(new_page_normalized)
@@ -920,7 +920,7 @@ class MovePageTool:
             "type": "function",
             "function": {
                 "name": MovePageTool.name,
-                "description": "Changes your current page to a specified new page which is accessible via a link from the current page. You can only call this function once at a time, as it will take you to a different page.",
+                "description": "Changes your current page to a specified new page which is accessible via a link from the current page. You can only call this function ONCE, as it will take you to a different page.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -1039,7 +1039,7 @@ class WikiAgent(SimpleAgent):
                     print(f"Tool response: {tool_response[:100]}")
 
             # check if move to a new page
-            # if one of the tool calls is a move page, then we want to reset this chat history
+            # if one of the tool calls is a move page, then we want to reset this chat history and also have start which appends the system and on_page_instruction
             if any(
                 tool_call.function.name == MovePageTool.name for tool_call in tool_calls
             ):
@@ -1073,7 +1073,7 @@ class WikiAgent(SimpleAgent):
         self.update_history(instruction_messages)
 
         print(
-            f"\nSYSTEM: \n{instruction_messages[0]['content']} \n\nUSER: \n{instruction_messages[1]['content']}"
+            f"\nSYSTEM: \n{instruction_messages[0]['content'][:100]} \n\nUSER: \n{instruction_messages[1]['content'][:100]}"
         )
 
     def run(self):
@@ -1119,21 +1119,293 @@ def agent_loop(agent, game, num_loops=10):
     """
 
     for i in range(num_loops):
+        print(f"TIME STEP {i}")
         if not agent.task.check_win():
             agent.run()
         else:
-            print("\nAll tasks solved.")
-            break
+            print(f"\nAll tasks solved in {i} steps.")
+            return
+    print("TASK FAILED")
 
 
 # %%
-game_1 = WikiGame("United Kingdom", "India")
+game_1 = WikiGame("Fried Rice", "Stalin")
 agent = WikiAgent(task=game_1, tools=wiki_game_tools)
 agent_loop(agent, game_1, 30)
+
+# # %%
+# for message in agent.full_chat_history:
+#     try:
+#         print(f"{str(message.role)}:\n {str(message.content)}")
+#     except:
+#         print(f"""{message["role"]}:\n {message["content"]}""")
+# # %%
+
+
 # %%
-for message in agent.full_chat_history:
-    try:
-        print(f"{str(message.role)}:\n {str(message.content)}")
-    except:
-        print(f"""{message["role"]}:\n {message["content"]}""")
+class WikiGamePrompting(WikiGame):
+    """
+    Inherits from WikiGame and adds improved prompting.
+
+    Attributes:
+        starting_page (str): The title of the starting page (inherited)
+        goal_page (str): The title of the goal page (inherited)
+        current_page (WikipediaPage): The current Wikipedia page (inherited)
+        page_history (List[str]): The history of pages visited (inherited)
+
+    Methods:
+        get_page(title: str) -> WikipediaPage: Get a Wikipedia page object given a title (inherited)
+
+        get_page_summary(page: WikipediaPage | None = None) -> str: Get the summary of a Wikipedia page (inherited)
+
+        get_permitted_links(title: Optional[str] = None) -> list[str]: Get permitted links for the current page (inherited)
+
+        is_permitted_link(link: str) -> bool: Check if a link is permitted (inherited)
+
+        system_instruction -> dict: Generate the starting instructions for the game (modified below)
+
+        on_page_instruction -> dict: Generate instructions for the current page (modified below)
+
+        next_step_instruction -> dict: Generate instructions for the next step (modified below)
+
+        check_win() -> bool: Check if the game has been won (inherited)
+
+    NOTES:
+    The major benefits to prompting come from putting the goal page title in the next step instruction and system prompt.
+    You want to add the current page and goal page wherever you can, especially in the recent prompts
+    The takeaway is that the "next step to the goal of ..." is really important prompt; during the exploration key decision making step, prompt it well
+
+    Without removal - 8 to 10 steps
+    Removed goal from system| removed goal and page_history and page summary from on_page - time step fail
+    Removed goal from system| - 15 time steps
+    Removed goal and page summary and page history from on_page| - 20 time steps
+    Removed goal from next_page - time step fail
+
+    """
+
+    @property
+    def system_instruction(self):
+        """
+        Provide improved starting instructions for the game.
+
+        Returns:
+            dict: The starting instructions. "role" is "system" for system messages.
+        """
+        return {
+            "role": "system",
+            "content": f"You are a wikipedia-racing AI. Your goal is to reach {self.goal_page.title} by accessing links from wikipedia pages. Your current page is {self.current_page.title}. ",
+        }
+
+    @property
+    def on_page_instruction(self):
+        """
+        Provide improved instructions for the current page.
+
+        Returns:
+            dict: The instructions for the current page. "role" is "user" for user messages.
+        """
+        return {
+            "role": "user",
+            "content": f"""You are currently on page: {self.current_page.title}. Make sure you start by reasoning about what steps you should take to get to the article on {self.goal_page.title}. 
+            When coming up with a strategy, make sure to pay attention to the path you have already taken, and if your current strategy doesn't seem to be working out, try something else. In case you're unsure, {self.goal_page.title} has the following summary:\n\n[Begin Summary]\n{self.get_page_summary(self.goal_page)}\n[End Summary]\n
+            The path you have taken so far is {" -> ".join(self.page_history)} Try not to backtrack to a previous page unless neccessary.
+            """,
+        }
+
+    @property
+    def next_step_instruction(self):
+        """
+        Provide improved instructions for the next step.
+
+        Returns:
+            dict: The instructions for the next step. "role" is "user" for user messages.
+        """
+
+        return {
+            "role": "user",
+            # this is the most important step!
+            "content": f"What's your next step to the goal of {self.goal_page.title}?",
+        }
+
+
 # %%
+
+start_end = ("Linux", "Dana Carvey")
+
+# %%
+# Original WikiGame and WikiAgent
+game = WikiGame(*start_end)
+agent = WikiAgent(game, model="gpt-4o-mini", tools=wiki_game_tools)
+agent_loop(agent, game, 30)
+
+# %%
+# Improved WikiGame and WikiAgent
+gameBetterPrompt = WikiGamePrompting(*start_end)
+agentBetter = WikiAgent(gameBetterPrompt, model="gpt-4o-mini", tools=wiki_game_tools)
+agent_loop(agentBetter, gameBetterPrompt, 30)
+
+
+# %%
+class WikiGameReAct(WikiGamePrompting):
+    """
+    Inherits from WikiGamePrompting and adds the ReAct framework.
+
+    Attributes:
+        starting_page (str): The title of the starting page (inherited)
+        goal_page (str): The title of the goal page (inherited)
+        current_page (WikipediaPage): The current Wikipedia page (inherited)
+        page_history (List[str]): The history of pages visited (inherited)
+
+    Methods:
+
+        - get_page(title: str) -> WikipediaPage: Get a Wikipedia page object given a title (inherited)
+        - get_page_summary(page: WikipediaPage | None = None) -> str: Get the summary of a Wikipedia page (inherited)
+        - get_permitted_links(title: Optional[str] = None) -> list[str]: Get permitted links for the current page (inherited)
+        - is_permitted_link(link: str) -> bool: Check if a link is permitted (inherited)
+        - system_instruction -> dict: Generate the starting instructions for the game (inherited)
+        - on_page_instruction -> dict: Generate instructions for the current page (inherited)
+        - next_step_instruction -> dict: Generate instructions for the next step (inherited)
+        - check_win() -> bool: Check if the game has been won (inherited)
+
+    """
+
+    def __init__(self, starting_page: str, goal_page: str, tools=None):
+        super().__init__(starting_page, goal_page)
+        self.tools = tools
+
+    @property
+    def system_instruction(self):
+        """
+        Provided a description of the tools in the system message. When generate is called with tools this is redundant, but when generate is called without tools, this is useful.
+
+        Returns:
+            dict: The starting instructions. "role" is "system" for system messages.
+        """
+        tool_string = ""
+        for tool in self.tools:
+            tool_string = tool_string + " " + str(tool.description)
+
+        return {
+            "role": "system",
+            "content": f"""You are a wikipedia-racing AI. Your goal is to reach {self.goal_page.title} page by accessing links from wikipedia pages. Your current page is {self.current_page.title}. \n
+            The description of the available tools at your disposal is:{tool_string} """,
+        }
+
+
+class WikiAgentReAct(WikiAgent):
+    """
+    Inherits from WikiAgent and adds the ReAct framework.
+
+    Attributes:
+        model (str): The model used for generating responses (inherited)
+        tools (List[Any]): List of tools (inherited)
+        client (OpenAI): OpenAI client for API calls (inherited)
+        task (Any): The current task being executed (inherited)
+        chat_history (List[dict]): History of interactions (inherited)
+
+    Methods:
+        - get_response(use_tool: bool = True) -> ChatCompletionMessage: Get response from the model (inherited)
+        - execute_tool_calls(message: ChatCompletionMessage) -> List[str]: Execute tool calls from the model's response (inherited)
+        - update_history(message : str | ChatCompletionMessage | List[str | ChatCompletionMessage]): Update self.chat_history and self.full_chat_history with a message or list of messages. (inherited)
+        - reset_history(): Empty self.chat_history of the agent. (inherited)
+        - handle_tool_calls(response: ChatCompletionMessage): Handles tool_calls in the wikipedia game context. (inherited)
+        - handle_refusal(response: ChatCompletionMessage): Handles refusals in the wikipedia game context. (inherited)
+        - start(): A function to put the starting instructions in agent.chat_history when the agent starts a new page or starts the game. (inherited)
+        - run() -> bool: Run one loop of the Wikipedia agent (inherited)
+
+    """
+
+    def generate_reason(self) -> ChatCompletionMessage:
+        """
+
+        Generate a reason for the agent to take an action. This function should:
+            - Get the model to reason about the current state of the game (without tools)
+            - Return the response from the model
+
+        Returns:
+            ChatCompletionMessage: The response from the model
+        """
+        self.update_history(
+            apply_user_format(
+                f"""Think carefully step-by-step, for how you are going to take this sequence of links. \n
+                Lay out a plan for how you might possibly chart a linear path of big ideas towards the goal of {self.task.goal_page.title}"""
+            )
+        )
+        return self.get_response(use_tool=False)
+
+    def generate_action(self) -> ChatCompletionMessage:
+        """
+
+        Generate an action for the agent to take. This function should:
+            - Get the model to generate an action for the agent to take (with tools)
+            - Return the response from the model
+
+        Returns:
+            ChatCompletionMessage: The response from the model
+
+        """
+        self.update_history(
+            apply_user_format(
+                f"What action do you want to take to the goal of {self.task.goal.title}"
+            )
+        )
+        return self.get_response(use_tool=True)
+
+    def generate_reason_and_action(self):
+        """
+
+        Generate a Reason and Action for the agent to take. This function should:
+            - Generate a Reason
+            - Add the Reason to the chat history
+            - Generate an Action
+            - Return the Action so that tool calls can be handled
+
+        Returns:
+            ChatCompletionMessage: The action from the model
+
+        """
+        reason = self.generate_reason()
+        print("REASONING IS", reason.content)
+        self.update_history(reason)
+        return self.generate_action()
+
+    def run(self):
+        """
+        Run one loop of the agent.
+
+        This function should:
+            - Generate a Reason and Action
+            - Handle the tool calls, refusals, and no tool calls in the model response
+        """
+        # task_instruction = self.task.current_task_instruction
+        # self.chat_history.append(apply_user_format(task_instruction))
+
+        # get initial tool response from model
+        response = self.generate_reason_and_action()
+
+        # handle this response
+        # if it has tool calls
+        if response.tool_calls:
+            self.handle_tool_calls(response)
+
+        # no tool calls, try again in the next time step
+        elif response.refusal:
+            self.handle_refusal(response)
+
+        # no tool calls and it did not refuse, its final
+        else:
+            # TODO: see if response has role as system
+            self.update_history(response)
+
+
+# %%
+# WikiGame and WikiAgent with improved prompting
+game = WikiGamePrompting("Drupe", "17th parallel north")
+agent = WikiAgent(task=game, tools=wiki_game_tools)
+agent_loop(agent, game, 40)
+
+# %%
+# WikiGame and WikiAgent with ReAct
+game = WikiGameReAct("Drupe", "17th parallel north", tools=wiki_game_tools)
+agent = WikiAgentReAct(task=game, tools=wiki_game_tools)
+agent_loop(agent=agent, game=game, num_loops=40)
