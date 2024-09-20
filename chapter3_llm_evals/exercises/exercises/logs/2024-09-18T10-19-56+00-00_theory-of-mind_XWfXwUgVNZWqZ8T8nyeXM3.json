@@ -1,0 +1,119 @@
+{
+  "version": 2,
+  "status": "cancelled",
+  "eval": {
+    "task": "theory_of_mind",
+    "task_version": 0,
+    "task_id": "XWfXwUgVNZWqZ8T8nyeXM3",
+    "run_id": "B9QmUY3VV5xKQeuQDaziK3",
+    "created": "2024-09-18T10:19:56+00:00",
+    "dataset": {
+      "name": "theory_of_mind",
+      "location": "example://theory_of_mind",
+      "samples": 100,
+      "shuffled": false
+    },
+    "model": "openai/gpt-4o-mini",
+    "task_attribs": {},
+    "task_args": {},
+    "model_args": {},
+    "config": {
+      "limit": 10
+    },
+    "revision": {
+      "type": "git",
+      "origin": "git@github.com:chloeli-15/ARENA_evals.git",
+      "commit": "da534b8"
+    },
+    "packages": {
+      "inspect_ai": "0.3.27"
+    }
+  },
+  "plan": {
+    "name": "plan",
+    "steps": [
+      {
+        "solver": "chain_of_thought",
+        "params": {}
+      },
+      {
+        "solver": "generate",
+        "params": {}
+      },
+      {
+        "solver": "self_critique",
+        "params": {
+          "model": "openai/gpt-4o-mini"
+        }
+      },
+      {
+        "solver": "chain_of_thought",
+        "params": {}
+      },
+      {
+        "solver": "generate",
+        "params": {}
+      },
+      {
+        "solver": "self_critique",
+        "params": {
+          "model": "openai/gpt-4o-mini"
+        }
+      },
+      {
+        "solver": "chain_of_thought",
+        "params": {}
+      },
+      {
+        "solver": "generate",
+        "params": {}
+      },
+      {
+        "solver": "self_critique",
+        "params": {
+          "model": "openai/gpt-4o-mini"
+        }
+      },
+      {
+        "solver": "chain_of_thought",
+        "params": {}
+      },
+      {
+        "solver": "generate",
+        "params": {}
+      },
+      {
+        "solver": "self_critique",
+        "params": {
+          "model": "openai/gpt-4o-mini"
+        }
+      },
+      {
+        "solver": "chain_of_thought",
+        "params": {}
+      },
+      {
+        "solver": "generate",
+        "params": {}
+      },
+      {
+        "solver": "self_critique",
+        "params": {
+          "model": "openai/gpt-4o-mini"
+        }
+      }
+    ],
+    "config": {}
+  },
+  "stats": {
+    "started_at": "2024-09-18T10:19:56+00:00",
+    "completed_at": "2024-09-18T10:20:07+00:00",
+    "model_usage": {
+      "openai/gpt-4o-mini": {
+        "input_tokens": 33932,
+        "output_tokens": 6903,
+        "total_tokens": 40835
+      }
+    }
+  }
+}

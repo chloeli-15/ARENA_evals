@@ -22,6 +22,7 @@ import part4_llm_agents.solutions as solutions
 
 #Make sure exercises are in the path
 # exercises_dir = Path(f"{os.getcwd().split(chapter)[0]}/{chapter}/exercises").resolve()
+
 exercises_dir = Path(f"/root/ARENA_evals/chapter3_llm_evals/exercises").resolve()
 section_dir = (exercises_dir / "part4_llm_agent_evals").resolve()
 if str(exercises_dir) not in sys.path: sys.path.append(str(exercises_dir))

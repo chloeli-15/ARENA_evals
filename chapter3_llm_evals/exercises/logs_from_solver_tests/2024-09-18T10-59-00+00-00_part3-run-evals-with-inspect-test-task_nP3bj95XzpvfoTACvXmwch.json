@@ -1,0 +1,54 @@
+{
+  "version": 2,
+  "status": "error",
+  "eval": {
+    "run_id": "DamEgY2w3VRYycnmkgbFhD",
+    "created": "2024-09-18T10:59:00+00:00",
+    "task": "part3_run_evals_with_inspect/test_task",
+    "task_id": "nP3bj95XzpvfoTACvXmwch",
+    "task_version": 0,
+    "task_attribs": {},
+    "task_args": {},
+    "dataset": {
+      "samples": 4,
+      "shuffled": false
+    },
+    "model": "openai/gpt-4o-mini",
+    "model_args": {},
+    "config": {},
+    "revision": {
+      "type": "git",
+      "origin": "git@github.com:chloeli-15/ARENA_evals.git",
+      "commit": "00f1281"
+    },
+    "packages": {
+      "inspect_ai": "0.3.29"
+    }
+  },
+  "plan": {
+    "name": "plan",
+    "steps": [
+      {
+        "solver": "prompt_template",
+        "params": {
+          "template": "hello, i'm a {question} with {choices}"
+        }
+      },
+      {
+        "solver": "generate",
+        "params": {}
+      }
+    ],
+    "config": {}
+  },
+  "stats": {
+    "started_at": "2024-09-18T10:59:00+00:00",
+    "completed_at": "2024-09-18T10:59:00+00:00",
+    "model_usage": {}
+  },
+  "error": {
+    "message": "KeyError('question')",
+    "traceback": "Traceback (most recent call last):\n\n  File \"/opt/conda/envs/arena-env/lib/python3.11/site-packages/inspect_ai/_eval/task/run.py\", line 247, in task_run\n    sample_results = await asyncio.gather(*sample_coroutines)\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n  File \"/opt/conda/envs/arena-env/lib/python3.11/site-packages/inspect_ai/_eval/task/run.py\", line 431, in task_run_sample\n    error = sample_error(ex)\n            ^^^^^^^^^^^^^^^^\n\n  File \"/opt/conda/envs/arena-env/lib/python3.11/site-packages/inspect_ai/_eval/task/error.py\", line 22, in __call__\n    raise ex\n\n  File \"/opt/conda/envs/arena-env/lib/python3.11/site-packages/inspect_ai/_eval/task/run.py\", line 403, in task_run_sample\n    state = await solver(state, generate)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n  File \"/root/ARENA_evals/chapter3_llm_evals/exercises/part3_run_evals_with_inspect/answers.py\", line 119, in solve\n    state.user_prompt.text = template.format(prompt=state.user_prompt.text)\n                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nKeyError: 'question'\n",
+    "traceback_ansi": "\u001b[31m┌─\u001b[0m\u001b[31m────────────────────────────────────────\u001b[0m\u001b[31m \u001b[0m\u001b[1;31mTraceback \u001b[0m\u001b[1;2;31m(most recent call last)\u001b[0m\u001b[31m \u001b[0m\u001b[31m─────────────────────────────────────────\u001b[0m\u001b[31m─┐\u001b[0m\n\u001b[31m│\u001b[0m \u001b[2;33m/opt/conda/envs/arena-env/lib/python3.11/site-packages/inspect_ai/_eval/task/\u001b[0m\u001b[1;33mrun.py\u001b[0m:\u001b[94m247\u001b[0m in \u001b[92mtask_run\u001b[0m                  \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m                                                                                                                      \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m \u001b[2;33m/opt/conda/envs/arena-env/lib/python3.11/site-packages/inspect_ai/_eval/task/\u001b[0m\u001b[1;33mrun.py\u001b[0m:\u001b[94m431\u001b[0m in \u001b[92mtask_run_sample\u001b[0m           \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m                                                                                                                      \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m \u001b[2;33m/opt/conda/envs/arena-env/lib/python3.11/site-packages/inspect_ai/_eval/task/\u001b[0m\u001b[1;33merror.py\u001b[0m:\u001b[94m22\u001b[0m in \u001b[92m__call__\u001b[0m                 \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m                                                                                                                      \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m \u001b[2;33m/opt/conda/envs/arena-env/lib/python3.11/site-packages/inspect_ai/_eval/task/\u001b[0m\u001b[1;33mrun.py\u001b[0m:\u001b[94m403\u001b[0m in \u001b[92mtask_run_sample\u001b[0m           \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m                                                                                                                      \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m \u001b[2;33m/root/ARENA_evals/chapter3_llm_evals/exercises/part3_run_evals_with_inspect/\u001b[0m\u001b[1;33manswers.py\u001b[0m:\u001b[94m119\u001b[0m in \u001b[92msolve\u001b[0m                  \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m                                                                                                                      \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m   \u001b[2m116 \u001b[0m\u001b[2m│   \u001b[0m                                                                                                           \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m   \u001b[2m117 \u001b[0m\u001b[2m│   \u001b[0m\u001b[94masync\u001b[0m \u001b[94mdef\u001b[0m \u001b[92msolve\u001b[0m(state: TaskState, generate: Generate) -> TaskState:                                        \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m   \u001b[2m118 \u001b[0m\u001b[2m│   │   \u001b[0m\u001b[94mif\u001b[0m state.user_prompt:                                                                                  \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m \u001b[31m> \u001b[0m119 \u001b[2m│   │   │   \u001b[0mstate.user_prompt.text = template.format(prompt=state.user_prompt.text)                            \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m   \u001b[2m120 \u001b[0m\u001b[2m│   │   \u001b[0m\u001b[94mreturn\u001b[0m state                                                                                           \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m   \u001b[2m121 \u001b[0m\u001b[2m│   \u001b[0m                                                                                                           \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m   \u001b[2m122 \u001b[0m\u001b[2m│   \u001b[0m\u001b[94mreturn\u001b[0m solve                                                                                               \u001b[31m│\u001b[0m\n\u001b[31m└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘\u001b[0m\n\u001b[1;91mKeyError: \u001b[0m\u001b[32m'question'\u001b[0m\n"
+  }
+}

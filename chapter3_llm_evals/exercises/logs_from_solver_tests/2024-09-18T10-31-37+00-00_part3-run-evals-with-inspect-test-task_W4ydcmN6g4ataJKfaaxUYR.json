@@ -1,0 +1,43 @@
+{
+  "version": 2,
+  "status": "error",
+  "eval": {
+    "run_id": "QZ3cmhXAo3mxCf2Fv8wN9m",
+    "created": "2024-09-18T10:31:37+00:00",
+    "task": "part3_run_evals_with_inspect/test_task",
+    "task_id": "W4ydcmN6g4ataJKfaaxUYR",
+    "task_version": 0,
+    "task_attribs": {},
+    "task_args": {},
+    "dataset": {
+      "samples": 4,
+      "shuffled": false
+    },
+    "model": "openai/gpt-4o-mini",
+    "model_args": {},
+    "config": {},
+    "revision": {
+      "type": "git",
+      "origin": "git@github.com:chloeli-15/ARENA_evals.git",
+      "commit": "da534b8"
+    },
+    "packages": {
+      "inspect_ai": "0.3.29"
+    }
+  },
+  "plan": {
+    "name": "plan",
+    "steps": [],
+    "config": {}
+  },
+  "stats": {
+    "started_at": "2024-09-18T10:31:37+00:00",
+    "completed_at": "2024-09-18T10:31:37+00:00",
+    "model_usage": {}
+  },
+  "error": {
+    "message": "AttributeError(\"'function' object has no attribute '__registry_info__'\")",
+    "traceback": "Traceback (most recent call last):\n\n  File \"/opt/conda/envs/arena-env/lib/python3.11/site-packages/inspect_ai/_eval/task/run.py\", line 196, in task_run\n    log_plan(logger, plan, generate_config)\n\n  File \"/opt/conda/envs/arena-env/lib/python3.11/site-packages/inspect_ai/_eval/task/log.py\", line 189, in log_plan\n    steps=[eval_plan_step(solver) for solver in plan.steps],\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n  File \"/opt/conda/envs/arena-env/lib/python3.11/site-packages/inspect_ai/_eval/task/log.py\", line 189, in <listcomp>\n    steps=[eval_plan_step(solver) for solver in plan.steps],\n           ^^^^^^^^^^^^^^^^^^^^^^\n\n  File \"/opt/conda/envs/arena-env/lib/python3.11/site-packages/inspect_ai/_eval/task/log.py\", line 184, in eval_plan_step\n    solver=registry_log_name(solver), params=registry_params(solver)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\n\n  File \"/opt/conda/envs/arena-env/lib/python3.11/site-packages/inspect_ai/_util/registry.py\", line 266, in registry_log_name\n    name = registry_info(o).name\n           ^^^^^^^^^^^^^^^^\n\n  File \"/opt/conda/envs/arena-env/lib/python3.11/site-packages/inspect_ai/_util/registry.py\", line 230, in registry_info\n    info = getattr(o, REGISTRY_INFO)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\n\nAttributeError: 'function' object has no attribute '__registry_info__'\n",
+    "traceback_ansi": "\u001b[31m┌─\u001b[0m\u001b[31m────────────────────────────────────────\u001b[0m\u001b[31m \u001b[0m\u001b[1;31mTraceback \u001b[0m\u001b[1;2;31m(most recent call last)\u001b[0m\u001b[31m \u001b[0m\u001b[31m─────────────────────────────────────────\u001b[0m\u001b[31m─┐\u001b[0m\n\u001b[31m│\u001b[0m \u001b[2;33m/opt/conda/envs/arena-env/lib/python3.11/site-packages/inspect_ai/_eval/task/\u001b[0m\u001b[1;33mrun.py\u001b[0m:\u001b[94m196\u001b[0m in \u001b[92mtask_run\u001b[0m                  \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m                                                                                                                      \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m \u001b[2;33m/opt/conda/envs/arena-env/lib/python3.11/site-packages/inspect_ai/_eval/task/\u001b[0m\u001b[1;33mlog.py\u001b[0m:\u001b[94m189\u001b[0m in \u001b[92mlog_plan\u001b[0m                  \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m                                                                                                                      \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m \u001b[2;33m/opt/conda/envs/arena-env/lib/python3.11/site-packages/inspect_ai/_eval/task/\u001b[0m\u001b[1;33mlog.py\u001b[0m:\u001b[94m189\u001b[0m in \u001b[92m<listcomp>\u001b[0m                \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m                                                                                                                      \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m \u001b[2;33m/opt/conda/envs/arena-env/lib/python3.11/site-packages/inspect_ai/_eval/task/\u001b[0m\u001b[1;33mlog.py\u001b[0m:\u001b[94m184\u001b[0m in \u001b[92meval_plan_step\u001b[0m            \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m                                                                                                                      \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m \u001b[2;33m/opt/conda/envs/arena-env/lib/python3.11/site-packages/inspect_ai/_util/\u001b[0m\u001b[1;33mregistry.py\u001b[0m:\u001b[94m266\u001b[0m in \u001b[92mregistry_log_name\u001b[0m         \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m                                                                                                                      \u001b[31m│\u001b[0m\n\u001b[31m│\u001b[0m \u001b[2;33m/opt/conda/envs/arena-env/lib/python3.11/site-packages/inspect_ai/_util/\u001b[0m\u001b[1;33mregistry.py\u001b[0m:\u001b[94m230\u001b[0m in \u001b[92mregistry_info\u001b[0m             \u001b[31m│\u001b[0m\n\u001b[31m└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘\u001b[0m\n\u001b[1;91mAttributeError: \u001b[0m\u001b[32m'function'\u001b[0m object has no attribute \u001b[32m'__registry_info__'\u001b[0m\n"
+  }
+}
