@@ -112,8 +112,9 @@ import openai
 from dotenv import load_dotenv
 
 #Make sure exercises are in the path
+chapter = r"chapter3_llm_evals"
 exercises_dir = Path(f"{os.getcwd().split(chapter)[0]}/{chapter}/exercises").resolve()
-section_dir = (exercises_dir / "part4_llm_agent_evals").resolve()
+section_dir = (exercises_dir / "part4_llm_agents").resolve()
 if str(exercises_dir) not in sys.path: sys.path.append(str(exercises_dir))
 os.chdir(exercises_dir)
 
