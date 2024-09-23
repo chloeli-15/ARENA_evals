@@ -80,6 +80,14 @@ We will build a toy task called `ArithmeticTask`. This task takes in two numbers
 - Update the current problem if the model answer was correct, or after a certain number of attempts
 - Check if all problems have been solved
 
+**How to handle calculations?** We have implemented a helper function `evaluate_expression()` to evaluate the arithmetic expressions, which you should use in your implementation of `execute()`. `evaluate_expression()` takes an arithmetic expression as a string (e.g. "3+5") and returns the result as a string (e.g. "8.0").
+
+<details><summary>Aside: Why not use Python's in-built <code>eval()</code> function?</summary>
+
+Python's `eval()` function evaluates an arbitrary string expression, and so allows AI models to run arbitrary code. Unless you have set up a container or sandboxed environment, it is very bad to allow LLMs to run arbitrary code on your computer!
+
+</details>
+
 ```python
 class ArithmeticTask:
     def __init__(self, num1: int | float, num2: int | float):
@@ -320,13 +328,6 @@ For the `CalculateTool`, it should have the following methods:
 - `execute()` - This should take in an arithmetical expression as string (e.g. `"3+5"`) and return the result of this expression (also as a string). The `execute()` function should take the task as a variable, as often tools will need to be able to make changes to the task state (e.g. update the current problem).
 - `description` - This should return a dictionary containing the tool description in the correct API syntax. 
 
-**How to handle calculations?** We have implemented a helper function `evaluate_expression()` to evaluate the arithmetic expressions, which you should use in your implementation of `execute()`. <!-- insert function docstring--> 
-
-<details><summary>Aside: Why not use Python's in-built <code>eval()</code> function?</summary>
-
-Python's `eval()` function evaluates an arbitrary string expression, and so allows AI models to run arbitrary code. Unless you have set up a container or sandboxed environment, it is very bad to allow LLMs to run arbitrary code on your computer!
-
-</details>
 
 #### Tool Description
 Models like ChatGPT and Claude are fine-tuned to interpret and respond to `tool` descriptions appropriately, just like `user` and `system` messages. Below is an example of a typical tool description for the OpenAI API (see their [function calling guide](https://platform.openai.com/docs/guides/function-calling) for more details). Note that this may differ between APIs.
@@ -335,6 +336,9 @@ Models like ChatGPT and Claude are fine-tuned to interpret and respond to `tool`
 {
     "type": "function",
     "function": {
+{   
+    "type": "function",
+    "function":{
         "name": "get_delivery_date",
         "description": "Get the delivery date for a customer's order. Call this whenever you need to know the delivery date, for example when a customer asks 'Where is my package'",
         "parameters": {
@@ -383,7 +387,7 @@ class CalculateTool():
             task (Any): Not used in this function
 
         Returns:
-            dict: The result of the arithmetical expression as a string
+            str: The result of the arithmetical expression as a string
         """
         return ""
 
@@ -393,7 +397,7 @@ class CalculateTool():
         Provides the description of the tool
 
         Returns:
-            str: The description of the tool
+            dict: The description of the tool
         """
 
         return {}
