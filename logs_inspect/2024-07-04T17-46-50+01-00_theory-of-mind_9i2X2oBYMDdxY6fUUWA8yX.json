@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "status": "cancelled",
+  "eval": {
+    "task": "theory_of_mind",
+    "task_version": 0,
+    "task_id": "9i2X2oBYMDdxY6fUUWA8yX",
+    "run_id": "3AE6FDRv6N5zmPugqi2VxZ",
+    "created": "2024-07-04T17:46:50+01:00",
+    "dataset": {
+      "name": "theory_of_mind",
+      "location": "example://theory_of_mind",
+      "samples": 100,
+      "shuffled": false
+    },
+    "model": "openai/gpt-3.5-turbo",
+    "task_attribs": {},
+    "task_args": {},
+    "model_args": {},
+    "config": {},
+    "revision": {
+      "type": "git",
+      "origin": "https://github.com/chloeli-15/ARENA_evals.git",
+      "commit": "bc11070"
+    },
+    "packages": {
+      "inspect_ai": "0.3.17"
+    }
+  },
+  "plan": {
+    "name": "plan",
+    "steps": [
+      {
+        "solver": "chain_of_thought",
+        "params": {}
+      },
+      {
+        "solver": "generate",
+        "params": {}
+      },
+      {
+        "solver": "self_critique",
+        "params": {
+          "model": "openai/gpt-3.5-turbo"
+        }
+      }
+    ],
+    "config": {}
+  },
+  "stats": {
+    "started_at": "2024-07-04T17:46:50+01:00",
+    "completed_at": "2024-07-04T17:46:53+01:00",
+    "model_usage": {
+      "openai/gpt-3.5-turbo": {
+        "input_tokens": 1508,
+        "output_tokens": 899,
+        "total_tokens": 2407
+      }
+    }
+  },
+  "logging": []
+}
