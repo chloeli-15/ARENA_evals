@@ -1,10 +1,10 @@
 import os
 import sys
 from pathlib import Path
-
+import warnings
 import os
 import json
-from typing import Literal
+from typing import Literal, Optional
 from inspect_ai import Task, eval, task
 from inspect_ai.log import read_eval_log
 from inspect_ai.model import ChatMessage
@@ -77,19 +77,23 @@ sample_dataset =  [
         target = "B"
     )
 ]
-def test_solver_functions(solver_functions, test_dataset : list[Sample] | None, scorer = match()):
+def test_solver_functions(solver_functions, test_dataset : Optional[list[Sample]] = None, scorer = match()):
     @task
     def test_task():
-        assert test_dataset is not None, "Please provide a test dataset"
+        if test_dataset is None:
+            warnings.warn("You haven't provided a test dataset. Defaulting to an example test_dataset.")
+            example_dataset = sample_dataset # example_dataset, sample_dataset, and test_dataset are a terrible collection of variable names for 3 things that basically do the same thing. SORRY! 
+        else:
+            example_dataset = test_dataset
         if isinstance(solver_functions, list):
             return Task(
-            dataset = test_dataset,
+            dataset = example_dataset,
             plan = solver_functions,
             scorer = match()
             )
         else: 
             return Task(
-            dataset = test_dataset,
+            dataset = example_dataset,
             plan = [solver_functions,
             generate()],
             scorer = match()
@@ -100,8 +104,10 @@ def test_solver_functions(solver_functions, test_dataset : list[Sample] | None, 
         model = "openai/gpt-4o-mini",
         log_dir = "./logs_from_solver_tests/"
     )
-    return f"/logs_from_solver_tests/"
+    return f"Now call \"!inspect view\" with on the following log to see how your solvers worked  /logs_from_solver_tests/{log.eval.created}_{log.eval.task}_{log.eval.task_id}.json"
 
 
 #%%
+log = read_eval_log("C:\\Users\\styme\\OneDrive\\Documents\\AI STUFF\\Model Written Evals\\Code Replication\\ARENA_evals\\chapter3_llm_evals\\exercises\\logs\\2024-09-24T16-33-11+01-00_theory-of-mind_EQKNhWJD5ityeSnQZ8yLyz.json")
+# %%
 # %%

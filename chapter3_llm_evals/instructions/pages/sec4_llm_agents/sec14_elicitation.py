@@ -317,13 +317,13 @@ class WikiAgentReAct(WikiAgent):
         model (str): The model used for generating responses (inherited)
         tools (List[Any]): List of tools (inherited)
         client (OpenAI): OpenAI client for API calls (inherited)
-        task (Any): The current task being executed (inherited)
+        task (WikiGame): The current task being executed (inherited)
         chat_history (List[dict]): History of interactions (inherited)
 
     Methods:
         - get_response(use_tool: bool = True) -> ChatCompletionMessage: Get response from the model (inherited)
         - execute_tool_calls(message: ChatCompletionMessage) -> List[str]: Execute tool calls from the model's response (inherited)
-        - update_history(message : str | ChatCompletionMessage | List[str | ChatCompletionMessage]): Update self.chat_history and self.full_chat_history with a message or list of messages. (inherited)
+        - update_history(message : dict[str, str] | ChatCompletionMessage | List[dict[str, str] | ChatCompletionMessage]): Update self.chat_history and self.full_chat_history with a message or list of messages. (inherited)
         - reset_history(): Empty self.chat_history of the agent. (inherited)
         - handle_tool_calls(response: ChatCompletionMessage): Handles tool_calls in the wikipedia game context. (inherited)
         - handle_refusal(response: ChatCompletionMessage): Handles refusals in the wikipedia game context. (inherited)
@@ -340,7 +340,7 @@ class WikiAgentReAct(WikiAgent):
             - Return the response from the model
         
         Returns:
-            ChatCompletionMessage: The response from the model
+            message (ChatCompletionMessage): The response from the model
         """
         # TODO
         pass
@@ -353,13 +353,13 @@ class WikiAgentReAct(WikiAgent):
             - Return the response from the model
         
         Returns:
-            ChatCompletionMessage: The response from the model
+            message (ChatCompletionMessage): The response from the model
         
         """
         # TODO
         pass
 
-    def generate_reason_and_action(self):
+    def generate_reason_and_action(self) -> ChatCompletionMessage:
         """
         
         Generate a Reason and Action for the agent to take. This function should:
@@ -369,7 +369,7 @@ class WikiAgentReAct(WikiAgent):
             - Return the Action so that tool calls can be handled
 
         Returns:
-            ChatCompletionMessage: The action from the model
+            message (ChatCompletionMessage): The action from the model
 
         """
         # TODO
@@ -447,7 +447,7 @@ class WikiAgentReAct(WikiAgent):
         model (str): The model used for generating responses (inherited)
         tools (List[Any]): List of tools (inherited)
         client (OpenAI): OpenAI client for API calls (inherited)
-        task (Any): The current task being executed (inherited)
+        task (WikiGame): The current task being executed (inherited)
         chat_history (List[dict]): History of interactions (inherited)
 
     Methods:
@@ -457,7 +457,7 @@ class WikiAgentReAct(WikiAgent):
 
         run(with_tool: bool = True) -> bool: Run one loop of the Wikipedia agent (inherited)
 
-        update_history(message : str | ChatCompletionMessage | List[str | ChatCompletionMessage]): Update self.chat_history and self.full_chat_history with a message or list of messages. (inherited)
+        update_history(message : dict[str, str] | ChatCompletionMessage | List[dict[str, str] | ChatCompletionMessage]): Update self.chat_history and self.full_chat_history with a message or list of messages. (inherited)
 
         reset_history(): Empty self.chat_history of the agent. (inherited)
 
@@ -490,7 +490,7 @@ class WikiAgentReAct(WikiAgent):
         response = self.get_response(use_tool=True)
         return response
 
-    def generate_reason_and_action(self):
+    def generate_reason_and_action(self) -> ChatCompletionMessage:
         """
         Generate a reason, store this in history, then generate and return an action.
         """
@@ -529,7 +529,7 @@ def agent_loop_ReAct(game, agent, num_loops = 10):
     Run the agent loop for a given number of loops with the ReAct framework.
 
     Args:
-        agent (WikiReActAgent): The agent to run
+        agent (WikiAgentReAct): The agent to run
         game (WikiGameReAct): The game to play
         num_loops (int): The number of loops to run
     """
@@ -544,7 +544,7 @@ def agent_loop_ReAct(game, agent, num_loops = 10):
     Run the agent loop for a given number of loops with the ReAct framework.
 
     Args:
-        agent (WikiReActAgent): The agent to run
+        agent (WikiAgentReAct): The agent to run
         game (WikiGameReAct): The game to play
         num_loops (int): The number of loops to run
     """
@@ -596,19 +596,20 @@ class TestPathTool():
         name (str): The name of the tool
 
     Methods:
-        execute(task: Any, path: str) -> str: Test if a given path is valid.
+        execute(task: WikiGame, path: str) -> str: Test if a given path is valid.
 
         description -> dict: Provides the description of the TestPathTool tool for the API
     """
     
     name = "test_path"
 
-    def execute(self, task: Any, path: str) -> str:
+    def execute(self, task: WikiGame, path: str) -> str:
         """
         Test if a given path is valid.
 
         Args:
             path (str): A string representing a path, e.g., "Barack Obama -> Indonesia -> India"
+            task (WikiGame): The current task being run.            
 
         Returns:
             str: A message indicating whether the path is valid or where it fails.
@@ -636,20 +637,21 @@ class TestPathTool():
         name (str): The name of the tool
 
     Methods:
-        execute(task: Any, path: str) -> str: Test if a given path is valid.
+        execute(task: WikiGame, path: str) -> str: Test if a given path is valid.
 
         description -> dict: Provides the description of the test_path tool for the API
     """
     
     name = "test_path"
 
-    def execute(self, task: Any, path: str) -> str:
+    def execute(self, task: WikiGame, path: str) -> str:
         """
         Test if a given path is valid.
 
         Args:
             path (str): A string representing a path, e.g., "Barack Obama -> Indonesia -> India"
-
+            task (WikiGame): The current task being run.
+            
         Returns:
             str: A message indicating whether the path is valid or where it fails.
         """
@@ -733,14 +735,14 @@ class WikiAgentChatHistory(WikiAgentReAct):
         model (str): The model used for generating responses (inherited)
         tools (List[Any]): List of tools (inherited)
         client (OpenAI): OpenAI client for API calls (inherited)
-        task (Any): The current task being executed (inherited)
+        task (WikiGame): The current task being executed (inherited)
         chat_history (List[dict]): History of interactions (inherited)
         full_chat_history (List[dict]): Full history of interactions
 
     Methods:
         - get_response(use_tool: bool = True) -> ChatCompletionMessage: Get response from the model (inherited)
         - execute_tool_calls(message: ChatCompletionMessage) -> List[str]: Execute tool calls from the model's response (inherited)
-        - update_history(message : str | ChatCompletionMessage | List[str | ChatCompletionMessage]): Update self.chat_history and self.full_chat_history with a message or list of messages. (inherited)
+        - update_history(message : dict[str, str] | ChatCompletionMessage | List[dict[str, str] | ChatCompletionMessage]): Update self.chat_history and self.full_chat_history with a message or list of messages. (inherited)
         - reset_history(): Empty self.chat_history of the agent. (modified below)
         - handle_tool_calls(response: ChatCompletionMessage): Handles tool_calls in the wikipedia game context. (inherited)
         - handle_refusal(response: ChatCompletionMessage): Handles refusals in the wikipedia game context. (inherited)
@@ -773,7 +775,7 @@ class WikiAgentChatHistory(WikiAgentReAct):
         model (str): The model used for generating responses (inherited)
         tools (List[Any]): List of tools (inherited)
         client (OpenAI): OpenAI client for API calls (inherited)
-        task (Any): The current task being executed (inherited)
+        task (WikiGame): The current task being executed (inherited)
         chat_history (List[dict]): History of interactions (inherited)
         full_chat_history (List[dict]): Full history of interactions
 
@@ -784,7 +786,7 @@ class WikiAgentChatHistory(WikiAgentReAct):
 
         run(with_tool: bool = True) -> bool: Run one loop of the Wikipedia agent (inherited)
 
-        update_history(message : str | ChatCompletionMessage | List[str | ChatCompletionMessage]): Update self.chat_history and self.full_chat_history with a message or list of messages. (inherited)
+        update_history(message : dict[str, str] | ChatCompletionMessage | List[dict[str, str] | ChatCompletionMessage]): Update self.chat_history and self.full_chat_history with a message or list of messages. (inherited)
 
         reset_history(): Empty self.chat_history of the agent. (modified below)
 

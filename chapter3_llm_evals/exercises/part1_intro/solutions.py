@@ -68,7 +68,6 @@ def apply_message_format(user : str, system : Optional[str]) -> List[dict]:
 
 #%%
 
-@retry_with_exponential_backoff
 def generate_response(client, model: str, messages:Optional[List[dict]]=None, user:Optional[str]=None, system:Optional[str]=None, temperature: float = 1, verbose: bool = False) -> str:
     """
     Generate a response to the `messages` from the OpenAI API.
@@ -115,7 +114,7 @@ def retry_with_exponential_backoff(
     Args:
     func: function to retry
     max_retries: maximum number of retries
-    intial_sleep_time: initial sleep time
+    initial_sleep_time: initial sleep time
     backoff_factor: factor to increase sleep time by
     jitter: if True, randomly vary the backoff_factor by a small amount
 
@@ -136,6 +135,10 @@ def retry_with_exponential_backoff(
         raise Exception(f"Maximum retries {max_retries} exceeded")
 
     return wrapper
+#%%
+#Wrap our generate_response function
+
+generate_response = retry_with_exponential_backoff(generate_response)
 
 #%%
 if MAIN:

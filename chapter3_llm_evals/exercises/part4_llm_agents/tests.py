@@ -82,10 +82,10 @@ def ArithmeticTaskTests(ArithmeticTaskClass):
 
     def ArithmeticTaskrun_all_tests():
         ArithmeticTasktest_init()
-        ArithemticTasktest_get_current_task()
-        ArithemticTasktest_check_solved()
-        ArithemticTasktest_check_answer()
-        ArithemticTasktest_update_current_task()
+        ArithmeticTasktest_get_current_task()
+        ArithmeticTasktest_check_solved()
+        ArithmeticTasktest_check_answer()
+        ArithmeticTasktest_update_current_task()
         print("All tests passed successfully!")
 
     # Run all tests

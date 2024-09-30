@@ -171,6 +171,7 @@ def theory_of_mind() -> Task:
             chain_of_thought(),
             generate(),
             self_critique(model="openai/gpt-4o-mini"),
+            generate()
         ],
         scorer=model_graded_fact(model="openai/gpt-4o-mini"),
     )
@@ -200,7 +201,24 @@ which indicates that the eval ran correctly. Now we can view the results of this
 
 Run the code block below and then click through to **http://localhost:7575**.
 
+<details><summary>How to use the Log viewer</summary>
+
+The log viewer works as follows:
+
+- When you first open the log viewer, you'll be on the "Samples" tab. This shows a high-level summary of each question the model was asked during your evaluation (including whether the model's answer was scored as "Correct" or "Incorrect").
+- Next to the "Samples" tab, at the top of the page, is an "Info" tab. This displays high-level information about the entire evaluation (how many questions were asked, how many tokens were used, the name of the task, the plan of the evaluation, etc).
+- Next to the "Info" tab is a "JSON" tab. This sinply displays the raw JSON of the log file.
+
+- Now return to the Samples tab and click on one of the questions, this will show you:
+    - First, a popup that displays the "Transcript" of the evaluation. This transcript will display all the information about how the evaluation proceeded (how each solver ran, the target, the initalisation of the sample object).
+    - Next to the "Transcript" tab, at the top of the page, is a "Messages" tab. This displays all the messages that the evaluated model sees, as well as what sort of message they are labelled as (User, assistant, system, etc).
+    - Next to the "Messages" tab, at the top of the page, is a "Scoring" tab. This shows how the model's output was scored by the scorer function.
+
+If you run inspect view on a log directory (containing multiple log files) then the viewer will generate a log view for all of these json files at once. These are accessible from the top left of the viewer, where you can select which log file you want to view (if you loaded in one log file, this will be the only option presented here). On the top right of the viewer, you can see the statistics that were collected for the overall evaluation by the scorer function (accuracy, std, etc).
+
 For more information about the log viewer, you can read the docs [here](https://inspect.ai-safety-institute.org.uk/log-viewer.html).
+
+</details>
 
 <details><summary>Aside: Log names</summary> I'm fairly confident that when Inspect accesses logs, it utilises the name, date, and time information as a part of the way of accessing and presenting the logging data. Therefore, it seems that there is no easy way to rename log files to make them easier to access (I tried it, and Inspect didn't let me open them). </details>
 

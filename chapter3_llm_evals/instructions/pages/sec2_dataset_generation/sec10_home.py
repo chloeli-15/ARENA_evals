@@ -92,6 +92,7 @@ import pandas as pd
 import time
 import math
 import json
+import functools
 import itertools
 from dataclasses import dataclass, field, asdict, fields
 from pydantic import BaseModel

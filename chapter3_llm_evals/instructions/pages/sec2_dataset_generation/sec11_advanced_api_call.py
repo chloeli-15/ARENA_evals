@@ -170,11 +170,13 @@ You might follow these steps:
 
 # TODO: Implement the structured output generation here
 @retry_with_exponential_backoff
-def generate_formatted_response(config: Config, 
+def generate_formatted_response(client: OpenAI,
+                                config: Config, 
                                 messages:Optional[List[dict]]=None, 
                                 user:Optional[str]=None, 
                                 system:Optional[str]=None, 
                                 verbose: bool = False
+                                max_tokens: Optional[int] = None) -> Optional[str]:
 ) -> str:
     '''
     Generate a formatted response using the OpenAI API.
@@ -205,7 +207,7 @@ def generate_formatted_response(config: Config,
     
     # TODO: Implement the structured output generation here
         
-tests.test_generate_formatted_response(generate_formatted_response)
+tests.test_generate_formatted_response(generate_formatted_response, client)
 ```
 
 <details>
@@ -234,7 +236,8 @@ class QuestionGeneration(BaseModel):
 
 
 @retry_with_exponential_backoff
-def generate_formatted_response(config : Config, 
+def generate_formatted_response(client: OpenAI,
+                                config : Config, 
                                 messages : Optional[List[dict]]=None, 
                                 user : Optional[str]=None, 
                                 system : Optional[str]=None, 
@@ -296,7 +299,7 @@ def generate_formatted_response(config : Config,
 
 
 ```python
-response = generate_formatted_response(config, user="Generate 4 factual questions about France's culture.", verbose=True)
+response = generate_formatted_response(client, config, user="Generate 4 factual questions about France's culture.", verbose=True)
 print("Raw response object:\n", response)
 print(f'\nModel reasoning: \n{json.loads(response)["reasoning"]}')
 print(f'\nModel generation:')

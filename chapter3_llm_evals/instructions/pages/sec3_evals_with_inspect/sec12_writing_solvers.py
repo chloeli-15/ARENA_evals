@@ -95,12 +95,13 @@ For example, if our original `user_prompt.text` from our dataset was: `"Do you w
 You might find Inspect's [solver documentation](https://inspect.ai-safety-institute.org.uk/solvers.html), or even their [github source code](https://github.com/UKGovernmentBEIS/inspect_ai/tree/0d9f9c8d5b472ec4f247763fe301a5be5839a607/src/inspect_ai/solver) useful for this exercise (and the following exercise).
 
 ```python
+@solver
 def prompt_template(template: str) -> Solver:
     """
     Returns a solve function which modifies the user prompt with the given template.
 
     Args:
-        template : The template string to use to modify the user prompt. Must include {question} to be replaced with the original user
+        template : The template string to use to modify the user prompt. Must include {prompt} to be replaced with the original user
 
     Returns:
         solve : A solve function which modifies the user prompt with the given template
@@ -182,7 +183,6 @@ def multiple_choice_format(template: str, **params: dict) -> Solver:
 <details><summary>Solution:</summary>
 
 ```python
-
 @solver
 def multiple_choice_format(template: str, **params: dict) -> Solver:
     """
@@ -208,8 +208,6 @@ def multiple_choice_format(template: str, **params: dict) -> Solver:
         return state
 
     return solve
-
-
 ```
 
 </details>
@@ -313,6 +311,7 @@ def system_message(system_message: str, **params: dict) -> Solver:
 
 <details><summary>Solution:</summary>
 
+```python
 @solver
 def system_message(system_message: str, **params: dict) -> Solver:
     """
@@ -348,7 +347,8 @@ def system_message(system_message: str, **params: dict) -> Solver:
         return state
 
     return solve
-
+```
+    
 </details>
 
 

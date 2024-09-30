@@ -12,6 +12,8 @@ import pandas as pd
 import time
 import math
 import json
+import warnings
+import functools
 import itertools
 from dataclasses import dataclass, field, asdict, fields
 from pydantic import BaseModel
@@ -311,8 +313,8 @@ if MAIN:
     gen_prompts.few_shot_examples = mcq_examples
     gen_prompts.num_shots = 4 # Change this to 1 (or more) and see if the question quality changes
 
-    print("\nSYSTEM:\n",gen_prompts.system_prompt)
-    print("\nUSER:\n",gen_prompts.user_prompt)
+    print("\nSYSTEM:\n",gen_prompts.get_system_prompt())
+    print("\nUSER:\n",gen_prompts.get_user_prompt())
 
 # %%
 if MAIN:
@@ -376,8 +378,8 @@ if MAIN:
     gen_prompts.update_get_user_prompt(get_few_shot_var_user_prompt)
 
     # Print the new user prompt
-    print("\nSYSTEM:\n",gen_prompts.system_prompt)
-    print("\nUSER:\n",gen_prompts.user_prompt)
+    print("\nSYSTEM:\n",gen_prompts.get_system_prompt())
+    print("\nUSER:\n",gen_prompts.get_user_prompt())
 
 # %%
 if MAIN:

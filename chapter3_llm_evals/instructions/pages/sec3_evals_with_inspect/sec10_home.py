@@ -94,7 +94,7 @@ from pathlib import Path
 import json
 from typing import Literal
 from inspect_ai import Task, eval, task
-from inspect_ai.log import read_eval_log
+from inspect_ai.log import read_eval_log, EvalLog
 from inspect_ai.model import ChatMessage
 from inspect_ai.dataset import FieldSpec, json_dataset, Sample, example_dataset
 from inspect_ai.solver._multiple_choice import (
