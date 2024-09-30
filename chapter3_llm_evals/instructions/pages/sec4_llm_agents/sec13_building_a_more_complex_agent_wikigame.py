@@ -42,10 +42,10 @@ We'll build a rudimentary agent that can play the wikipedia Game. Then, in secti
 Our agent will interact with Wikipedia by making tool calls to the [Wikipedia API](https://wikipedia.readthedocs.io/en/latest/quickstart.html), which is simple to use. We will only need to learn the following key functions for the game. 
 
 1. `wikipedia.page()` - Returns a `WikipediaPage` object, which contains various attributes and methods to access page content. (See [page docs](https://wikipedia-api.readthedocs.io/en/latest/API.html#wikipediapage) for these attributes.)
-2. `wikipediaPage.title()` - Returns the title of the page
-3. `wikipediaPage.contents()` - Returns the full text content of the page (this can be very long, make sure to take snippets when possible to not use up the context window of the LLM)
-4. `wikipediaPage.summary()` - Returns a summary of the page (i.e. the introductory text of the Wikipage before the first section title).
-5. `wikipediaPage.links()` - Returns a list of all links as strings
+2. `wikipediaPage.title` - Returns the title of the page
+3. `wikipediaPage.content` - Returns the full text content of the page (this can be very long, make sure to take snippets when possible to not use up the context window of the LLM)
+4. `wikipediaPage.summary` - Returns a summary of the page (i.e. the introductory text of the Wikipage before the first section title).
+5. `wikipediaPage.links` - Returns a list of all links as strings
 
 
 <details><summary> Aside: Wikipedia API content can be weird!</summary>
@@ -206,8 +206,8 @@ def get_permitted_links(current_page: WikipediaPage) -> list[str]:
 
     """
     all_links = current_page.links
-    content = current_page.content
-    permitted_links = [link for link in all_links if link in content]
+    content_lower = current_page.content.lower()
+    permitted_links = [link for link in all_links if link.lower() in content_lower]
     return permitted_links
 ```
 
@@ -228,7 +228,7 @@ You should spend up to 30-35 mins on this exercise.
 
 Build the `WikiGame` class that instantiates the wikipedia game. This should contain the following functionalities:
 1. Keep track of task states
-2. Give task-specifc instructions
+2. Give task-specific instructions
 3. Task-specific helper functions for calling the Wikipedia API. These less interesting methods have been provided for you, but you should read and understand what they do.
 
 
@@ -308,14 +308,14 @@ class WikiGame:
         if title:
             page = self.get_page(title)
             all_links = page.links
-            content = page.content
-            permitted_links = [link for link in all_links if link in content]
+            content_lower = page.content.lower()
+            permitted_links = [link for link in all_links if link.lower() in content]
             if title in permitted_links:
                 permitted_links.remove(title)
         else:
             all_links = self.current_page.links
-            content = self.current_page.content
-            permitted_links = [link for link in all_links if link in content]
+            content_lower = self.current_page.content.lower()
+            permitted_links = [link for link in all_links if link.lower() in content_lower]
             if self.current_page.title in permitted_links:
                 permitted_links.remove(self.current_page.title)
         return permitted_links
@@ -340,7 +340,7 @@ class WikiGame:
         Generate the starting instructions for the game, formatted as a system prompt.
 
         Returns:
-            dict: The starting instructions. The "role" is "system" for system messages.
+            dict: The starting instructions, formatted as a system prompt. 
         """
         # TODO
         return {}
@@ -351,7 +351,7 @@ class WikiGame:
         Tell the agent what page they are on and give a summary of the page, formatted as a user prompt.
 
         Returns:
-            dict: The instructions for the current page. The "role" is "user" for user messages.
+            dict: The instructions for the current page, formatted as a user prompt.
         """
         # TODO
         return {}
@@ -362,7 +362,7 @@ class WikiGame:
         Ask the agent "What's the next step?" after making a tool call, formatted as a user prompt.
 
         Returns:
-            dict: The instructions for the next step. The "role" is "user" for user messages.
+            dict: The instructions for the next step, formatted as a user prompt.
         """
         # TODO
         return {}
@@ -483,41 +483,32 @@ class WikiGame:
     @property
     def system_instruction(self) -> dict:
         """
-        Generate the starting instructions for the game.
+        Generate the starting instructions for the game, formatted as a system prompt.
 
         Returns:
-            dict: The starting instructions. "role" is "system" for system messages.
+            dict: The starting instructions.
         """
-        return {
-            "role": "system",
-            "content": "You are a wikipedia-racing AI. Your aim is to reach the goal page by accessing links from a series of wikipedia pages.",
-        }
+        return apply_system_format("You are a wikipedia-racing AI. Your aim is to reach the goal page by accessing links from a series of wikipedia pages.")
 
     @property
     def on_page_instruction(self) -> dict:
         """
-        Generate instructions for the current page.
+        Tell the agent what page they are on and give a summary of the page, formatted as a user prompt.
 
         Returns:
-            dict: The instructions for the current page. "role" is "user" for user messages.
+            dict: The instructions for the current page.
         """
-        return {
-            "role": "user",
-            "content": f"""You are currently on page: {self.current_page.title}. Your goal page is {self.goal_page.title}.""",
-        }
+        return apply_user_format(f"""You are currently on page: {self.current_page.title}. Your goal page is {self.goal_page.title}.""")
 
     @property
     def next_step_instruction(self) -> dict:
         """
-        Generate instructions for the next step.
+        Ask the agent "What's the next step?" after making a tool call, formatted as a user prompt.
 
         Returns:
-            dict: The instructions for the next step. "role" is "user" for user messages.
+            dict: The instructions for the next step.
         """
-        return {
-            "role": "user",
-            "content": f"What's your next step?",
-        }
+        return apply_user_format(f"What's your next step?")
 
     def check_win(self) -> bool:
         return self.current_page == self.goal_page
@@ -539,7 +530,7 @@ The basic WikiAgent will need these two tools at minimum to play the game:
 1. `GetContentTool`: This returns the full content of the current page, with all the wiki-links wrapped in `<link></link>` tags (as otherwise they are presented as strings and indistinguishable from normal text). As implementing this involves annoying regex, we have done this for you, but you should fill in the `description()` property.
 2. `MovePageTool`: This executes moving to a new given page when called and updates the `WikiGame` task state if successful. You should implement both the `execute()` function and the `description()` property.
 
-When formatting this tool list, refer back to the solution for you wrote for the arithmetic game, or the OpenAI docs [here](https://platform.openai.com/docs/guides/function-calling).
+When formatting this tool list, refer back to your code for the arithmetic game, or the OpenAI function-calling docs [here](https://platform.openai.com/docs/guides/function-calling).
 
 <details><summary>Why not just use <code>WikipediaPage.links()</code> to get a list of links directly?</summary>
 
@@ -558,12 +549,12 @@ class GetContentTool():
     name: str = "get_content"
 
     @staticmethod
-    def execute(task: WikiGame | Any) -> str:
+    def execute(task: WikiGame) -> str:
         """
         Get all the content for the wikipedia page you are currently on. Anything which corresponds to a link is wrapped in <link></link> tags.
 
         Args:
-            task (WikiGame | Any): The current task object.
+            task (WikiGame): The current task object.
 
         Returns:
             str: The content of the page with links wrapped
@@ -596,7 +587,7 @@ class MovePageTool():
     name: str = "move_page"
 
     @staticmethod
-    def execute(new_page: str, task: Any) -> str:
+    def execute(new_page: str, task: WikiGame) -> str:
         """
         Changes your current page to a specified new page which is accessible via a link from the current page. You can only call this function once at a time, as it will take you to a different page.
 
@@ -634,12 +625,12 @@ class GetContentTool():
     name = "get_content"
 
     @staticmethod
-    def execute(task: WikiGame | Any) -> str:
+    def execute(task: WikiGame) -> str:
         """
         Get all the content for the wikipedia page you are currently on. Anything which corresponds to a link is wrapped in <link></link> tags.
 
         Args:
-            task (WikiGame | Any): The current task object.
+            task (WikiGame): The current task object.
 
         Returns:
             str: The content of the page with links wrapped
@@ -682,7 +673,7 @@ class MovePageTool():
     name = "move_page"
 
     @staticmethod
-    def execute(new_page: str, task: Any) -> str:
+    def execute(new_page: str, task: WikiGame) -> str:
         """
         Changes your current page to a specified new page which is accessible via a link from the current page. You can only call this function once at a time, as it will take you to a different page.
 
@@ -766,7 +757,7 @@ class WikiAgent(SimpleAgent):
         model (str): The model used for generating responses (inherited)
         tools (List[Any]): List of tools (inherited)
         client (OpenAI): OpenAI client for API calls (inherited)
-        task (Any): The current task being executed
+        task (WikiGame): The current task being executed
         chat_history (List[dict]): History of interactions (inherited)
 
     Methods:
@@ -783,7 +774,7 @@ class WikiAgent(SimpleAgent):
 
     def __init__(
         self,
-        task: Any,
+        task: WikiGame,
         tools: List[Any],
         model="gpt-4o-mini",
         chat_history: List[dict] = None,
@@ -801,13 +792,13 @@ class WikiAgent(SimpleAgent):
     # ========================= Memory (to implement) =========================
 
     def update_history(
-        self, message: str | ChatCompletionMessage | List[str | ChatCompletionMessage]
+        self, message: dict[str,str] | ChatCompletionMessage | List[dict[str,str] | ChatCompletionMessage]
     ):
         """
         Update self.chat_history and self.full_chat_history with a message or list of messages.
 
         Args:
-            message (str | List[str]): The message to add to the chat history
+            message (dict[str, str] | ChatCompletionMessage | List[dict[str, str] | ChatCompletionMessage]): The message to add to the chat history
         """
         pass
 
@@ -871,7 +862,7 @@ class WikiAgent(SimpleAgent):
         model (str): The model used for generating responses (inherited)
         tools (List[Any]): List of tools (inherited)
         client (OpenAI): OpenAI client for API calls (inherited)
-        task (Any): The current task being executed
+        task (WikiGame): The current task being executed
         chat_history (List[dict]): History of interactions (inherited)
 
     Methods:
@@ -888,7 +879,7 @@ class WikiAgent(SimpleAgent):
 
     def __init__(
         self,
-        task: Any,
+        task: WikiGame,
         tools: List[Any],
         model="gpt-4o-mini",
         chat_history: List[dict] = None,
@@ -904,13 +895,13 @@ class WikiAgent(SimpleAgent):
         self.start()
 
     def update_history(
-        self, message: str | ChatCompletionMessage | List[str | ChatCompletionMessage]
+        self, message: dict[str,str] | ChatCompletionMessage | List[dict[str,str] | ChatCompletionMessage]
     ):
         """
         Update self.chat_history and self.full_chat_history with a message or list of messages.
 
         Args:
-            message (str | List[str]): The message to add to the chat history
+            message (dict[str, str] | ChatCompletionMessage | List[dict[str,str] | ChatCompletionMessage]): The message to add to the chat history
         """
         if isinstance(message, list):
             self.chat_history.extend(message)

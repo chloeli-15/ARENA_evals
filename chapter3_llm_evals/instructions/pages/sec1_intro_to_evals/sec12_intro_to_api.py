@@ -148,8 +148,7 @@ You should fill in the `generate_response` function below. It should:
 * The function should print the messages if `verbose=True`.
 
 ```python
-@retry_with_exponential_backoff
-def generate_response(client, 
+def generate_response(client : OpenAI, 
                       model: str, 
                       messages:Optional[List[dict]]=None, 
                       user:Optional[str]=None, 
@@ -160,6 +159,7 @@ def generate_response(client,
     Generate a response using the OpenAI API.
 
     Args:
+        client (OpenAI): The OpenAI client object.
         model (str): The name of the OpenAI model to use (e.g., "gpt-4o-mini").
         messages (Optional[List[dict]]): A list of message dictionaries with 'role' and 'content' keys. 
                                          If provided, this takes precedence over user and system args.
@@ -194,7 +194,7 @@ print(response)
 
 ```python
 @retry_with_exponential_backoff
-def generate_response(client,
+def generate_response(client : OpenAI,
                       model: str, 
                       messages:Optional[List[dict]]=None, 
                       user:Optional[str]=None, 
@@ -365,7 +365,7 @@ def retry_with_exponential_backoff(
     """
 
     def wrapper(*args, **kwargs):       
-        sleep_time = intial_sleep_time
+        sleep_time = initial_sleep_time
 
         for _ in range(max_retries):
             try:
@@ -384,5 +384,13 @@ def retry_with_exponential_backoff(
    
 </details>
 
+Now we'll use our `retry_with_exponential_backoff` decorator to wrap our `generate_response` function:
+
+```python
+#Wrap our generate response function with the retry_with_exponential_backoff decorator
+generate_response = retry_with_exponential_backoff(generate_response)
+```
+
+This is the `generate_response()` function that we'll use from here on out, since we'll always want to adjust our API calls in response to rate limits.
 
 ''', unsafe_allow_html=True)

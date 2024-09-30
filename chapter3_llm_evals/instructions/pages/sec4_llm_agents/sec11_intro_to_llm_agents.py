@@ -30,7 +30,7 @@ def section():
 
 > ### Learning objectives
 >- Understand why we want to evaluate LLM agents.
->- Red resources about LLM agent evaluations to understand the current state of the field.
+>- Read resources about LLM agent evaluations to understand the current state of the field.
 >- Understand the common failure modes of LLM agents.
 >
 ## What is an LLM agent?

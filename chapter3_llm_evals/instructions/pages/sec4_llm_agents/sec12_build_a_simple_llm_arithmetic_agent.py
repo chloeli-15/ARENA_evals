@@ -23,7 +23,7 @@ def section():
 
     st.markdown(
         r'''
-# Building a Simple Arithemtic Agent
+# Building a Simple Arithmetic Agent
 
 > ### Learning objectives
 >- Understand that a LLM agent is just a "glorified for-loop" (of the scaffolding program interacting with the LLM API).
@@ -77,7 +77,7 @@ We will build a toy task called `ArithmeticTask`. This task takes in two numbers
 
 - Get the current problem (e.g. at the start this will be "Calculate `num1` + `num2`")
 - Check if a given answer is correct
-- Update the current problem if the model answer was correct, or after a certain number of attempts
+- Update the current problem if the model answer was correct, (or if the model refuses to answer the question).
 - Check if all problems have been solved
 
 **How to handle calculations?** We have implemented a helper function `evaluate_expression()` to evaluate the arithmetic expressions, which you should use in your implementation of `execute()`. `evaluate_expression()` takes an arithmetic expression as a string (e.g. "3+5") and returns the result as a string (e.g. "8.0").
@@ -118,14 +118,14 @@ class ArithmeticTask:
         return ""
 
     @property
-    def current_task_instruction(self) -> str:
+    def instruction(self) -> dict:
         """
         Gets a string containing instructions for the current task for the agent. This will be fed to the agent as a user prompt.
 
         Returns:
-            str: A string containing the instructions for the current task
+            dict: A dictionary containing the instructions for the current task, formatted as a user prompt.
         """
-        return ""
+        return {}
 
     def check_solved(self) -> bool:
         """
@@ -136,7 +136,7 @@ class ArithmeticTask:
         """
         return True
 
-    def check_answer(self, model_answer: str) -> bool:
+    def check_answer(self, model_answer: str | float) -> bool:
         """
         Checks if the model's answer is correct
 
@@ -228,14 +228,14 @@ class ArithmeticTask:
         return f"{str(self.num1)} {self.operations[self.current_task_number]} {str(self.num2)}"
 
     @property
-    def instruction(self) -> str:
+    def instruction(self) -> dict:
         """
         Gets a string containing instructions for the current task for the agent. (This will be fed to the agent as a user prompt)
 
         Returns:
-            str: A string containing the instructions for the current task
+            dict: A dictionary containing the instructions for the current task, formatted as a user prompt.
         """
-        return f"Calculate the result of the following expression: {str(self.num1)} {self.operations[self.current_task_number]} {str(self.num2)}. Give your final answer in the format: <answer>NUMBER</answer>, where NUMBER is a numerical value"
+        return apply_user_format(f"Calculate the result of the following expression: {str(self.num1)} {self.operations[self.current_task_number]} {str(self.num2)}. Give your final answer in the format: <answer>NUMBER</answer>, where NUMBER is a numerical value")
 
     def check_solved(self) -> bool:
         """
@@ -246,7 +246,7 @@ class ArithmeticTask:
         """
         return all(self.is_solved.values())
 
-    def check_answer(self, model_answer: str) -> bool:
+    def check_answer(self, model_answer: str | float) -> bool:
         """
         Checks if the model's answer is correct
 
@@ -274,7 +274,7 @@ class ArithmeticTask:
 
 ## Tool use via function calling
 
-The simplest way for LLMs to take actions is via function calling. **Function calling** is an built-in feature of LLM Chat APIs that allows models to use external "tools" (i.e. Python functions, APIs) by simply receiving and outputing text. This involves 5 simple steps:
+The simplest way for LLMs to take actions is via function calling. **Function calling** is a built-in feature of LLM Chat APIs that allows models to use external "tools" (i.e. Python functions, APIs) by simply receiving and outputing text. This involves 5 simple steps:
 
 1. Pick a function in your codebase that the model should be able to call
 2. Describe your function in the syntax of the model's API so the model knows how to call it
@@ -374,13 +374,13 @@ class CalculateTool():
     name = "calculate"
 
     @staticmethod
-    def execute(expression: str, task: Any = None) -> str:
+    def execute(expression: str, task: Optional[ArithmeticTask] = None) -> str:
         """
         Evaluates the string expression in Python using `evaluate_expression()` and returns the result as a string
 
         Args:
             expression (str): The arithmetic expression to evaluate
-            task (Any): Not used in this function
+            task (ArithmeticTask | None): Not used in this function
 
         Returns:
             str: The result of the arithmetical expression as a string
@@ -393,7 +393,7 @@ class CalculateTool():
         Provides the description of the tool
 
         Returns:
-            dict: The description of the tool
+            dict: The JSON description of the tool for the OpenAI API
         """
 
         return {}
@@ -415,20 +415,20 @@ class CalculateTool():
         name (str): The name of the tool
 
     Methods:
-        - execute(task: Any, input: str) -> str: Executes the tool on the input and returns the result as a string.
+        - execute(task: Optional[], input: str) -> str: Executes the tool on the input and returns the result as a string.
         - description() -> str: Returns a description of the tool.
     
     """
     name = "calculate"
 
     @staticmethod
-    def execute(expression: str, task: Any = None) -> str:
+    def execute(expression: str, task: Optional[ArithmeticTask] = None) -> str:
         """
         Evaluates the string expression in Python using `evaluate_expression()` and returns the result as a string
 
         Args:
             expression (str): The arithmetic expression to evaluate
-            task (Any): Not used in this function
+            task (ArithmeticTask | None): Not used in this function
 
         Returns:
             str: The result of the arithmetical expression as a string
@@ -444,7 +444,7 @@ class CalculateTool():
         Provides the description of the tool
 
         Returns:
-            dict: The description of the tool
+            dict: The JSON description of the tool for the OpenAI API
         """
 
         return {
@@ -714,8 +714,8 @@ class SimpleAgent:
             str: The response from the model
         """
         print(f"Running SimpleAgent...")
-        instruction = self.task.current_task_instruction
-        self.chat_history.append(apply_user_format(instruction))
+        instruction = self.task.instruction
+        self.chat_history.append(instruction)
         response = self.get_response(use_tool=with_tool)
         return response
 
@@ -796,7 +796,7 @@ class SimpleAgent:
         """
         print(f"Running SimpleAgent...")
         instruction = self.task.instruction
-        self.chat_history.append(apply_user_format(instruction))
+        self.chat_history.append(instruction)
         response = self.get_response(use_tool=with_tool)
         return response
 ```
@@ -829,9 +829,9 @@ class ArithmeticAgent(SimpleAgent):
 
     Attributes:
         model (str): The model used for generating responses (inherited)
-        tool_descriptions (List[dict]): List of tool descriptions (inherited)
+        tools (List[Any]): List of tools (inherited)
         client (OpenAI): OpenAI client for API calls (inherited)
-        task (Any): The current task being executed (inherited)
+        task (ArithmeticTask): The current task being executed (inherited)
         chat_history (List[dict]): History of interactions (inherited)
 
     Methods:
@@ -842,13 +842,13 @@ class ArithmeticAgent(SimpleAgent):
             Execute tool calls from the model's response (inherited)
 
         run(with_tool: bool = True) -> bool:
-            Run one loop of the Wikipedia agent
+            Run one loop of the Arithmetic agent
     """
 
     def __init__(
         self,
         model: Literal["gpt-4o-mini"] = "gpt-4o-mini",
-        task: Any = None,
+        task: ArithmeticTask = None,
         tools: Optional[List[Any]] = [Calculator],
         chat_history: List[dict] = None,
         verbose: bool = True,
@@ -920,7 +920,7 @@ class ArithmeticAgent(SimpleAgent):
 ```
 <details><summary>Note on <code>handle_refusal()</code></summary>
 
-The `ChatCompletionMessage` object contains a `refusal` attribute that can be used to determine if the model has refused to answer. If the model has refused to answer, the `refusal` will contain this content and we can print this out. We have included this for completeness, but it is not necessary to implement this function because it almost never occurs in the WikiGame.
+The `ChatCompletionMessage` object contains a `refusal` attribute that can be used to determine if the model has refused to answer. If the model has refused to answer, the `refusal` will contain this content and we can print this out. We have included this for completeness, but it is not necessary to implement this function because it almost never occurs in the Arithmetic Task.
 
 See the [OpenAI API documentation](https://platform.openai.com/docs/guides/function-calling/edge-cases) for more information on the `refusal` attribute.
 
@@ -939,7 +939,7 @@ class ArithmeticAgent(SimpleAgent):
         model (str): The model used for generating responses (inherited)
         tool_descriptions (List[dict]): List of tool descriptions (inherited)
         client (OpenAI): OpenAI client for API calls (inherited)
-        task (Any): The current task being executed (inherited)
+        task (ArithmeticTask): The current task being executed (inherited)
         chat_history (List[dict]): History of interactions (inherited)
 
     Methods:
@@ -950,13 +950,13 @@ class ArithmeticAgent(SimpleAgent):
             Execute tool calls from the model's response (inherited)
 
         run(with_tool: bool = True) -> bool:
-            Run one loop of the Wikipedia agent
+            Run one loop of the Arithmetic agent
     """
 
     def __init__(
         self,
         model: Literal["gpt-4o-mini"] = "gpt-4o-mini",
-        task: Any = None,
+        task: ArithmeticTask = None,
         tools: Optional[List[Any]] = None,
         chat_history: List[dict] = None,
         verbose: bool = True,
@@ -1067,8 +1067,8 @@ class ArithmeticAgent(SimpleAgent):
         # Get the task instruction
         instruction = self.task.instruction
         if self.verbose:
-            print("\nUSER:", instruction)
-        self.chat_history.append(apply_user_format(instruction))
+            print("\nUSER:", instruction["content"])
+        self.chat_history.append(instruction)
 
         # Get the response from the model
         response = self.get_response(use_tool=with_tool)

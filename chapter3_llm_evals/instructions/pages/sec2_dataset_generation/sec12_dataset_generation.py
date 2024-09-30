@@ -246,8 +246,8 @@ mcq_examples = import_json(MCQ_EXAMPLES_FILEPATH)
 gen_prompts.few_shot_examples = mcq_examples
 gen_prompts.num_shots = 4
 
-print("\nSYSTEM:\n",gen_prompts.system_prompt)
-print("\nUSER:\n",gen_prompts.user_prompt)
+print("\nSYSTEM:\n",gen_prompts.get_system_prompt())
+print("\nUSER:\n",gen_prompts.get_user_prompt())
 ```
 
 ```python
@@ -260,7 +260,7 @@ pretty_print_questions(json.loads(response)["questions"])
 <summary>Solution</summary>
 
 ```python
-def get_few_shot_var_user_prompt(self):
+def get_few_shot_user_prompt(self):
     """
     Fills user template f-string and add few-shot examples into the string. Returns the filled few-shot user prompt as a string.
     """
@@ -607,7 +607,7 @@ You should fill in the `query_generator` function. This is the main generator fu
 * Perform the number of API calls necessary to generate any required number of questions (e.g. 300 questions)
 * Execute `generate_formatted_response` concurrently using ThreadPoolExecutor to make API calls 
 * Return a list of JSON questions
-* Use `save_json()` to optionally save the generated the questions to `config.generation_filepath` if defined
+* Use `save_json()` to optionally save the generated questions to `config.generation_filepath` if defined
 
 ```python
 def query_generator(client: OpenAI, total_q_to_gen:int, config: Config, prompts: GenPrompts) -> List[dict]:

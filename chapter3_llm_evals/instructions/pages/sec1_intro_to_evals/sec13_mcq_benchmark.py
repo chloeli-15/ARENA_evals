@@ -150,7 +150,7 @@ The goal of this exercise is explore a range of different questions, and see how
 2. Do these questions still relate to the threat model? If so, where do they fit in? If not, your threat model or your questions or both could be flawed.
 3. Ask your example questions to GPT4o-mini **without the answer options** using `generate_response` and see how it responds:
     - Does the answer show that the model correctly understood the question? If not, you will need to rephrase or come up with a different question.
-    - Given that the model understands the question, is there another question that is more reasonable? (E.g. You designed a decision-making question expecting the model to take one of two actions, but the model responded with a list of factors that it would need to know to make a decision. You may then choose to include information on these factors in your question, so that the model can reach a decision a more naturally.)
+    - Given that the model understands the question, is there another question that is more reasonable? (E.g. You designed a decision-making question expecting the model to take one of two actions, but the model responded with a list of factors that it would need to know to make a decision. You may then choose to include information on these factors in your question, so that the model can reach a decision more naturally.)
 4. Ask your example questions to GPT4o-mini **with** the answer options using `generate_response` and see how it responds:
     - Is its answer different to its freeform response? This may suggest that your answer options are contrived and forcing an unnatural response.
     
@@ -163,7 +163,7 @@ my_questions = import_json("mcq_examples.json")
 
 # Ask the model to answer the questions without answer options
 for question in my_questions:
-    response = generate_response(client, "gpt-4o-mini", user=question["question"])
+    response = generate_response(client, "gpt-4o-mini", system=question["system"] user=question["question"])
     print(f"Question: {question['question']}\n\nModel Answer: {response}\n")
 
 # Ask the model to answer the questions with answer options
@@ -171,7 +171,7 @@ for question in my_questions:
     question_text = question["question"] + "\nChoices:\n"
     for option, answer in question["answers"].items():
         question_text += f"\n({option}) {answer}"
-    response = generate_response(client, "gpt-4o-mini", user=question["question"])
+    response = generate_response(client, "gpt-4o-mini", system=question["system"], user=question_text)
     print(f"Question: {question['question']}\n\nModel Answer: {response}\n")
 ```
 

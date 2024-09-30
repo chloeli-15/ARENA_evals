@@ -49,13 +49,13 @@ class GetAccessiblePageSummaryTool():
     name = "get_accessible_page_summary"
 
     @staticmethod
-    def get_page_summary(task: Any, page_title: str) -> str:
+    def get_page_summary(task: WikiGame, page_title: str) -> str:
         """
         Get summary of a wikipedia page, to the last full stop within the first 500 characters. This is used to give a brief overview of the page to the agent.
 
         Args:
-            page (str): The Wikipedia page title.
-            task (Any): The current task object.
+            page_title (str): The Wikipedia page title.
+            task (WikiGame): The current task object.
 
         Returns:
             str: The summary of the Wikipedia page.
@@ -75,7 +75,7 @@ class GetAccessiblePageSummaryTool():
 
 
 get_accessible_page_summary_tool_inst = GetAccessiblePageSummaryTool()
-wiki_game_tools = [get_content_tool_inst, move_page_tool_inst, test_path_tool_inst, get_accessible_page_summary_tool_inst]
+wiki_game_tools = [get_content_tool_inst, move_page_tool_inst, TestPathTool_inst, get_accessible_page_summary_tool_inst]
 ```
 
 <details><summary>Solution:</summary>
@@ -89,13 +89,13 @@ class GetAccessiblePageSummaryTool():
     name = "get_accessible_page_summary"
 
     @staticmethod
-    def get_page_summary(task: Any, page_title: str) -> str:
+    def get_page_summary(task: WikiGame, page_title: str) -> str:
         """
         Get summary of a wikipedia page, to the last full stop within the first 500 characters. This is used to give a brief overview of the page to the agent.
 
         Args:
             page (str): The Wikipedia page title.
-            task (Any): The current task object.
+            task (WikiGame): The current task object.
 
         Returns:
             str: The summary of the Wikipedia page.
@@ -128,7 +128,7 @@ class GetAccessiblePageSummaryTool():
                     "type": "object",
                     "properties": {
                         "page_title": {
-                            "type": "object",
+                            "type": "string",
                             "description": "The wikipedia page you want to get the summary of.",
                         }
                     },
@@ -143,9 +143,9 @@ class GetAccessiblePageSummaryTool():
 Test your agent on the following game (or come up with your own):
 
 ```python
-wiki_game_tools = [get_content_tool_inst, move_page_tool_inst, test_path_tool_inst, get_accessible_page_summary_tool_inst]
-agent = WikiAgentReAct(game, model="gpt-4o-mini", tools = wiki_game_tools)
-game = WikiGameHistory("William Pitt the Younger", "Central Vietnam", tools = wiki_game_tools)
+wiki_game_tools = [get_content_tool_inst, move_page_tool_inst, TestPathTool_inst, get_accessible_page_summary_tool_inst]
+agent = WikiAgentChatHistory(game, model="gpt-4o-mini", tools = wiki_game_tools)
+game = WikiGameReAct("William Pitt the Younger", "Central Vietnam", tools = wiki_game_tools)
 ```
 
 ### Exercise - Implement an arbitrary page summary/content tool
@@ -167,7 +167,7 @@ class GetAnyPageContent():
     name = "get_any_page_content"
 
     @staticmethod
-    def execute(task: Any, page_title: str | None = None) -> str:
+    def execute(task: WikiGame, page_title: str | None = None) -> str:
         """
         Get the content of any wikipedia page
 
@@ -175,6 +175,7 @@ class GetAnyPageContent():
 
         Args:
             page_title (str): The title of the Wikipedia page
+            task (WikiGame): The current task being run.
 
         Returns:
             str: The content of the page (not wrapped in link tags).
@@ -192,7 +193,7 @@ class GetAnyPageContent():
         return {}
 
 get_any_page_content_tool_inst = GetAnyPageContent()
-wiki_game_tools = [get_content_tool_inst, move_page_tool_inst, test_path_tool_inst, get_any_page_content_tool_inst]
+wiki_game_tools = [get_content_tool_inst, move_page_tool_inst, TestPathTool_inst, get_any_page_content_tool_inst]
 ```
 
 <details><summary>Solution:</summary>
@@ -206,7 +207,7 @@ class GetAnyPageContent():
     name = "get_any_page_content"
 
     @staticmethod
-    def execute(task: Any, page_title: str | None = None) -> str:
+    def execute(task: WikiGame, page_title: str | None = None) -> str:
         """
         Get the content of any wikipedia page
 
@@ -214,6 +215,7 @@ class GetAnyPageContent():
 
         Args:
             page_title (str): The title of the Wikipedia page
+            task (WikiGame): The current task being run.
 
         Returns:
             str: The content of the page (not wrapped in link tags).
@@ -252,7 +254,7 @@ class GetAnyPageContent():
                     "type": "object",
                     "properties": {
                         "page_title": {
-                            "type": "object",
+                            "type": "string",
                             "description": "The wikipedia page you want to get the content of.",
                         }
                     },
@@ -267,8 +269,8 @@ class GetAnyPageContent():
 Test your agent on the following game:
 
 ```python
-agent = WikiAgentReAct(game, model="gpt-4o-mini", tools = wiki_game_tools)
-game = WikiGameHistory("49th Fighter Training Squadron", "Rosenhan experiment", tools = wiki_game_tools)
+agent = WikiAgentChatHistory(game, model="gpt-4o-mini", tools = wiki_game_tools)
+game = WikiGameReAct("49th Fighter Training Squadron", "Rosenhan experiment", tools = wiki_game_tools)
 agent_loop_ReAct(game, agent, 30)
 ```
 
@@ -281,9 +283,9 @@ Importance: 🔵⚪⚪⚪⚪
 Allow the game to have additional rules. Some suggestions are a "No country" rule, and a "No articles above a given length" rule, but feel free to add more if you think of any others. With all of our elicitation methods, the agent generally only fails if the path is impossible or unreasonably hard. To implement a no country rule, you may want to use the wikipedia API's "categories" attribute for `WikipediaPage` objects.
 
 ```python
-class WikiGameRules(WikiGameHistory):
+class WikiGameRules(WikiGameReAct):
     """
-    Inherits from WikiGameHistory and adds the ability to store and display the rules of the game.
+    Inherits from WikiGameReAct and adds the ability to store and display the rules of the game.
 
     Attributes:
         starting_page (str): The title of the starting page (inherited)
@@ -340,7 +342,7 @@ class WikiGameRules(WikiGameHistory):
 ```python
 class WikiGameRules(WikiGameReAct):
     """
-    Inherits from WikiGameHistory and adds the ability to store and display the rules of the game.
+    Inherits from WikiGameReAct and adds the ability to store and display the rules of the game.
 
     Attributes:
         starting_page (str): The title of the starting page (inherited)
@@ -415,7 +417,7 @@ class MovePageTool_rules(MovePageTool):
     """
 
     @staticmethod
-    def execute(new_page: str, task: Any) -> str:
+    def execute(new_page: str, task: WikiGame) -> str:
         """
         Changes your current page to a specified new page which is accessible via a link from the current page. You can only call this function once at a time, as it will take you to a different page.
 
@@ -451,7 +453,7 @@ class MovePageTool_rules(MovePageTool):
     """
 
     @staticmethod
-    def execute(new_page: str, task: Any) -> str:
+    def execute(new_page: str, task: WikiGame) -> str:
         """
         Changes your current page to a specified new page which is accessible via a link from the current page. You can only call this function once at a time, as it will take you to a different page.
 

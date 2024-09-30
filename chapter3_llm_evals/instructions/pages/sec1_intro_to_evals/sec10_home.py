@@ -79,7 +79,7 @@ Diagram note: The double arrows indicate that the steps iteratively help refine 
 
 #### 2️⃣ MCQ Benchmarks: Exploration
 
-Here, we'll to generate and refine 20 MC questions until we are happy that they evaluate the target property. We will use LLMs to help us generate, red-team and refine these questions.
+Here, we'll generate and refine 20 MC questions until we are happy that they evaluate the target property. We will use LLMs to help us generate, red-team and refine these questions.
 
 > ##### Learning objectives
 > 

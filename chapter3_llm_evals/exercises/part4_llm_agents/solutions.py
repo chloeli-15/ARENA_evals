@@ -25,7 +25,7 @@ section_dir = (exercises_dir / "part3_run_evals_with_inspect").resolve()
 if str(exercises_dir) not in sys.path: sys.path.append(str(exercises_dir))
 os.chdir(exercises_dir)
 from utils import countrylist
-from utils import evaluate_expression, apply_user_format, apply_assistant_format, establish_client_anthropic, establish_client_OpenAI, retry_with_exponential_backoff
+from utils import evaluate_expression, apply_user_format, apply_assistant_format, apply_system_format, establish_client_anthropic, establish_client_OpenAI, retry_with_exponential_backoff
 
 MAIN = __name__ == '__main__'
 # Test the function
@@ -70,14 +70,14 @@ class ArithmeticTask:
         return f"{str(self.num1)} {self.operations[self.current_task_number]} {str(self.num2)}"
 
     @property
-    def instruction(self) -> str:
+    def instruction(self) -> dict:
         """
-        Gets a string containing instructions for the current task for the agent. (This will be fed to the agent as a user prompt)
+        Gets a string containing instructions for the current task for the agent. This will be fed to the agent as a user prompt.
 
         Returns:
-            str: A string containing the instructions for the current task
+            dict: A dictionary containing the instructions for the current task, formatted as a user prompt.
         """
-        return f"Calculate the result of the following expression: {str(self.num1)} {self.operations[self.current_task_number]} {str(self.num2)}. Give your final answer in the format: <answer>NUMBER</answer>, where NUMBER is a numerical value"
+        return apply_user_format(f"Calculate the result of the following expression: {str(self.num1)} {self.operations[self.current_task_number]} {str(self.num2)}. Give your final answer in the format: <answer>NUMBER</answer>, where NUMBER is a numerical value")
 
     def check_solved(self) -> bool:
         """
@@ -88,7 +88,7 @@ class ArithmeticTask:
         """
         return all(self.is_solved.values())
 
-    def check_answer(self, model_answer: str) -> bool:
+    def check_answer(self, model_answer: str | float) -> bool:
         """
         Checks if the model's answer is correct
 
@@ -146,13 +146,13 @@ class CalculateTool():
     name = "calculate"
 
     @staticmethod
-    def execute(expression: str, task: Any = None) -> str:
+    def execute(expression: str, task: Optional[ArithmeticTask] = None) -> str:
         """
         Evaluates the string expression in Python using `evaluate_expression()` and returns the result as a string
 
         Args:
             expression (str): The arithmetic expression to evaluate
-            task (Any): Not used in this function
+            task (ArithmeticTask | None): Not used in this function
 
         Returns:
             str: The result of the arithmetical expression as a string
@@ -308,9 +308,12 @@ class SimpleAgent:
         for tool_call in tool_calls:
             if not self.task:
                 raise ValueError("Task is not set. Cannot execute tool calls.")
-            func = next(
-                (tool for tool in self.tools if tool.name == tool_call.function.name),
-            )
+            try:
+                func = next(
+                    (tool for tool in self.tools if tool.name == tool_call.function.name),
+                            )
+            except StopIteration:
+                raise ValueError(f"Tool {tool_call.function.name} not found.")
             arguments = json.loads(tool_call.function.arguments)
             tool_response = func.execute(**arguments, task=self.task)
             tool_responses.append(tool_response)
@@ -330,7 +333,7 @@ class SimpleAgent:
         """
         print(f"Running SimpleAgent...")
         instruction = self.task.instruction
-        self.chat_history.append(apply_user_format(instruction))
+        self.chat_history.append(instruction)
         response = self.get_response(use_tool=with_tool)
         return response
 
@@ -348,9 +351,9 @@ class ArithmeticAgent(SimpleAgent):
 
     Attributes:
         model (str): The model used for generating responses (inherited)
-        tool_descriptions (List[dict]): List of tool descriptions (inherited)
+        tools (List[Any]): List of tools (inherited)
         client (OpenAI): OpenAI client for API calls (inherited)
-        task (Any): The current task being executed (inherited)
+        task (ArithmeticTask): The current task being executed (inherited)
         chat_history (List[dict]): History of interactions (inherited)
 
     Methods:
@@ -367,7 +370,7 @@ class ArithmeticAgent(SimpleAgent):
     def __init__(
         self,
         model: Literal["gpt-4o-mini"] = "gpt-4o-mini",
-        task: Any = None,
+        task: ArithmeticTask = None,
         tools: Optional[List[Any]] = None,
         chat_history: List[dict] = None,
         verbose: bool = True,
@@ -478,8 +481,8 @@ class ArithmeticAgent(SimpleAgent):
         # Get the task instruction
         instruction = self.task.instruction
         if self.verbose:
-            print("\nUSER:", instruction)
-        self.chat_history.append(apply_user_format(instruction))
+            print("\nUSER:", instruction["content"])
+        self.chat_history.append(instruction)
 
         # Get the response from the model
         response = self.get_response(use_tool=with_tool)
@@ -633,8 +636,8 @@ def get_permitted_links(current_page: WikipediaPage) -> list[str]:
 
     """
     all_links = current_page.links
-    content = current_page.content
-    permitted_links = [link for link in all_links if link in content]
+    content_lower = current_page.content.lower()
+    permitted_links = [link for link in all_links if link.lower() in content_lower]
     return permitted_links
 
 #%%
@@ -766,41 +769,32 @@ class WikiGame:
     @property
     def system_instruction(self) -> dict:
         """
-        Generate the starting instructions for the game.
+        Generate the starting instructions for the game, formatted as a system prompt.
 
         Returns:
-            dict: The starting instructions. "role" is "system" for system messages.
+            dict: The starting instructions.
         """
-        return {
-            "role": "system",
-            "content": "You are a wikipedia-racing AI. Your aim is to reach the goal page by accessing links from a series of wikipedia pages.",
-        }
+        return apply_system_format("You are a wikipedia-racing AI. Your aim is to reach the goal page by accessing links from a series of wikipedia pages.")
 
     @property
     def on_page_instruction(self) -> dict:
         """
-        Generate instructions for the current page.
+        Tell the agent what page they are on and give a summary of the page, formatted as a user prompt.
 
         Returns:
-            dict: The instructions for the current page. "role" is "user" for user messages.
+            dict: The instructions for the current page.
         """
-        return {
-            "role": "user",
-            "content": f"""You are currently on page: {self.current_page.title}. Your goal page is {self.goal_page.title}.""",
-        }
+        return apply_user_format("""You are currently on page: {self.current_page.title}. Your goal page is {self.goal_page.title}.""")
 
     @property
     def next_step_instruction(self) -> dict:
         """
-        Generate instructions for the next step.
+        Ask the agent "What's the next step?" after making a tool call, formatted as a user prompt.
 
         Returns:
-            dict: The instructions for the next step. "role" is "user" for user messages.
+            dict: The instructions for the next step.
         """
-        return {
-            "role": "user",
-            "content": f"What's your next step?",
-        }
+        return apply_user_format(f"What's your next step?")
 
     def check_win(self) -> bool:
         return self.current_page == self.goal_page
@@ -811,12 +805,12 @@ class GetContentTool():
     name = "get_content"
 
     @staticmethod
-    def execute(task: WikiGame | Any) -> str:
+    def execute(task: WikiGame) -> str:
         """
         Get all the content for the wikipedia page you are currently on. Anything which corresponds to a link is wrapped in <link></link> tags.
 
         Args:
-            task (WikiGame | Any): The current task object.
+            task (WikiGame): The current task object.
 
         Returns:
             str: The content of the page with links wrapped
@@ -859,7 +853,7 @@ class MovePageTool():
     name = "move_page"
 
     @staticmethod
-    def execute(new_page: str, task: Any) -> str:
+    def execute(new_page: str, task: WikiGame) -> str:
         """
         Changes your current page to a specified new page which is accessible via a link from the current page. You can only call this function once at a time, as it will take you to a different page.
 
@@ -919,7 +913,7 @@ class WikiAgent(SimpleAgent):
         model (str): The model used for generating responses (inherited)
         tools (List[Any]): List of tools (inherited)
         client (OpenAI): OpenAI client for API calls (inherited)
-        task (Any): The current task being executed
+        task (WikiGame): The current task being executed
         chat_history (List[dict]): History of interactions (inherited)
 
     Methods:
@@ -936,7 +930,7 @@ class WikiAgent(SimpleAgent):
 
     def __init__(
         self,
-        task: Any,
+        task: WikiGame,
         tools: List[Any],
         model="gpt-4o-mini",
         chat_history: List[dict] = None,
@@ -952,7 +946,7 @@ class WikiAgent(SimpleAgent):
         self.start()
 
     def update_history(
-        self, message: str | ChatCompletionMessage | List[str | ChatCompletionMessage]
+        self, message: dict[str, str] | ChatCompletionMessage | List[dict[str, str] | ChatCompletionMessage]
     ):
         """
         Update self.chat_history and self.full_chat_history with a message or list of messages.
@@ -1143,12 +1137,9 @@ class WikiGamePrompting(WikiGame):
         Provide improved starting instructions for the game.
 
         Returns:
-            dict: The starting instructions. "role" is "system" for system messages.
+            dict: The starting instructions.
         """
-        return {
-            "role": "system",
-            "content": f"You are a wikipedia-racing AI. Your goal is to reach {self.goal_page.title} by accessing links from wikipedia pages. Your current page is {self.current_page.title}.",
-        }
+        return apply_system_format("content": f"You are a wikipedia-racing AI. Your goal is to reach {self.goal_page.title} by accessing links from wikipedia pages. Your current page is {self.current_page.title}.")
 
     @property
     def on_page_instruction(self):
@@ -1156,13 +1147,9 @@ class WikiGamePrompting(WikiGame):
         Provide improved instructions for the current page.
 
         Returns:
-            dict: The instructions for the current page. "role" is "user" for user messages.
+            dict: The instructions for the current page.
         """
-        return {
-            "role": "user",
-            "content": f"""You are currently on page: {self.current_page.title}. Make sure you start by reasoning about what steps you should take to get to the article on {self.goal_page.title}. When coming up with a strategy, make sure to pay attention to the path you have already taken, and if your current strategy doesn't seem to be working out, try something else. In case you're unsure, {self.goal_page.title} has the following summary:\n\n[Begin Summary]\n{self.get_page_summary(self.goal_page)}\n[End Summary]\n\nThe path you have taken so far is {" -> ".join(self.page_history)}.
-            """,
-        }
+        return apply_user_format(f"""You are currently on page: {self.current_page.title}. Make sure you start by reasoning about what steps you should take to get to the article on {self.goal_page.title}. When coming up with a strategy, make sure to pay attention to the path you have already taken, and if your current strategy doesn't seem to be working out, try something else. In case you're unsure, {self.goal_page.title} has the following summary:\n\n[Begin Summary]\n{self.get_page_summary(self.goal_page)}\n[End Summary]\n\nThe path you have taken so far is {" -> ".join(self.page_history)}.""")
 
     @property
     def next_step_instruction(self):
@@ -1170,13 +1157,10 @@ class WikiGamePrompting(WikiGame):
         Provide improved instructions for the next step.
 
         Returns:
-            dict: The instructions for the next step. "role" is "user" for user messages.
+            dict: The instructions for the next step.
         """
 
-        return {
-            "role": "user",
-            "content": f"What's your next step to get to {self.goal_page.title}?",
-        }
+        return apply_user_format(f"What's your next step to get to {self.goal_page.title}?")
 
 #%%
 if MAIN:
@@ -1232,13 +1216,10 @@ class WikiGameReAct(WikiGamePrompting):
         Provided a description of the tools in the system message. When generate is called with tools this is redundant, but when generate is called without tools, this is useful.
 
         Returns:
-            dict: The starting instructions. "role" is "system" for system messages.
+            dict: The starting instructions.
         """
         tool_descriptions = "\n".join([tool.description["function"]["name"] + ":" + tool.description["function"]["description"] for tool in self.tools])
-        return {
-            "role": "system",
-            "content": f"""You are a wikipedia-racing AI. Your goal is to reach {self.goal_page.title} by accessing links from wikipedia pages. Your current page is {self.current_page.title}. You have access to {str(len(self.tools))} tools, which are:\n{tool_descriptions}""",
-        }
+        return apply_system_format(f"""You are a wikipedia-racing AI. Your goal is to reach {self.goal_page.title} by accessing links from wikipedia pages. Your current page is {self.current_page.title}. You have access to {str(len(self.tools))} tools, which are:\n{tool_descriptions}""")
 
 
 class WikiAgentReAct(WikiAgent):
@@ -1249,7 +1230,7 @@ class WikiAgentReAct(WikiAgent):
         model (str): The model used for generating responses (inherited)
         tools (List[Any]): List of tools (inherited)
         client (OpenAI): OpenAI client for API calls (inherited)
-        task (Any): The current task being executed (inherited)
+        task (WikiGame): The current task being executed (inherited)
         chat_history (List[dict]): History of interactions (inherited)
 
     Methods:
@@ -1278,9 +1259,7 @@ class WikiAgentReAct(WikiAgent):
         # Get the model to reason about the current state of the game and add the response to the messages (you may not want to give it tools for this)
         self.chat_history.append(
             apply_user_format(
-                "Think carefully about your current situation and what actions you want to take to get closer to"
-                + self.task.goal_page.title
-                + "."
+                f"Think carefully about your current situation and what actions you want to take to get closer to {self.task.goal_page.title}."
             )
         )
         response = self.get_response(use_tool=False)
@@ -1292,7 +1271,7 @@ class WikiAgentReAct(WikiAgent):
         response = self.get_response(use_tool=True)
         return response
 
-    def generate_reason_and_action(self):
+    def generate_reason_and_action(self) -> ChatCompletionMessage:
         """
         Generate a reason, store this in history, then generate and return an action.
         """
@@ -1361,14 +1340,14 @@ class TestPathTool():
         name (str): The name of the tool
 
     Methods:
-        execute(task: Any, path: str) -> str: Test if a given path is valid.
+        execute(task: WikiGame, path: str) -> str: Test if a given path is valid.
 
         description -> dict: Provides the description of the test_path tool for the API
     """
     
     name = "test_path"
 
-    def execute(self, task: Any, path: str) -> str:
+    def execute(self, task: WikiGame, path: str) -> str:
         """
         Test if a given path is valid.
 
@@ -1429,7 +1408,7 @@ class WikiAgentChatHistory(WikiAgentReAct):
         model (str): The model used for generating responses (inherited)
         tools (List[Any]): List of tools (inherited)
         client (OpenAI): OpenAI client for API calls (inherited)
-        task (Any): The current task being executed (inherited)
+        task (WikiGame): The current task being executed (inherited)
         chat_history (List[dict]): History of interactions (inherited)
         full_chat_history (List[dict]): Full history of interactions
 
@@ -1485,13 +1464,13 @@ class GetAccessiblePageSummaryTool():
     name = "get_accessible_page_summary"
 
     @staticmethod
-    def get_page_summary(task: Any, page_title: str) -> str:
+    def get_page_summary(task: WikiGame, page_title: str) -> str:
         """
         Get summary of a wikipedia page, to the last full stop within the first 500 characters. This is used to give a brief overview of the page to the agent.
 
         Args:
             page (str): The Wikipedia page title.
-            task (Any): The current task object.
+            task (WikiGame): The current task object.
 
         Returns:
             str: The summary of the Wikipedia page.
@@ -1555,13 +1534,14 @@ class GetAnyPageContent():
     name = "get_any_page_content"
 
     @staticmethod
-    def execute(task: Any, page_title: str | None = None) -> str:
+    def execute(task: WikiGame, page_title: str | None = None) -> str:
         """
         Get the content of any wikipedia page
 
         Also provides current page content if no page_title is provided.
 
         Args:
+            task (WikiGame): The current task object.
             page_title (str): The title of the Wikipedia page
 
         Returns:
@@ -1624,7 +1604,7 @@ if MAIN:
 
 class WikiGameRules(WikiGameReAct):
     """
-    Inherits from WikiGameHistory and adds the ability to store and display the rules of the game.
+    Inherits from WikiGameReAct and adds the ability to store and display the rules of the game.
 
     Attributes:
         starting_page (str): The title of the starting page (inherited)
@@ -1661,19 +1641,13 @@ class WikiGameRules(WikiGameReAct):
         Provide improved starting instructions for the game.
 
         Returns:
-            dict: The starting instructions. "role" is "system" for system messages.
+            dict: The starting instructions.
         """
         tool_descriptions = "\n".join([tool.description["function"]["name"] + ":" + tool.description["function"]["description"] for tool in self.tools])
         if self.rules:
-            return {
-            "role" : "system",
-            "content" : f"""You are a wikipedia-racing AI. Your goal is to reach {self.goal_page.title} by accessing links from wikipedia pages. Your current page is {self.current_page.title}. You have access to {str(len(self.tools))} tools, which are:\n{tool_descriptions}\n\nThe additional rules of the game are: {",".join(self.rules)}"""
-        }
+            return apply_system_format(f"""You are a wikipedia-racing AI. Your goal is to reach {self.goal_page.title} by accessing links from wikipedia pages. Your current page is {self.current_page.title}. You have access to {str(len(self.tools))} tools, which are:\n{tool_descriptions}\n\nThe additional rules of the game are: {",".join(self.rules)}""")
         else:
-            return {
-            "role" : "system",
-            "content" : f"""You are a wikipedia-racing AI. Your goal is to reach {self.goal_page.title} by accessing links from wikipedia pages. Your current page is {self.current_page.title}. You have access to {str(len(self.tools))} tools, which are:\n{tool_descriptions}"""
-        }
+            return apply_system_format(f"""You are a wikipedia-racing AI. Your goal is to reach {self.goal_page.title} by accessing links from wikipedia pages. Your current page is {self.current_page.title}. You have access to {str(len(self.tools))} tools, which are:\n{tool_descriptions}""")
 
     @property
     def on_page_instruction(self):
@@ -1681,12 +1655,9 @@ class WikiGameRules(WikiGameReAct):
         Provide improved instructions for the current page.
 
         Returns:
-            dict: The instructions for the current page. "role" is "user" for user messages.
+            dict: The instructions for the current page.
         """
-        return {
-            "role" : "user",
-            "content" : f"""You are currently on page: {self.current_page.title}. Make sure you start by reasoning about what steps you should take to get to the article on {self.goal_page.title}. When coming up with a strategy, make sure to pay attention to the path you have already taken, and if your current strategy doesn't seem to be working out, try something else. In case you're unsure, {self.goal_page.title} has the following summary:\n[Begin Summary]\n{self.get_page_summary(self.goal_page)}\n[End Summary]\n\nThe pages you've visited so far are: {" -> ".join(self.page_history)}\n\nThe rules of the game are: {",".join(self.rules)}"""
-        }
+        return apply_user_format(f"""You are currently on page: {self.current_page.title}. Make sure you start by reasoning about what steps you should take to get to the article on {self.goal_page.title}. When coming up with a strategy, make sure to pay attention to the path you have already taken, and if your current strategy doesn't seem to be working out, try something else. In case you're unsure, {self.goal_page.title} has the following summary:\n[Begin Summary]\n{self.get_page_summary(self.goal_page)}\n[End Summary]\n\nThe pages you've visited so far are: {" -> ".join(self.page_history)}\n\nThe rules of the game are: {",".join(self.rules)}""")
 #%%
 
 class MovePageTool_rules(MovePageTool):
@@ -1695,7 +1666,7 @@ class MovePageTool_rules(MovePageTool):
     """
 
     @staticmethod
-    def execute(new_page: str, task: Any) -> str:
+    def execute(new_page: str, task: WikiGame) -> str:
         """
         Changes your current page to a specified new page which is accessible via a link from the current page. You can only call this function once at a time, as it will take you to a different page.
 
