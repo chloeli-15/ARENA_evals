@@ -484,7 +484,7 @@ if MAIN:
         # Get results dynamically as they are completed using as_complete() function
         for future in as_completed(futures):
             result = future.result() # Notice that this is not in the order of the input, unlike `executor.map()`
-            print(f"Sum of {int(result/2)} = {result}")
+            print(f"Sum of {int(result/2)} and {int(result/2)} = {result}")
             processed_future.append(executor.submit(process_result, result))
 
         for future in as_completed(processed_future):
