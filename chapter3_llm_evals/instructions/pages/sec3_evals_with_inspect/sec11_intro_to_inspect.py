@@ -45,13 +45,15 @@ def section():
 
 Inspect uses `Task` as the central object for passing information about our eval experiment set-up. It contains:
 
-- The `dataset`of questions we will evaluate the model on.
-- The `plan` that the evaluation will proceed along. This is a list of `Solver` functions. `Solver` functions can modify the evaluation questions and/or get the model to generate a response. A typical collection of solvers that forms a `plan` might look like:
-    - A `chain_of_thought` function which will add a prompt after the evaluation question that instructs the model to use chain-of-thought before answering.
-    - A `generate` function that calls the LLM API to generate a response to the question (which now also includes a chain-of-thought prompt).
-    - A `self_critique` function that maintains the `ChatHistory` of the model so far, and adds a prompt asking the model to critique its own output.
-    - Another `generate` solver which calls the LLM API to generate an output in response to the new `self_critique` prompt.
-- The final component of a `Task` object is a `scorer` function, which specifies how to score the model's output.
+- The `dataset`of questions we will evaluate the model on. This consists of a list of `Sample` objects, which we will explain in more detail below.
+- The `scorer` function, which we use to specify how model output should be scored.
+- The `plan` that the evaluation will proceed along. This is a list of `solver` functions. `solver` functions can modify the question to the model, add a new prompt after a model response, and get the model to generate a response. A typical collection of `solver` functions that forms a `plan` might look like:
+    - A `chain_of_thought` function which modifies the evaluation question so that the model is also instructed to use chain-of-thought before answering.
+    - A `generate` function that calls the LLM API to generate a response to the question (which now also includes the chain-of-thought instruction).
+    - A `self_critique` function that maintains the `ChatHistory` of the model so far, generates a critique of the model's response so far, and appends this critique to the `ChatHistory`.
+    - Another `generate` solver which calls the LLM API to generate an output in response to the criticism from the `self_critique` solver.
+    - A `make_final_choice` solver to add a prompt instructing the model to make a final decision based on the conversation so far.
+    - A `generate` solver that gets the model to generate a final response.
 
 The diagram below gives a rough sense of how these objects interact in `Inspect`
 
