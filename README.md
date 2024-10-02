@@ -7,6 +7,6 @@ This GitHub Repo contains version 1 of a new 1-week curriculum on LLM Evals bein
 If you are testing or contributing our materials, do the following:
 * Clone the repo and make a new branch
 * Make a PR with the corresponding changes to both:
-    - exercises/part.../solutions.py (for bugs in the solution) or exercises/part.../tests.py (for bugs in the test functions)
-    - instructions/pages.sec.../sec_n_title.py (for any text or code displayed on our streamlit)
+    - `exercises/part.../solutions.py` (for bugs in the solution) or `exercises/part.../tests.py` (for bugs in the test functions)
+    - `instructions/pages.sec.../sec_n_title.py` (for any text or code displayed on our streamlit)
 
