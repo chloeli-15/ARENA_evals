@@ -333,6 +333,9 @@ For the `CalculateTool`, it should have the following methods:
 Models like ChatGPT and Claude are fine-tuned to interpret and respond to `tool` descriptions appropriately, just like `user` and `system` messages. Below is an example of a typical tool description for the OpenAI API (see their [function calling guide](https://platform.openai.com/docs/guides/function-calling) for more details). Note that this may differ between APIs.
 
 ```python
+{
+    "type": "function",
+    "function": {
 {   
     "type": "function",
     "function":{
@@ -347,9 +350,10 @@ Models like ChatGPT and Claude are fine-tuned to interpret and respond to `tool`
                 },
             },
             "required": ["order_id"],
-            "additionalProperties": False,
-        }
-    }
+            "additionalProperties": false,
+        },
+    },
+}
 ```
 
 <details><summary><b>Good practices for writing tool descriptions</b></summary>
