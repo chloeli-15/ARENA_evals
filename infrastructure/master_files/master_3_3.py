@@ -51,7 +51,13 @@ r'''
 
 r'''
 # Introduction
+'''
 
+# ! CELL TYPE: markdown
+# ! FILTERS: []
+# ! TAGS: []
+
+r'''
 Today we'll introduce you to the process of running an evaluation using the `Inspect` library. This is a library that has been built by UK AISI to provide standardisation across different evals.
 
 We'll begin by introducing the high-level overview of how Inspect works, including the key components of: a dataset, solvers, and scorers. Then we'll write our own solvers so that we can design our own evaluation procedure (including whether we want to use chain-of-thought, self-critique, multi-turn agent dialogues, etc). These evaluations will use the questions that you generated in [3.2].
@@ -72,10 +78,9 @@ Each exercise will have a difficulty and importance rating out of 5, as well as 
 r'''
 ## Content & Learning Objectives
 
-
 #### 1️⃣ Intro to Inspect
 
-> ##### Learning objectives
+> ##### Learning Objectives
 >
 > - Understand the big picture of how Inspect works.
 > - Understand the components of a `Task` object.
@@ -85,7 +90,7 @@ r'''
 
 #### 2️⃣ Writing Solvers
 
-> ##### Learning objectives
+> ##### Learning Objectives
 > 
 > - Understand what solvers are and how to build one.
 > - Understand how prompting affects model responses to your questions.
@@ -93,7 +98,7 @@ r'''
 
 #### 3️⃣ Writing Tasks and Evaluating
 
-> ##### Learning objectives
+> ##### Learning Objectives
 >
 > - Understand why we have to shuffle choices in MCQs.
 > - Understand how to write a task in Inspect to carry out our evaluation
@@ -182,19 +187,6 @@ MAIN = __name__ == "__main__"
 
 r'''
 # 1️⃣ Intro to Inspect
-'''
-
-# ! CELL TYPE: markdown
-# ! FILTERS: []
-# ! TAGS: []
-
-r'''
-> ### Learning Objectives
-> 
-> - Understand the big picture of how Inspect works
-> - Understand the components of a `Task` object
-> - Turn our json dataset into an Inspect dataset.
-> - Understand the role of solvers and scorers in Inspect.
 '''
 
 # ! CELL TYPE: markdown
@@ -559,7 +551,13 @@ Our solvers will be relatively atomic compared to what is theoretically possible
 <img src="https://raw.githubusercontent.com/chloeli-15/ARENA_img/main/img/ch3-question-journey-eg.png" width="950"/>
 
 </details>
+'''
 
+# ! CELL TYPE: markdown
+# ! FILTERS: []
+# ! TAGS: []
+
+r'''
 ### Exercise - Write `prompt_template` function
 ```c
 Difficulty: 🔴🔴⚪⚪⚪
@@ -1510,7 +1508,7 @@ r'''
 r'''
 ### Exercise (optional) - Extract data from log files
 ```c
-Difficulty:🔴🔴🔴⚪⚪
+Difficulty: 🔴🔴🔴⚪⚪
 Importance: 🔵🔵🔵⚪⚪
 ```
 
@@ -1530,7 +1528,7 @@ Extract data from the log files that have been generated so far, so that we can 
 r'''
 ### Exercise (optional) - Use plotly (and Claude) to plot the results of your evaluation
 ```c
-Difficulty:🔴🔴🔴⚪⚪
+Difficulty: 🔴🔴🔴⚪⚪
 Importance: 🔵🔵🔵⚪⚪
 ```
 
