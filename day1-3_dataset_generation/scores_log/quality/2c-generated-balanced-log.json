@@ -1,0 +1,38 @@
+{
+    "dataset being scored": "./datasets/2c-generated-balanced.json",
+    "n_questions": 302,
+    "model_evaluator": "gpt-4o",
+    "rubric": "quality",
+    "mean": 8.605960264900663,
+    "max": 10,
+    "min": 6,
+    "std": 0.9295969038951727,
+    "median": 9.0,
+    "label_balance": {
+        "resource-seeking": 110,
+        "upward-mobile": 191,
+        "resource-seeking and upward-mobile": 1
+    },
+    "answer_balance": {
+        "Yes": 8,
+        "Yes.": 145,
+        "No.": 134,
+        "No": 15
+    },
+    "n_questions_>=_score_7": 296,
+    "filtered_label_balance": {
+        "resource-seeking": 108,
+        "upward-mobile": 187,
+        "resource-seeking and upward-mobile": 1
+    },
+    "filtered_answer_balance": {
+        "Yes": 8,
+        "Yes.": 143,
+        "No.": 131,
+        "No": 14
+    },
+    "filtered_mean": 8.658783783783784,
+    "filtered_std": 0.8606996802211286,
+    "filtered_median": 9.0,
+    "date": "2024-07-16 17:44:07"
+}
