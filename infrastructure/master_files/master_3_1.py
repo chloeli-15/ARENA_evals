@@ -25,8 +25,6 @@ r'''
 # ! TAGS: []
 
 r'''
-## Colab: [exercises](https://www.youtube.com/watch?v=dQw4w9WgXcQ) | [solutions](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
-
 ARENA [streamlit page](https://arena3-chapter3-llm-eval.streamlit.app/[3.4]_Dataset_Generation)
 
 Please send any problems / bugs on the `#errata` channel in the [Slack group](https://join.slack.com/t/arena-uk/shared_invite/zt-2noug8mpy-TRYbCnc3pzj7ITNrZIjKww), and ask any questions on the dedicated channels for this chapter of material.

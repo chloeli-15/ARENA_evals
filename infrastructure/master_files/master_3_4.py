@@ -27,8 +27,6 @@ r'''
 # ! TAGS: []
 
 r'''
-## Colab: [exercises](https://www.youtube.com/watch?v=dQw4w9WgXcQ) | [solutions](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
-
 ARENA [streamlit page](https://arena3-chapter3-llm-eval.streamlit.app/[3.4]_Dataset_Generation)
 
 Please send any problems / bugs on the `#errata` channel in the [Slack group](https://join.slack.com/t/arena-uk/shared_invite/zt-2noug8mpy-TRYbCnc3pzj7ITNrZIjKww), and ask any questions on the dedicated channels for this chapter of material.
@@ -81,33 +79,34 @@ r'''
 
 ### 1️⃣ Intro to LLM Agents
 > ##### Learning Objectives
-> Understand why we want to evaluate LLM agents.
-> Read resources about LLM agent evaluations to understand the current state of the field.
-> Understand the common failure modes of LLM agents.
+> - Understand why we want to evaluate LLM agents.
+> - Read resources about LLM agent evaluations to understand the current state of the field.
+> - Understand the common failure modes of LLM agents.
 
 ### 2️⃣ Building a Simple Arithmetic Agent
 > ##### Learning Objectives
-> Understand that a LLM agent is just a "glorified for-loop" (of the scaffolding program interacting with the LLM API).
-> Learn how to use function calling to allow LLMs to use external tools.
-> Understand the main functionalities of an LLM agent.
+> - Understand that a LLM agent is just a "glorified for-loop" (of the scaffolding program interacting with the LLM API).
+> - Learn how to use function calling to allow LLMs to use external tools.
+> - Understand the main functionalities of an LLM agent.
 
 ### 3️⃣ Building a more Complex Agent: WikiGame
 > ##### Learning Objectives
-> Get comfortable building a more complex task
-> Understand how to build a more complex agent
-> Observe the failure modes of a more complex agent
+> - Get comfortable building a more complex task
+> - Understand how to build a more complex agent
+> - Observe the failure modes of a more complex agent
 
 ### 4️⃣ Elicitation
 > ##### Learning Objectives
-> Understand the importance of elicitation in evaluating LLM agents
-> Understand the different methods of elicitation
-> Understand how to improve prompting, tools, history storage, and information access in LLM agents
+> - Understand the importance of elicitation in evaluating LLM agents
+> - Understand the different methods of elicitation
+> - Understand how to improve prompting, tools, history storage, and information access in LLM agents
 
 ### 5️⃣ Bonus
 > ##### Learning Objectives
-> Implement additional tools for elicitation
-> Explore some of your own ideas for elicitation
-> Explore some of the current research in elicitation
+>
+> - Implement additional tools for elicitation
+> - Explore some of your own ideas for elicitation
+> - Explore some of the current research in elicitation
 '''
 
 # ! CELL TYPE: markdown
