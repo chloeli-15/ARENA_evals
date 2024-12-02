@@ -39,7 +39,7 @@ ALL_FILENAMES = {
 # FILES = [x for x in ALL_FILENAMES.keys() if x[0] == "1"]
 # FILES = [x for x in ALL_FILENAMES.keys() if x[0] != "3"]
 # FILES = [x for x in ALL_FILENAMES.keys() if x[0] != "3" and x != "0.3" and x[0] != "0"]
-FILES = ["3.1"]
+FILES = ["3.1","3.2","3.3","3.4"]
 
 for FILE in FILES:
     chapter_name = {

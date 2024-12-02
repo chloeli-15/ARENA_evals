@@ -26,8 +26,6 @@ r'''
 # ! TAGS: []
 
 r'''
-## Colab: [exercises](NotYetGenerated) | [solutions](NotYetGenerated)
-
 ARENA [streamlit page](https://arena3-chapter3-llm-eval.streamlit.app/[3.2]_Dataset_Generation)
 
 Please send any problems / bugs on the `#errata` channel in the [Slack group](https://join.slack.com/t/arena-uk/shared_invite/zt-2noug8mpy-TRYbCnc3pzj7ITNrZIjKww), and ask any questions on the dedicated channels for this chapter of material.
@@ -108,6 +106,51 @@ r'''
 r'''
 ## Setup
 '''
+
+# ! CELL TYPE: code
+# ! FILTERS: [colab]
+# ! TAGS: [master-comment]
+
+# import os
+# import sys
+# from importlib.metadata import distributions
+# from pathlib import Path
+# IN_COLAB = "google.colab" in sys.modules
+
+# chapter = "chapter3_llm_evals"
+# repo = "ARENA_evals"
+# branch = "main"
+
+# # Install dependencies
+# if "inspect_ai" not in [dist.metadata["Name"] for dist in distributions()]:
+#     %pip install openai anthropic inspect_ai tabulate wikipedia
+
+# # Get root directory, handling 3 different cases: (1) Colab, (2) notebook not in ARENA repo, (3) notebook in ARENA repo
+# root = (
+#     "/content"
+#     if IN_COLAB
+#     else "/root"
+#     if repo not in os.getcwd()
+#     else str(next(p for p in Path.cwd().parents if p.name == repo))
+# )
+
+# if Path(root).exists() and not Path(f"{root}/{chapter}").exists():
+#     if not IN_COLAB:
+#         !sudo apt-get install unzip
+#         %pip install jupyter ipython --upgrade
+
+#     if not os.path.exists(f"{root}/{chapter}"):
+#         !wget -P {root} https://github.com/chloeli-15/ARENA_evals/archive/refs/heads/{branch}.zip
+#         !unzip {root}/{branch}.zip '{repo}-{branch}/{chapter}/exercises/*' -d {root}
+#         !mv {root}/{repo}-{branch}/{chapter} {root}/{chapter}
+#         !rm {root}/{branch}.zip
+#         !rmdir {root}/{repo}-{branch}
+
+
+# if f"{root}/{chapter}/exercises" not in sys.path:
+#     sys.path.append(f"{root}/{chapter}/exercises")
+
+# os.chdir(f"{root}/{chapter}/exercises")
 
 # ! CELL TYPE: code
 # ! FILTERS: []

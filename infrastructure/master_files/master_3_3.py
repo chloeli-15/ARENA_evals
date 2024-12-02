@@ -26,8 +26,6 @@ r'''
 # ! TAGS: []
 
 r'''
-### Colab : [exercises](https://www.youtube.com/watch?v=dQw4w9WgXcQ) | [solutions](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
-
 ARENA [Streamlit page](https://arena3-chapter3-llm-evals.streamlit.app/[3.3]_Run_Evals_with_Inspect)
 
 Please send any probvlems / bugs on the `#errata` channel in the [Slack group](https://join.slack.com/t/arena-uk/shared_invite/zt-2noug8mpy-TRYbCnc3pzj7ITNrZIjKww), and ask any questions on the dedicated channels for this chapter of material.
@@ -78,7 +76,7 @@ Each exercise will have a difficulty and importance rating out of 5, as well as 
 r'''
 ## Content & Learning Objectives
 
-#### 1️⃣ Intro to Inspect
+### 1️⃣ Intro to Inspect
 
 > ##### Learning Objectives
 >
@@ -88,7 +86,7 @@ r'''
 > - Understand the role of solvers and scorers in Inspect.
 
 
-#### 2️⃣ Writing Solvers
+### 2️⃣ Writing Solvers
 
 > ##### Learning Objectives
 > 
@@ -96,7 +94,7 @@ r'''
 > - Understand how prompting affects model responses to your questions.
 > - Think of how you want your evaluation to proceed and write solvers for this.
 
-#### 3️⃣ Writing Tasks and Evaluating
+### 3️⃣ Writing Tasks and Evaluating
 
 > ##### Learning Objectives
 >
@@ -107,7 +105,7 @@ r'''
 >
 
 
-#### 4️⃣ Bonus: Log Files and Plotting
+### 4️⃣ Bonus: Log Files and Plotting
 
 > ##### Learning Objectives
 >
@@ -124,6 +122,51 @@ r'''
 r'''
 ## Setup
 '''
+
+# ! CELL TYPE: code
+# ! FILTERS: [colab]
+# ! TAGS: [master-comment]
+
+# import os
+# import sys
+# from importlib.metadata import distributions
+# from pathlib import Path
+# IN_COLAB = "google.colab" in sys.modules
+
+# chapter = "chapter3_llm_evals"
+# repo = "ARENA_evals"
+# branch = "main"
+
+# # Install dependencies
+# if "inspect_ai" not in [dist.metadata["Name"] for dist in distributions()]:
+#     %pip install openai anthropic inspect_ai tabulate wikipedia
+
+# # Get root directory, handling 3 different cases: (1) Colab, (2) notebook not in ARENA repo, (3) notebook in ARENA repo
+# root = (
+#     "/content"
+#     if IN_COLAB
+#     else "/root"
+#     if repo not in os.getcwd()
+#     else str(next(p for p in Path.cwd().parents if p.name == repo))
+# )
+
+# if Path(root).exists() and not Path(f"{root}/{chapter}").exists():
+#     if not IN_COLAB:
+#         !sudo apt-get install unzip
+#         %pip install jupyter ipython --upgrade
+
+#     if not os.path.exists(f"{root}/{chapter}"):
+#         !wget -P {root} https://github.com/chloeli-15/ARENA_evals/archive/refs/heads/{branch}.zip
+#         !unzip {root}/{branch}.zip '{repo}-{branch}/{chapter}/exercises/*' -d {root}
+#         !mv {root}/{repo}-{branch}/{chapter} {root}/{chapter}
+#         !rm {root}/{branch}.zip
+#         !rmdir {root}/{repo}-{branch}
+
+
+# if f"{root}/{chapter}/exercises" not in sys.path:
+#     sys.path.append(f"{root}/{chapter}/exercises")
+
+# os.chdir(f"{root}/{chapter}/exercises")
 
 # ! CELL TYPE: code
 # ! FILTERS: []
