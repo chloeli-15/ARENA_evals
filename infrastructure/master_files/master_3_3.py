@@ -162,6 +162,8 @@ r'''
 #         !rm {root}/{branch}.zip
 #         !rmdir {root}/{repo}-{branch}
 
+# if IN_COLAB:
+#     from google.colab import userdata
 
 # if f"{root}/{chapter}/exercises" not in sys.path:
 #     sys.path.append(f"{root}/{chapter}/exercises")
