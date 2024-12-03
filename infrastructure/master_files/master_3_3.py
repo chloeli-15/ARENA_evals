@@ -139,7 +139,7 @@ r'''
 
 # # Install dependencies
 # if "inspect_ai" not in [dist.metadata["Name"] for dist in distributions()]:
-#     %pip install openai anthropic inspect_ai tabulate wikipedia
+#     %pip install openai anthropic inspect_ai tabulate wikipedia jaxtyping
 
 # # Get root directory, handling 3 different cases: (1) Colab, (2) notebook not in ARENA repo, (3) notebook in ARENA repo
 # root = (
@@ -163,7 +163,7 @@ r'''
 #         !rmdir {root}/{repo}-{branch}
 
 # if IN_COLAB:
-#     from google.colab import userdata
+#     from google.colab import userdata, output
 
 # if f"{root}/{chapter}/exercises" not in sys.path:
 #     sys.path.append(f"{root}/{chapter}/exercises")
@@ -222,7 +222,7 @@ if str(exercises_dir) not in sys.path: sys.path.append(str(exercises_dir))
 os.chdir(exercises_dir)
 
 from utils import import_json, save_json, retry_with_exponential_backoff, pretty_print_questions, load_jsonl, omit
-import part3_run_evals_with_inspect.tests as tests
+import part3_evals_with_inspect.tests as tests
 
 MAIN = __name__ == "__main__"
 

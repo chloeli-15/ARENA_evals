@@ -241,11 +241,16 @@ if MAIN:
 # ! TAGS: []
 
 if MAIN:
+    # FILTERS: ~colab
     load_dotenv()
-    api_key = os.getenv("OPENAI_API_KEY") 
+    api_key = os.getenv("OPENAI_API_KEY")
     openai.api_key = api_key
-
+    # END FILTERS
+    # FILTERS: colab
+    # TAGS: master-comment
+    openai.api_key = userdata.get("OPENAI_API_KEY")
     client = OpenAI()
+    # END FILTERS
 
 @retry_with_exponential_backoff
 def generate_response(config: Config,

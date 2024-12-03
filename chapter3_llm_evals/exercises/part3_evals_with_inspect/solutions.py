@@ -57,7 +57,7 @@ from utils import (
     load_jsonl,
     omit,
 )
-import part3_run_evals_with_inspect.tests as tests
+import part3_evals_with_inspect.tests as tests
 
 MAIN = __name__ == "__main__"
 

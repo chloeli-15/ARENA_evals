@@ -473,11 +473,16 @@ When giving this input to the API via the `message` parameter, we use the syntax
 # ! TAGS: []
 
 # Configure your API key
+# FILTERS: ~colab
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
 openai.api_key = api_key
-
+# END FILTERS
+# FILTERS: colab
+# TAGS: master-comment
+openai.api_key = userdata.get("OPENAI_API_KEY")
 client = OpenAI()
+# END FILTERS
 
 response = client.chat.completions.create(
     model="gpt-4o-mini",

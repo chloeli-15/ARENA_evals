@@ -93,8 +93,6 @@ if MAIN:
     api_key = os.getenv("OPENAI_API_KEY")
     openai.api_key = api_key
 
-    client = OpenAI()
-
 
 @retry_with_exponential_backoff
 def generate_response(
