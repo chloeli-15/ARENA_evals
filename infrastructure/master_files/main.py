@@ -1,3 +1,4 @@
+# %%
 from pathlib import Path
 
 from arena_material_conversion import MasterFileData
@@ -18,12 +19,27 @@ ALL_FILENAMES = {
     "0.5": ("05_[0.5]_VAEs_&_GANs", "part5_vaes_and_gans"),
     "1.1": ("01_[1.1]_Transformer_from_Scratch", "part1_transformer_from_scratch"),
     "1.2": ("02_[1.2]_Intro_to_Mech_Interp", "part2_intro_to_mech_interp"),
-    "1.3.1": ("11_🧬_[1.3.1]_Toy_Models_of_Superposition_&_SAEs", "part31_superposition_and_saes"),
+    "1.3.1": (
+        "11_🧬_[1.3.1]_Toy_Models_of_Superposition_&_SAEs",
+        "part31_superposition_and_saes",
+    ),
     "1.3.2": ("12_🧬_[1.3.2]_Interpretability_with_SAEs", "part32_interp_with_saes"),
-    "1.4.1": ("21_📚_[1.4.1]_Indirect_Object_Identification", "part41_indirect_object_identification"),
-    "1.4.2": ("22_📚_[1.4.2]_Function_Vectors_&_Model_Steering", "part42_function_vectors_and_model_steering"),
-    "1.5.1": ("31_🔬_[1.5.1]_Balanced_Bracket_Classifier", "part51_balanced_bracket_classifier"),
-    "1.5.2": ("32_🔬_[1.5.2]_Grokking_&_Modular_Arithmetic", "part52_grokking_and_modular_arithmetic"),
+    "1.4.1": (
+        "21_📚_[1.4.1]_Indirect_Object_Identification",
+        "part41_indirect_object_identification",
+    ),
+    "1.4.2": (
+        "22_📚_[1.4.2]_Function_Vectors_&_Model_Steering",
+        "part42_function_vectors_and_model_steering",
+    ),
+    "1.5.1": (
+        "31_🔬_[1.5.1]_Balanced_Bracket_Classifier",
+        "part51_balanced_bracket_classifier",
+    ),
+    "1.5.2": (
+        "32_🔬_[1.5.2]_Grokking_&_Modular_Arithmetic",
+        "part52_grokking_and_modular_arithmetic",
+    ),
     "1.5.3": ("33_🔬_[1.5.3]_OthelloGPT", "part53_othellogpt"),
     "2.1": ("01_[2.1]_Intro_to_RL", "part1_intro_to_rl"),
     "2.2": ("02_[2.2]_Q-Learning_and_DQN", "part2_q_learning_and_dqn"),
@@ -51,14 +67,21 @@ for FILE in FILES:
 
     master_path = Path(__file__).parent / f"master_{FILE.replace('.', '_')}.ipynb"
     chapter_dir = master_path.parent.parent.parent / chapter_name
+    print(master_path, chapter_dir)
 
     assert master_path.exists() and chapter_dir.exists()
 
     st_name, ex_name = ALL_FILENAMES[FILE]
 
     master = MasterFileData(
-        master_path=master_path, chapter_dir=chapter_dir, exercise_dir_name=ex_name, streamlit_page_name=st_name
+        master_path=master_path,
+        chapter_dir=chapter_dir,
+        exercise_dir_name=ex_name,
+        streamlit_page_name=st_name,
     )
     master.master_ipynb_to_py(overwrite=True)
     master.generate_files(overwrite=True, verbose=True)
     # master.master_py_to_ipynb(overwrite=True)
+
+
+# %%
