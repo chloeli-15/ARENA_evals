@@ -164,8 +164,7 @@ r'''
 #         !rmdir {root}/{repo}-{branch}
 
 # if IN_COLAB:
-#     from google.colab import userdata
-#     from google.colab import output
+#     from google.colab import userdata, output
 #     output.serve_kernel_port_as_window(7575)
 #     sys.modules['__main__'].__file__ = None
 #     try:
@@ -477,10 +476,17 @@ Run the code block below and then click through to http://localhost:7575.
 '''
 
 # ! CELL TYPE: code
-# ! FILTERS: [~py]
+# ! FILTERS: [st]
 # ! TAGS: []
 
-!inspect view --log-dir "your/log/path/here.json" --port 7575
+!inspect view --log-dir "your/log/path/here.eval"
+
+# ! CELL TYPE: code
+# ! FILTERS: [colab]
+# ! TAGS: [master-comment]
+
+# output.serve_kernel_port_as_window(7575)
+# !inspect view --log-dir "your/log/path/here.eval" --port 7575
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -509,6 +515,20 @@ For more information about the log viewer, you can read the docs [here](https://
 
 
 <details><summary>Aside: Log names</summary> I'm fairly confident that when Inspect accesses logs, it utilises the name, date, and time information as a part of the way of accessing and presenting the logging data. Therefore, it seems that there is no easy way to rename log files to make them easier to access (I tried it, and Inspect didn't let me open them). </details>
+'''
+
+# ! CELL TYPE: markdown
+# ! FILTERS: [colab]
+# ! TAGS: []
+
+r'''
+<details><summary>Help: I'm running this on google colab, and <code>localhost:7575</code> isn't working</summary>
+
+If you're running this on a google colab, then before running the `!inspect view`, you'll need to tell colab to redirect the `localhost` which Inspect generates, using the command `output.serve_kernel_port_as_window(7575)`, just as we've done above. Google Colab will warn you, and then provide you with a link titled `http://localhost:7575` which redirects you to a remotely hosted kernel port.
+
+You'll also need to ensure your browser settings allow colab to redirect ports.
+
+</details>
 '''
 
 # ! CELL TYPE: markdown
@@ -665,15 +685,28 @@ def prompt_template(template: str) -> Solver:
     return solve
 
 if MAIN:
-    tests.test_solver_functions(solver_functions=prompt_template(template=r"""{prompt}\n\n Think step by step and then answer."""), test_dataset=None)
+    tests.test_solver_functions(solver_functions=prompt_template(template="""{prompt}\n\n Think step by step and then answer."""), test_dataset=None)
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
 # ! TAGS: []
 
 r'''
-Test your solver code with the provided test. Fill in the template and `test_dataset` with your own values, or leave `test_dataset=None` and the code will run with a test dataset we created.
+Test your solver code with the provided test. Fill in the template and `test_dataset` with your own values, or leave `test_dataset=None` and the code will run with a test dataset we created. Then run the code cell below to view the results of running a simple evaluation with the solver you created.
 '''
+
+# ! CELL TYPE: code
+# ! FILTERS: [st]
+# ! TAGS: []
+
+!inspect view --log-dir "your/log/path/here.eval"
+
+# ! CELL TYPE: code
+# ! FILTERS: [colab]
+# ! TAGS: [master-comment]
+
+# output.serve_kernel_port_as_window(7575)
+# !inspect view --log-dir "your/log/path/here.eval" --port 7575
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -731,6 +764,19 @@ def multiple_choice_format(template: str, **params: dict) -> Solver:
 if MAIN:    
     tests.test_solver_functions(solver_functions=multiple_choice_format(template=r"""{question}\n\n{choices}\n\nAnswer the above question."""), test_dataset=None)
 
+# ! CELL TYPE: code
+# ! FILTERS: [st]
+# ! TAGS: []
+
+!inspect view --log-dir "your/log/path/here.eval"
+
+# ! CELL TYPE: code
+# ! FILTERS: [colab]
+# ! TAGS: [master-comment]
+
+# output.serve_kernel_port_as_window(7575)
+# !inspect view --log-dir "your/log/path/here.eval" --port 7575
+
 # ! CELL TYPE: markdown
 # ! FILTERS: []
 # ! TAGS: []
@@ -776,7 +822,20 @@ def make_choice(prompt: str) -> Solver:
     return solve
 
 if MAIN:
-    tests.test_solver_functions(solver_functions=[multiple_choice_format(template = r""""Think about the following question, without coming to a final answer\n\n{question}\n\n{choices}"""), make_choice(prompt="Please make a choice from the options above.")], test_dataset=None)
+    tests.test_solver_functions(solver_functions=[multiple_choice_format(template = r""""Think about the following question, without coming to a final answer\n\n{question}\n\n{choices}"""), generate(), make_choice(prompt="Please make a choice from the options above."), generate()], test_dataset=None)
+
+# ! CELL TYPE: code
+# ! FILTERS: [st]
+# ! TAGS: []
+
+!inspect view --log-dir "your/log/path/here.eval"
+
+# ! CELL TYPE: code
+# ! FILTERS: [colab]
+# ! TAGS: [master-comment]
+
+# output.serve_kernel_port_as_window(7575)
+# !inspect view --log-dir "your/log/path/here.eval" --port 7575
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -837,6 +896,19 @@ def system_message(system_message: str, **params: dict) -> Solver:
 
     return solve
 
+# ! CELL TYPE: code
+# ! FILTERS: [st]
+# ! TAGS: []
+
+!inspect view --log-dir "your/log/path/here.eval"
+
+# ! CELL TYPE: code
+# ! FILTERS: [colab]
+# ! TAGS: [master-comment]
+
+# output.serve_kernel_port_as_window(7575)
+# !inspect view --log-dir "your/log/path/here.eval" --port 7575
+
 # ! CELL TYPE: markdown
 # ! FILTERS: []
 # ! TAGS: []
@@ -850,7 +922,7 @@ Importance: 🔵🔵⚪⚪⚪
 You should spend up to 20-25 mins on this exercise.
 ```
 
-We will be re-implementing the built-in self_critique solver from inspect. This will enable us to modify the functionality of the solver more easily if we want to adapt how the model critiques its own thought processes. To see why we might want models to do self-critique, read this paper. Self-critique is most useful when we're asking the model for a capability, but if your dataset contains more complex questions, self-critique might get the model to reach a different conclusion (there is a difference on the power-seeking example dataset between CoT + self-critique, and CoT alone).
+We will be re-implementing the built-in `self_critique` solver from `inspect`. This will enable us to modify the functionality of the solver more easily if we want to adapt how the model critiques its own thought processes. To see why we might want models to do self-critique, read [this paper](https://arxiv.org/pdf/2303.17651). Self-critique is most useful when we're testing the model for capabilities, but if your dataset contains more complex questions then self-critique might get the model to reach a different conclusion (there is a difference on the power-seeking example dataset between CoT + self-critique, and CoT alone).
 
 <details><summary>How Inspect implements <code>self_critique</code></summary>
 
@@ -870,6 +942,61 @@ You may not want to implement the solver in exactly this way, but implementing t
 
 </details>
 '''
+
+# ! CELL TYPE: code
+# ! FILTERS: []
+# ! TAGS: []
+
+@solver
+def self_critique(
+    model: str,
+    critique_template: str | None,
+    critique_completion_template: str | None,
+    **params: dict,
+) -> Solver:
+    """
+    Args:
+        - model: The model we use to generate the self-critique
+
+        - critique_template: This is the template for how you present the output of the model so far to itself, so that the model can *generate* the critique. This template should contain {question} and {completion} to be formatted.
+        
+        - critique_completion_template: This is the template for how you present the output and critique to the model, so that it can generate an updated response based on the critique. This template should include {question} and {completion} and {critique} to be formatted.
+
+    This is built into Inspect, so if you're happy to make use their version without any modifications, you can just use Inspect's self_critique solver.
+    """
+    # EXERCISE
+    # async def solve(state: TaskState, generate: Generate) -> TaskState:
+    #    pass
+    # return solve
+    # END EXERCISE
+    # SOLUTION
+    Model = get_model(model)
+
+    async def solve(state: TaskState, generate: Generate) -> TaskState:
+        metadata = omit(state.metadata, ["question", "completion", "critique"])
+        critique = await Model.generate(
+            critique_template.format(
+                question=state.input_text,
+                completion=state.output.completion,
+                **metadata,
+            )
+        )
+
+        state.messages.append(
+            ChatMessageUser(
+                content=critique_completion_template.format(
+                    question=state.input_text,
+                    completion=state.output.completion,
+                    critique=critique.completion,
+                    **metadata,
+                )
+            )
+        )
+
+        return await generate(state)
+
+    return solve
+    # END SOLUTION
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -1216,7 +1343,7 @@ Now we can load our different datasets in using the code below. Just fill in `pa
 # ! TAGS: []
 
 if MAIN:
-    path_to_eval_dataset = r"your/path/to/dataset/here.json"
+    path_to_eval_dataset = r"your/path/to/dataset/here.eval"
 
     eval_dataset_system = json_dataset(
         path_to_eval_dataset,
@@ -1440,7 +1567,7 @@ You should spend up to 5-10 mins to code this exercise. (Running may take longer
 
 Now conduct your final evaluation. You can either use a series of nested `for` loops and conditionals to run the different versions of your task built above, or you could put all the different parameters into one `itertools.product` object.
 
-You should write this code so that it carries out your entire suite of evaluations on *one* model that you want to evaluate. We could easily run it on every model we want to evaluate all at once, however this would take a substantial amount of time, and the cost would be hard to predict. Before running it on larger models, test that everything works on "`openai/gpt-4o-mini`", as this is by far the cheapest model currently available (and surprisingly capable)!
+You should write this code so that it carries out your entire suite of evaluations on *one* model that you want to evaluate. We could easily run it on every model we want to evaluate all at once, however this would take a substantial amount of time, and the cost would be hard to predict. Before running it on larger models, test that everything works on "`openai/gpt-4o-mini`", as this is by far the cheapest model currently available at the time of writing (and surprisingly capable)!
 
 For ease of use later, you should put your actual evaluation logs in a different subfolder in `/logs/` than your baseline evaluation logs.
 
@@ -1479,6 +1606,27 @@ if MAIN:
 # ! TAGS: []
 
 r'''
+Now view the results of your evaluation to verify that the evaluation proceeded how you intended.
+'''
+
+# ! CELL TYPE: code
+# ! FILTERS: [st]
+# ! TAGS: []
+
+!inspect view --log-dir "your/log/path/here.eval"
+
+# ! CELL TYPE: code
+# ! FILTERS: [colab]
+# ! TAGS: [master-comment]
+
+# output.serve_kernel_port_as_window(7575)
+# !inspect view --log-dir "your/log/path/here.eval" --port 7575
+
+# ! CELL TYPE: markdown
+# ! FILTERS: []
+# ! TAGS: []
+
+r'''
 # 4️⃣ Bonus: Log files and plotting
 '''
 
@@ -1497,7 +1645,7 @@ Now that we've finished running our evaluations, we can look at the logs and plo
 # ! TAGS: []
 
 if MAIN:
-    log = read_eval_log(r"path/to/log/file.json")
+    log = read_eval_log(r"path/to/log/file.eval")
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []

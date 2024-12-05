@@ -150,7 +150,7 @@ def prompt_template(template: str) -> Solver:
 if MAIN:
     tests.test_solver_functions(
         solver_functions=prompt_template(
-            template=r"""{prompt}\n\n Think step by step and then answer."""
+            template="""{prompt}\n\n Think step by step and then answer."""
         ),
         test_dataset=None,
     )
@@ -222,7 +222,9 @@ if MAIN:
             multiple_choice_format(
                 template=r""""Think about the following question, without coming to a final answer\n\n{question}\n\n{choices}"""
             ),
+            generate(),
             make_choice(prompt="Please make a choice from the options above."),
+            generate(),
         ],
         test_dataset=None,
     )
@@ -266,6 +268,54 @@ def system_message(system_message: str, **params: dict) -> Solver:
     async def solve(state: TaskState, generate: Generate) -> TaskState:
         insert_system_message(state.messages, ChatMessageSystem(content=system_message))
         return state
+
+    return solve
+
+
+# %%
+
+
+@solver
+def self_critique(
+    model: str,
+    critique_template: str | None,
+    critique_completion_template: str | None,
+    **params: dict,
+) -> Solver:
+    """
+    Args:
+        - model: The model we use to generate the self-critique
+
+        - critique_template: This is the template for how you present the output of the model so far to itself, so that the model can *generate* the critique. This template should contain {question} and {completion} to be formatted.
+
+        - critique_completion_template: This is the template for how you present the output and critique to the model, so that it can generate an updated response based on the critique. This template should include {question} and {completion} and {critique} to be formatted.
+
+    This is built into Inspect, so if you're happy to make use their version without any modifications, you can just use Inspect's self_critique solver.
+    """
+    Model = get_model(model)
+
+    async def solve(state: TaskState, generate: Generate) -> TaskState:
+        metadata = omit(state.metadata, ["question", "completion", "critique"])
+        critique = await Model.generate(
+            critique_template.format(
+                question=state.input_text,
+                completion=state.output.completion,
+                **metadata,
+            )
+        )
+
+        state.messages.append(
+            ChatMessageUser(
+                content=critique_completion_template.format(
+                    question=state.input_text,
+                    completion=state.output.completion,
+                    critique=critique.completion,
+                    **metadata,
+                )
+            )
+        )
+
+        return await generate(state)
 
     return solve
 
@@ -391,7 +441,7 @@ def record_to_sample(system: bool, system_prompt_as_context: bool):
 # %%
 
 if MAIN:
-    path_to_eval_dataset = r"your/path/to/dataset/here.json"
+    path_to_eval_dataset = r"your/path/to/dataset/here.eval"
 
     eval_dataset_system = json_dataset(
         path_to_eval_dataset,
@@ -538,7 +588,7 @@ if MAIN:
 # %%
 
 if MAIN:
-    log = read_eval_log(r"path/to/log/file.json")
+    log = read_eval_log(r"path/to/log/file.eval")
 
 # %%
 
