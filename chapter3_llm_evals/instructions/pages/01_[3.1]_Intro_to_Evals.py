@@ -12,9 +12,12 @@ import streamlit_antd_components as sac
 #     ...
 # ]
 metadata = [
-    {"title": "Threat-Modeling", "icon": "1-circle-fill", "subtitle": "45%"},
-    {"title": "Intro to API Calls", "icon": "2-circle-fill", "subtitle": "5%"},
-    {"title": "MCQ Benchmarks", "icon": "3-circle-fill", "subtitle": "50%"},
+    {"title": "Intro to API Calls", "icon": "1-circle-fill", "subtitle": "10%"},
+    {
+        "title": "Threat-Modeling & Eval Design",
+        "icon": "1-circle-fill",
+        "subtitle": "90%",
+    },
 ]
 chapter_name = "chapter3_llm_evals"
 

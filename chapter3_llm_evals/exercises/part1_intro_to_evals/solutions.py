@@ -14,6 +14,7 @@ import warnings
 import time
 
 # Make sure exercises are in the path
+
 chapter = r"chapter3_llm_evals"
 exercises_dir = Path(f"{os.getcwd().split(chapter)[0]}/{chapter}/exercises").resolve()
 section_dir = (exercises_dir / "part1_intro").resolve()
@@ -36,10 +37,13 @@ load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
 openai.api_key = api_key
 
+# %%
+
 client = OpenAI()
+MODEL = "gpt-4o-mini"
 
 response = client.chat.completions.create(
-    model="gpt-4o-mini",
+    model=MODEL,
     messages=[
         {"role": "system", "content": "You are a helpful assistant."},
         {"role": "user", "content": "What is the capital of France?"},
@@ -65,6 +69,7 @@ def apply_assistant_format(content: str) -> dict:
 
 
 def apply_message_format(user: str, system: Optional[str]) -> List[dict]:
+    """Returns the whole message list directly."""
     messages = []
     if system:
         messages.append({"role": "system", "content": system})
@@ -101,8 +106,6 @@ def generate_response(
 
     Note:
         - If both 'messages' and 'user'/'system' are provided, 'messages' takes precedence.
-        - The function uses a retry mechanism with exponential backoff for handling transient errors.
-        - The client object should be properly initialized before calling this function.
     """
     if model != "gpt-4o-mini":
         warnings.warn(f"Warning: The model '{model}' is not 'gpt-4o-mini'.")
@@ -127,9 +130,7 @@ def generate_response(
 
 # %%
 
-response = generate_response(
-    client, "gpt-4o-mini", user="What is the capital of France?"
-)
+response = generate_response(client, MODEL, user="What is the capital of France?")
 print(response)
 
 # %%
@@ -193,38 +194,51 @@ generate_response = retry_with_exponential_backoff(generate_response)
 
 # %%
 
-# See questions from the anthropic dataset
-anthropic_dataset_name = "power-seeking-inclination"  # Choose a dataset
-dataset = load_jsonl(f"data/anthropic/{anthropic_dataset_name}.jsonl")
-question_sample = random.sample(dataset, 5)
-pretty_print_questions(question_sample)
+
+# Helper function; Just run
+def format_mcq_as_user(mcq: dict, with_choices: bool = False) -> Dict[str, str]:
+    """
+    Format a multiple-choice dict into a user prompt (with MCQ choices or without) for the OpenAI API.
+
+    Args:
+        mcq (dict): A dictionary containing the question, answers, and answer matching behavior.
+
+    Returns:
+        str: The formatted multiple-choice question.
+    """
+    question = mcq["question"]  # Requires a mcq["question"] to be a string
+    answers = mcq[
+        "answers"
+    ]  # Requires a mcq["answers"] to be a dict with keys A, B, C, D, etc.
+
+    formatted_question = f"{question}"
+
+    if with_choices:
+        formatted_question += "\n\nChoices:"
+        for letter, answer in answers.items():
+            formatted_question += f"\n{letter}. {answer}"
+
+    return apply_user_format(formatted_question)
+
 
 # %%
 
-# See how the model responds to the questions
-for question in question_sample:
-    response = generate_response(client, "gpt-4o-mini", user=question["question"])
-    print(f"Question: {question['question']}\n\nModel Answer: {response}\n")
+# TODO
+mcq = {
+    "question": "...",
+    "answers": {
+        "A": "...",
+        "B": "...",
+    },
+    "answer_matching_behavior": "...",
+}
 
-# %%
+question_with_choices = format_mcq_as_user(mcq, with_choices=True)
+question_without_choices = format_mcq_as_user(mcq, with_choices=False)
 
-my_questions = import_json("mcq_examples.json")
-
-# Ask the model to answer the questions without answer options
-for question in my_questions:
-    response = generate_response(
-        client, "gpt-4o-mini", system=question["system"], user=question["question"]
-    )
-    print(f"Question: {question['question']}\n\nModel Answer: {response}\n")
-
-# Ask the model to answer the questions with answer options
-for question in my_questions:
-    question_text = question["question"] + "\nChoices:\n"
-    for option, answer in question["answers"].items():
-        question_text += f"\n({option}) {answer}"
-    response = generate_response(
-        client, "gpt-4o-mini", system=question["system"], user=question_text
-    )
-    print(f"Question: {question['question']}\n\nModel Answer: {response}\n")
+print("Question\n", question_with_choices)
+print("Response\n", generate_response(client, MODEL, user=question_with_choices))
+print("\n\nQuestion\n", question_without_choices)
+print("Response\n", generate_response(client, MODEL, user=question_without_choices))
 
 # %%

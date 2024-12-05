@@ -32,36 +32,40 @@ Links to other chapters: [**(0) Fundamentals**](https://arena3-chapter0-fundamen
 
 <img src="https://raw.githubusercontent.com/chloeli-15/ARENA_img/main/img/ch3-evals-cover.jpeg" width="350">
 
-## Introduction
-
-The Threat-Modelling section of chapter [3.1] is the only non-coding section of the curriculum. The exercises focus on designing a threat model and specification for a chosen model property. We use this to design an evaluation (eval) to measure this target property. These are the first steps and often the hardest/most "creative" part of real eval research. In practice this is often done by a team of researchers, and can take weeks or months. The exercises are designed to give you a taste of this process. The exercise questions are open-ended, and you're not expected to have a perfect answer by the end.
-
-Each exercise will have a difficulty and importance rating out of 5, as well as an estimated maximum time you should spend on these exercises and sometimes a short annotation. You should interpret the ratings & time estimates relatively (e.g. if you find yourself spending about 50% longer on the exercises than the time estimates, adjust accordingly). Please do skip exercises / look at solutions if you don't feel like they're important enough to be worth doing, and you'd rather get to the good stuff!
-
 ## Overview of Chapter [3.1] to [3.3]
 
-The goal of chapter [3.1] to [3.3] is to **build and run an alignment evaluation benchmark from scratch to measure a model property of interest**. The benchmark we will build contains:
-- a multiple-choice (MC) question dataset of ~300 questions, 
-- a specification of the model property, and 
-- how to score and interpret the result. 
+The goal of chapter [3.1] to [3.3] is to learn how to **design, build and run an alignment evaluation benchmark from scratch to measure a model property of interest**. The sections walk you through the step-by-step process of designing an eval, which should generalize to evals you might want to create in the future:
 
-We will use LLMs to generate and filter our questions, following the method from [Ethan Perez et al (2022)](https://arxiv.org/abs/2212.09251). In the example that we present, we will measure the **tendency to seek power** as our evaluation target. 
+* In [3.1], we will learn how to craft threat models and a specification for the model property you choose to evaluate, then design 10 example eval questions that measures this property. 
+* In [3.2], we will learn to use LLMs to expand our 10 eval questions to generate ~300 questions, following the method from [Ethan Perez et al (2022)](https://arxiv.org/abs/2212.09251). 
+* In [3.3], we will learn to evaluate models on this benchmark using the UK AISI's [`inspect`](https://inspect.ai-safety-institute.org.uk/) library.
 
-* For chapter [3.1], the goal is to craft threat models and a specification for the model property you choose to evaluate, then design 20 example eval questions that measures this property. 
-* For chapter [3.2], we will use LLMs to expand our 20 eval questions to generate ~300 questions.
-* For chapter [3.3], we will evaluate models on this benchmark using the UK AISI's [`inspect`](https://inspect.ai-safety-institute.org.uk/) library.
-
+The benchmark we will build contains a multiple-choice question (MCQ)dataset of ~300 questions, a specification of the model property, and how to score and interpret the result. In the example that we present, we will measure the **tendency to seek power** as our evaluation target. 
+<!--
 <details><summary>Why have we chose to build an alignment evals specifically?</summary>
 
 The reason that we are focusing primarily on alignment evals, as opposed to capability evals, is that we are using LLMs to generate our dataset, which implies that the model must be able to solve the questions in the dataset. We cannot use models to generate and label correct answers if they are not capable of solving the questions. (However, we can use still use models to generate parts of a capability eval question if we do not require the model to be able to solve them.)
 
+</details>-->
+
+<img src="https://raw.githubusercontent.com/chloeli-15/ARENA_img/main/img/ch3-day1-3-overview.png" width=1400>
+
+
+<details><summary>Diagram note</summary>
+
+- The double arrows indicate that the steps iteratively help refine each other. 
+- In reality, the threat model should come first and determine what target properties of the model are worth evaluating. However, in this diagram we flipped the order and put "Target Property" before "Threat-modeling & Specification", as in the exercises, we will start by choosing a property, then build a threat model for it. This is purely because we want to learn the skill of building threat models. 
 </details>
 
-<img src="https://raw.githubusercontent.com/chloeli-15/ARENA_img/main/img/ch3-day1-3-overview.png" width=1200>
 
-<!-- TODO: Make this diagram horizontal -->
+## Introduction
 
-Diagram note: The double arrows indicate that the steps iteratively help refine each other. In general, the threat model should come first and determine what model properties are worth evaluating. However, in this diagram we put "Target Property" before "Threat-modeling & Specification". This is because in the exercises, we will start by choosing a property, then build a threat model around it because we want to learn the skill of building threat models. 
+This section focuses on the key thinking skills for designing evals, including how to start, what questions to ask, what is the step-by-step process of designing an eval. This is the starting point for designing an eval.
+
+We start by designing threat models and specifications for a model property of interest. It is arguably the hardest, most "creative" part of real eval research. In practice, this is often done by a team of researchers and can take weeks or months. The exercises are designed to give you a taste of this process under time constraint. The exercise questions are open-ended, and you're not expected to have a perfect answer by the end if you are going through it in a day.
+
+Note that Threat-Modelling and Specification sections of [3.1] are the only non-coding parts of the curriculum. Each exercise will have a difficulty and importance rating out of 5, as well as an estimated maximum time you should spend on these exercises and sometimes a short annotation. You should interpret the ratings & time estimates relatively (e.g. if you find yourself spending about 50% longer on the exercises than the time estimates, adjust accordingly). Please do skip exercises / look at solutions if you don't feel like they're important enough to be worth doing, and you'd rather get to the good stuff!
+
 
 ## Content & Learning Objectives
 
@@ -71,7 +75,7 @@ Diagram note: The double arrows indicate that the steps iteratively help refine 
 > ##### Learning objectives
 >
 > - Understand the purpose of evaluations and what safety cases are
-> - Understand the types of evaluations
+> - Understand the types of evaluations that exist
 > - Learn what a threat model looks like, why it's important, and how to build one
 > - Learn how to write a specification for an evaluation target
 > - Learn how to use models to help you in the design process
