@@ -131,6 +131,7 @@ r'''
 # import sys
 # from importlib.metadata import distributions
 # from pathlib import Path
+# import warnings
 # IN_COLAB = "google.colab" in sys.modules
 
 # chapter = "chapter3_llm_evals"
@@ -139,7 +140,7 @@ r'''
 
 # # Install dependencies
 # if "inspect_ai" not in [dist.metadata["Name"] for dist in distributions()]:
-#     %pip install openai anthropic inspect_ai tabulate wikipedia jaxtyping
+#     %pip install openai anthropic inspect_ai tabulate wikipedia
 
 # # Get root directory, handling 3 different cases: (1) Colab, (2) notebook not in ARENA repo, (3) notebook in ARENA repo
 # root = (
@@ -163,7 +164,17 @@ r'''
 #         !rmdir {root}/{repo}-{branch}
 
 # if IN_COLAB:
-#     from google.colab import userdata, output
+#     from google.colab import userdata
+#     from google.colab import output
+#     output.serve_kernel_port_as_window(7575)
+#     sys.modules['__main__'].__file__ = None
+#     try:
+#         os.environ["OPENAI_API_KEY"] = userdata.get("OPENAI_API_KEY")
+#     except:
+#         try: os.environ["ANTHROPIC_API_KEY"] = userdata.get("ANTHROPIC_API_KEY")
+#         except:
+#             warnings.warn("You don't have an OPENAI_API_KEY or an ANTHROPIC_API_KEY variable set in the secrets tab of your google colab.")
+
 
 # if f"{root}/{chapter}/exercises" not in sys.path:
 #     sys.path.append(f"{root}/{chapter}/exercises")
@@ -498,9 +509,13 @@ For more information about the log viewer, you can read the docs [here](https://
 
 
 <details><summary>Aside: Log names</summary> I'm fairly confident that when Inspect accesses logs, it utilises the name, date, and time information as a part of the way of accessing and presenting the logging data. Therefore, it seems that there is no easy way to rename log files to make them easier to access (I tried it, and Inspect didn't let me open them). </details>
+'''
 
+# ! CELL TYPE: markdown
+# ! FILTERS: [st]
+# ! TAGS: []
 
-
+r'''
 <details><summary>Help: I'm running this from a remote machine and can't access the Log Viewer at localhost:7575</summary>
 
 If you're running this from a remote machine in VScode and can't access localhost:7575, the first thing you should try is modifying the "Auto Forward Ports Source" VScode setting to "Process," as shown below.
@@ -509,7 +524,7 @@ If you're running this from a remote machine in VScode and can't access localhos
 
 If it still doesn't work, then **make sure you've changed this setting in all setting categories** (circled in blue in the image above).
 
-If you're still having issues, then try a different localhost port, (i.e. change `--port 7575` to `--port 7576` or something).
+If you're still having issues, then try a different localhost port, (e.g. change `--port 7575` to `--port 7576`).
 </details>
 '''
 

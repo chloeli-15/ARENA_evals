@@ -104,6 +104,8 @@ def test_solver_functions(solver_functions, test_dataset : Optional[list[Sample]
         model = "openai/gpt-4o-mini",
         log_dir = "./logs_from_solver_tests/"
     )
-    return f"Now call \"!inspect view\" on the following log to see how your solvers worked  /logs_from_solver_tests/{log.eval.created}_{log.eval.task}_{log.eval.task_id}.json"
-
+    try:
+        return f"Now call \"!inspect view\" on the following log to see how your solvers worked  /logs_from_solver_tests/{log.eval.created}_{log.eval.task}_{log.eval.task_id}.eval"
+    except:
+        return f"Now call \"!inspect view\" on the following log to see how your solvers worked  /logs_from_solver_tests/{log[0].eval.created}_{log[0].eval.task}_{log[0].eval.task_id}.eval"
 # %%

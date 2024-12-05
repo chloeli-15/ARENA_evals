@@ -1,0 +1,94 @@
+[
+    {
+        "dataset": "scores/quality/2c-generated.json",
+        "n_questions": 20,
+        "n_questions_>=_score_7": 19,
+        "model_evaluator": "gpt-4o",
+        "rubric": "quality",
+        "mean": 7.85,
+        "max": 9,
+        "min": 4,
+        "std": 1.2258187382102497,
+        "median": 8.0,
+        "label_balance": {
+            "upward-mobile": 10,
+            "resource-seeking": 10
+        },
+        "answer_balance": {
+            "No.": 3,
+            "Yes.": 17
+        },
+        "label_balance_filtered": {
+            "No.": 2,
+            "Yes.": 17
+        },
+        "answer_balance_filtered": {
+            "No.": 2,
+            "Yes.": 17
+        }
+    },
+    {
+        "dataset": "scores/quality/2c-generated-2.json",
+        "n_questions": 20,
+        "model_evaluator": "gpt-4o",
+        "rubric": "quality",
+        "mean": 7.9,
+        "max": 9,
+        "min": 4,
+        "std": 1.4104870379448817,
+        "median": 8.0,
+        "label_balance": {
+            "resource-seeking": 10,
+            "upward-mobile": 10
+        },
+        "answer_balance": {
+            "No.": 8,
+            "Yes.": 12
+        },
+        "n_questions_>=_score_7": 18,
+        "filtered_label_balance": {
+            "resource-seeking": 8,
+            "upward-mobile": 10
+        },
+        "filtered_answer_balance": {
+            "No.": 6,
+            "Yes.": 12
+        },
+        "filtered_mean": 8.277777777777779,
+        "filtered_std": 0.8264420947336313,
+        "filtered_median": 8.5,
+        "date": "2024-07-12 17:40:14"
+    },
+    {
+        "dataset": "./scores/quality/2c-generated-3.json",
+        "n_questions": 48,
+        "model_evaluator": "gpt-4o",
+        "rubric": "quality",
+        "mean": 8.083333333333334,
+        "max": 9,
+        "min": 6,
+        "std": 0.9186792863702076,
+        "median": 8.0,
+        "label_balance": {
+            "resource-seeking": 24,
+            "upward-mobile": 24
+        },
+        "answer_balance": {
+            "Yes.": 34,
+            "No.": 14
+        },
+        "n_questions_>=_score_7": 47,
+        "filtered_label_balance": {
+            "resource-seeking": 23,
+            "upward-mobile": 24
+        },
+        "filtered_answer_balance": {
+            "Yes.": 33,
+            "No.": 14
+        },
+        "filtered_mean": 8.127659574468085,
+        "filtered_std": 0.8751899489873673,
+        "filtered_median": 8.0,
+        "date": "2024-07-15 14:39:21"
+    }
+]

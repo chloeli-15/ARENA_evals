@@ -1,0 +1,70 @@
+Training language models to follow instructions
+with human feedback
+Long Ouyang∗ Jeff Wu∗ Xu Jiang∗ Diogo Almeida∗ Carroll L. Wainwright∗
+Pamela Mishkin∗ Chong Zhang Sandhini Agarwal Katarina Slama Alex Ray
+John Schulman Jacob Hilton Fraser Kelton Luke Miller Maddie Simens
+Amanda Askell† Peter Welinder Paul Christiano∗†
+Jan Leike∗ Ryan Lowe∗
+OpenAI
+Abstract
+Making language models bigger does not inherently make them better at following
+a user’s intent. For example, large language models can generate outputs that
+are untruthful, toxic, or simply not helpful to the user. In other words, these
+models are not aligned with their users. In this paper, we show an avenue for
+aligning language models with user intent on a wide range of tasks by fine-tuning
+with human feedback. Starting with a set of labeler-written prompts and prompts
+submitted through the OpenAI API, we collect a dataset of labeler demonstrations
+of the desired model behavior, which we use to fine-tune GPT-3 using supervised
+learning. We then collect a dataset of rankings of model outputs, which we use to
+further fine-tune this supervised model using reinforcement learning from human
+feedback. We call the resulting models InstructGPT. In human evaluations on
+our prompt distribution, outputs from the 1.3B parameter InstructGPT model are
+preferred to outputs from the 175B GPT-3, despite having 100x fewer parameters.
+Moreover, InstructGPT models show improvements in truthfulness and reductions
+in toxic output generation while having minimal performance regressions on public
+NLP datasets. Even though InstructGPT still makes simple mistakes, our results
+show that fine-tuning with human feedback is a promising direction for aligning
+language models with human intent.
+1 Introduction
+Large language models (LMs) can be “prompted” to perform a range of natural language processing (NLP) tasks, given some examples of the task as input. However, these models often express
+unintended behaviors such as making up facts, generating biased or toxic text, or simply not following
+user instructions (Bender et al., 2021; Bommasani et al., 2021; Kenton et al., 2021; Weidinger et al.,
+2021; Tamkin et al., 2021; Gehman et al., 2020). This is because the language modeling objective used for many recent large LMs—predicting the next token on a webpage from the internet—is
+different from the objective “follow the user’s instructions helpfully and safely” (Radford et al., 2019;
+Brown et al., 2020; Fedus et al., 2021; Rae et al., 2021; Thoppilan et al., 2022). Thus, we say that
+the language modeling objective is misaligned. Averting these unintended behaviors is especially
+important for language models that are deployed and used in hundreds of applications.
+We make progress on aligning language models by training them to act in accordance with the user’s
+intention (Leike et al., 2018). This encompasses both explicit intentions such as following instructions
+and implicit intentions such as staying truthful, and not being biased, toxic, or otherwise harmful.
+Using the language of Askell et al. (2021), we want language models to be helpful (they should
+help the user solve their task), honest (they shouldn’t fabricate information or mislead the user), and
+harmless (they should not cause physical, psychological, or social harm to people or the environment).
+We elaborate on the evaluation of these criteria in Section 3.6.
+We focus on fine-tuning approaches to aligning language models. Specifically, we use reinforcement
+learning from human feedback (RLHF; Christiano et al., 2017; Stiennon et al., 2020) to fine-tune
+GPT-3 to follow a broad class of written instructions (see Figure 2). This technique uses human
+preferences as a reward signal to fine-tune our models. We first hire a team of 40 contractors to label
+our data, based on their performance on a screening test (see Section 3.4 and Appendix B.1 for more
+details). We then collect a dataset of human-written demonstrations of the desired output behavior
+on (mostly English) prompts submitted to the OpenAI API3 and some labeler-written prompts, and
+use this to train our supervised learning baselines. Next, we collect a dataset of human-labeled
+comparisons between outputs from our models on a larger set of API prompts. We then train a reward
+model (RM) on this dataset to predict which model output our labelers would prefer. Finally, we
+use this RM as a reward function and fine-tune our supervised learning baseline to maximize this
+reward using the PPO algorithm (Schulman et al., 2017). We illustrate this process in Figure 2. This
+procedure aligns the behavior of GPT-3 to the stated preferences of a specific group of people (mostly
+our labelers and researchers), rather than any broader notion of “human values”; we discuss this
+further in Section 5.2. We call the resulting models InstructGPT.
+We mainly evaluate our models by having our labelers rate the quality of model outputs on our test
+set, consisting of prompts from held-out customers (who are not represented in the training data).
+We also conduct automatic evaluations on a range of public NLP datasets. We train three model sizes (1.3B, 6B, and 175B parameters), and all of our models use the GPT-3 architecture. Our main
+findings are as follows:
+Labelers significantly prefer InstructGPT outputs over outputs from GPT-3. On our test set,
+outputs from the 1.3B parameter InstructGPT model are preferred to outputs from the 175B GPT-3,
+despite having over 100x fewer parameters. These models have the same architecture, and differ only
+by the fact that InstructGPT is fine-tuned on our human data. This result holds true even when we
+add a few-shot prompt to GPT-3 to make it better at following instructions. Outputs from our 175B
+InstructGPT are preferred to 175B GPT-3 outputs 85 ± 3% of the time, and preferred 71 ± 4% of the
+time to few-shot 175B GPT-3. InstructGPT models also generate more appropriate outputs according
+to our labelers, and more reliably follow explicit constraints in the instruction.
