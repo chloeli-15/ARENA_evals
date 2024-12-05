@@ -106,8 +106,6 @@ def generate_response(
 
     Note:
         - If both 'messages' and 'user'/'system' are provided, 'messages' takes precedence.
-        - The function uses a retry mechanism with exponential backoff for handling transient errors.
-        - The client object should be properly initialized before calling this function.
     """
     if model != "gpt-4o-mini":
         warnings.warn(f"Warning: The model '{model}' is not 'gpt-4o-mini'.")
