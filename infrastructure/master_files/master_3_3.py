@@ -26,20 +26,6 @@ r'''
 # ! TAGS: []
 
 r'''
-ARENA [Streamlit page](https://arena3-chapter3-llm-evals.streamlit.app/[3.3]_Run_Evals_with_Inspect)
-
-Please send any probvlems / bugs on the `#errata` channel in the [Slack group](https://join.slack.com/t/arena-uk/shared_invite/zt-2noug8mpy-TRYbCnc3pzj7ITNrZIjKww), and ask any questions on the dedicated channels for this chapter of material.
-
-If you want to change to dark mode, you can do this by clicking the three horizontal lines in the top-right, then navigating to Settings → Theme.
-
-Links to other chapters: [(0) Fundamentals](https://arena3-chapter0-fundamentals.streamlit.app/), [(1) Transformers & Mech Interp](https://arena3-chapter1-transformer-interp.streamlit.app/), [(2) RL](https://arena3-chapter2-rl.streamlit.app/).
-'''
-
-# ! CELL TYPE: markdown
-# ! FILTERS: []
-# ! TAGS: []
-
-r'''
 <img src = "https://raw.githubusercontent.com/info-arena/ARENA_img/refs/heads/main/img/ch3-evals-cover.jpeg" width = "600">
 '''
 
@@ -164,7 +150,8 @@ r'''
 #         !rmdir {root}/{repo}-{branch}
 
 # if IN_COLAB:
-#     from google.colab import userdata
+#     from google.colab import userdata, output
+#     output.serve_kernel_port_as_window(7575)
 #     sys.modules['__main__'].__file__ = None
 #     try:
 #         os.environ["OPENAI_API_KEY"] = userdata.get("OPENAI_API_KEY")
