@@ -60,13 +60,14 @@ from utils import (
     plot_simple_score_distribution,
     print_dict_as_table,
     pretty_print_messages,
+    generate_response,
 )
 
-num_q_per_call = 4
 import part2_dataset_generation.tests as tests
 
 MAIN = __name__ == "__main__"
 MODEL = "gpt-4o-mini"
+num_q_per_call = 4
 
 # %%
 
@@ -241,8 +242,9 @@ MCQ_EXAMPLES_FILEPATH = (
     f"data/power_seeking_20_questions.json"  # Modify to your MCQ examples filepath
 )
 MCQ_EXAMPLES = import_json(MCQ_EXAMPLES_FILEPATH)
-print(MCQ_EXAMPLES)
 NUM_SHOT = 4  # Modify as needed to show more or fewer examples
+if MAIN:
+    print(MCQ_EXAMPLES)
 
 # %%
 
@@ -348,16 +350,17 @@ gen_prompts = GenPrompts(
 
 # Print the new user prompt
 system_prompt, few_shot_user_prompt = gen_prompts.get_message()
-print("\nSYSTEM PROMPT:\n", system_prompt)
-print("\nUSER PROMPT:\n", few_shot_user_prompt)
+if MAIN:
+    print("\nSYSTEM PROMPT:\n", system_prompt)
+    print("\nUSER PROMPT:\n", few_shot_user_prompt)
 
-response = generate_formatted_response(
-    client=client, model=MODEL, messages=gen_prompts.get_message(), verbose=True
-)
-print(
-    "MODEL RESPONSE:\n",
-)
-pretty_print_questions(json.loads(response)["questions"])
+    response = generate_formatted_response(
+        client=client, model=MODEL, messages=gen_prompts.get_message(), verbose=True
+    )
+    print(
+        "MODEL RESPONSE:\n",
+    )
+    pretty_print_questions(json.loads(response)["questions"])
 
 # %%
 
@@ -403,7 +406,7 @@ def query_generator(
     max_workers=4,
 ) -> List[dict]:
     """
-    This is the main function that queries the model to generate `total_q_to_gen` number of questions. It loads and prepares the prompts, calculates the number of model calls needed, then execute `generate_response` that many times concurrently using ThreadPoolExecutor.
+    This is the main function that queries the model to generate `total_q_to_gen` number of questions. It loads and prepares the prompts, calculates the number of model calls needed, then execute `generate_formatted_response` that many times concurrently using ThreadPoolExecutor.
 
     Args:
         client: OpenAI - the OpenAI client object
@@ -420,7 +423,7 @@ def query_generator(
     # Create an iterable input_args list containing the input args for each call
     input_args = [(client, model, prompts.get_message()) for _ in range(num_calls)]
 
-    # Create a ThreadPoolExecutor object, execute generate_response function concurrently, and raise any exceptions encountered
+    # Create a ThreadPoolExecutor object, execute generate_formatted_response function concurrently, and raise any exceptions encountered
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         try:
             responses = list(
@@ -561,7 +564,7 @@ def generate_model_score(
     verbose: bool = False,
 ) -> Tuple[int, str]:
     """
-    Prepares a few-shot prompt and uses `generate_response()` to generate a response.
+    Prepares a few-shot prompt and uses `generate_formatted_response()` to generate a response.
 
     Returns:
         Tuple[int, str]: A tuple containing:
@@ -595,7 +598,7 @@ if MAIN:
     # For scoring, set temp to zero because we only want to most probable/accurate score
     score, response = generate_model_score(
         client=client,
-        user="What's for dinner?",
+        question="What's for dinner?",
         model=MODEL,
         prompts=qc_prompt,
         verbose=True,
@@ -609,7 +612,7 @@ def query_scorer(
     client,
     dataset: List[dict],
     prompts: QCPrompts,
-    model=MODE,
+    model=MODEL,
     chunk_size=5,
     max_workers=4,
     score_filepath="/data/scored_questions_001.json",
@@ -645,7 +648,7 @@ def query_scorer(
             for question in chunk:
                 assert question is not None, "Question content cannot be None"
                 score, response = generate_model_score(
-                    client=client, question=str(question), model=MODEL, prompts=prompts
+                    client=client, question=str(question), model=model, prompts=prompts
                 )
 
                 question["score"] = score
@@ -660,11 +663,9 @@ def query_scorer(
         total_chunks = math.ceil(len(dataset) / chunk_size)
         print("Number of chunks:", total_chunks)
         list(executor.map(process_chunk, range(total_chunks)))
-
     # Save the scored dataset to output_filepath
     if score_filepath is not None:
         save_json(score_filepath, scored_dataset)
-
     return scored_dataset
 
 
@@ -673,7 +674,7 @@ def query_scorer(
 if MAIN:
     generated_dataset = import_json(generation_filepath)
     scored_dataset = query_scorer(
-        dataset=generated_dataset, model=MODEL, prompts=qc_prompt
+        client=client, dataset=generated_dataset, model=MODEL, prompts=qc_prompt
     )
     scored_dataset = sorted(scored_dataset, key=operator.itemgetter("score"))
     print(tabulate_model_scores(scored_dataset))
@@ -762,7 +763,7 @@ def check_answer_balance(dataset_filepath: str) -> dict:
 
 
 def summarize_results(
-    scored_dataset: List[dict], model=MODEL, save_to: Optional[str] = None
+    scored_dataset: List[dict], save_to: Optional[str] = None
 ) -> dict:
     """
     Calculate summary statistics for the results of the evaluation.
@@ -852,16 +853,15 @@ if MAIN:
     scores_filepath = f"data/scores/scores_{version}.json"
     log_filepath = f"data/logs/log_{version}.json"
 
-    config = Config(
-        model=model,
-        generation_filepath=generation_filepath,
-        score_filepath=scores_filepath,
-    )
-    print(config)
-
     # Instantiate and edit the prompts
-    gen_prompts = GenPrompts()
-    qc_prompt = QCPrompts()
+    gen_prompts = GenPrompts(
+        system_prompt=SYSTEM_PROMPT,
+        user_prompt=USER_PROMPT,
+        few_shot_examples=MCQ_EXAMPLES,
+        num_shots=NUM_SHOT,
+        variance_prompts=VAR_PROMPTS,
+    )
+    qc_prompt = QCPrompts(rubric=rubric, scoring_examples=scoring_examples)
 
     print("\n\n======================= GENERATION PROMPTS ==========================\n")
     pretty_print_messages(gen_prompts.get_message())
@@ -872,11 +872,32 @@ if MAIN:
 
 if MAIN:
     # Generate and evaluate the dataset
-    generated_dataset = query_generator(client, total_q_to_gen, config, gen_prompts)
+    generated_dataset = query_generator(
+        client=client,
+        total_q_to_gen=total_q_to_gen,
+        generation_filepath=generation_filepath,
+        num_q_per_call=4,
+        model=MODEL,
+        prompts=gen_prompts,
+        max_workers=max_workers,
+    )
 
-    scored_dataset = query_scorer(client, generated_dataset, config, qc_prompt)
+    scored_dataset = query_scorer(
+        client=client,
+        dataset=generated_dataset,
+        model=MODEL,
+        prompts=qc_prompt,
+        score_filepath="/data/scored_questions_001.json",
+    )
+    print(scored_dataset)
 
-    summary = summarize_results(scored_dataset, config, log_filepath)
+    summary = summarize_results(scored_dataset, save_to=log_filepath)
+
+# %%
+
+print(scored_dataset)
+scores = [q[f"score"] for q in scored_dataset]
+print(scores)
 
 # %%
 

@@ -14,7 +14,7 @@ if str(exercises_dir) not in sys.path:
 
 MAIN = __name__ == '__main__'
 
-from utils import import_json, save_json, retry_with_exponential_backoff, apply_system_format, apply_assistant_format, apply_user_format, apply_message_format, pretty_print_questions, tabulate_model_scores, plot_score_by_category, plot_simple_score_distribution, print_dict_as_table
+from utils import import_json, save_json, retry_with_exponential_backoff, apply_system_format, apply_assistant_format, apply_user_format, apply_message_format, pretty_print_questions, tabulate_model_scores, plot_score_by_category, plot_simple_score_distribution, print_dict_as_table, generate_response
 
 #%%
 def test_generate_formatted_response(test_fn: Callable, client):

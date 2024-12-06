@@ -9,6 +9,7 @@ import types
 from tabulate import tabulate
 import textwrap
 import random
+import warnings
 import time
 import plotly.graph_objects as go
 from collections import defaultdict
@@ -337,9 +338,59 @@ def pretty_print_questions(questions) -> None:
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
 
+def generate_response(client : OpenAI,
+                      model: str, 
+                      messages:Optional[List[dict]]=None, 
+                      user:Optional[str]=None, 
+                      system:Optional[str]=None, 
+                      temperature: float = 1, 
+                      verbose: bool = False) -> str:
+    """
+    Generate a response using the OpenAI API.
+
+    Args:
+        model (str): The name of the OpenAI model to use (e.g., "gpt-4o-mini").
+        messages (Optional[List[dict]]): A list of message dictionaries with 'role' and 'content' keys. 
+                                         If provided, this takes precedence over user and system args.
+        user (Optional[str]): The user's input message. Used if messages is None.
+        system (Optional[str]): The system message to set the context. Used if messages is None.
+        temperature (float): Controls randomness in output. Higher values make output more random. Default is 1.
+        verbose (bool): If True, prints the input messages before making the API call. Default is False.
+
+    Returns:
+        str: The generated response from the OpenAI model.
+
+    Note:
+        - If both 'messages' and 'user'/'system' are provided, 'messages' takes precedence.
+    """
+    if model != "gpt-4o-mini":
+        warnings.warn(f"Warning: The model '{model}' is not 'gpt-4o-mini'.")
+
+    if messages is None:
+        messages = apply_message_format(user=user, system=system)
+
+    if verbose:
+        for message in messages:
+            print(f"{message['role'].upper()}:\n{message['content']}\n")
+
+    # API call
+    try:
+        response = client.chat.completions.create(
+        model=model, 
+        messages=messages, 
+        temperature=temperature
+        )
+
+    except Exception as e:
+        print("Error in generation:", e)
+
+    return response.choices[0].message.content
+
 def tabulate_model_scores(data: List[Dict], 
                           new_column_keys: List[str] = ["score", "model_response"], 
                           max_width: int = 40) -> str:
+    if not data:
+        return "No data available to display"
     table_data = []
     for item in data:
         question_str = ""
@@ -356,7 +407,7 @@ def tabulate_model_scores(data: List[Dict],
             item.get("score", "N/A"),
             model_response
         ])
-
+    print(table_data)
     headers = ["Question", "Score", "Model Response"]
     return tabulate(table_data, headers=headers, tablefmt="simple_grid", colalign=("left", "center", "left"))
 
