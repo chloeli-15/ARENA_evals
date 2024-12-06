@@ -151,7 +151,7 @@ r'''
 
 # # Install dependencies
 # if "inspect_ai" not in [dist.metadata["Name"] for dist in distributions()]:
-#     %pip install openai anthropic inspect_ai tabulate wikipedia
+#     %pip install openai anthropic inspect_ai tabulate wikipedia dotenv
 
 # # Get root directory, handling 3 different cases: (1) Colab, (2) notebook not in ARENA repo, (3) notebook in ARENA repo
 # root = (
@@ -177,6 +177,14 @@ r'''
 
 # if f"{root}/{chapter}/exercises" not in sys.path:
 #     sys.path.append(f"{root}/{chapter}/exercises")
+
+# if IN_COLAB:
+#     from google.colab import userdata
+#     try:
+#         os.environ["OPENAI_API_KEY"] = userdata.get("OPENAI_API_KEY")
+#     except:
+#         warnings.warn("You don't have an OPENAI_API_KEY variable set in the secrets tab of your google colab.")
+
 
 # os.chdir(f"{root}/{chapter}/exercises")
 
