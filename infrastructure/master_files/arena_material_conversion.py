@@ -572,7 +572,6 @@ class MasterFileData:
             if path.suffix == ".py":
                 len_old = path.read_text(encoding="utf-8").count("\n")
                 path_str = str(path).replace("\\", "/")
-                print("ruff_path", subprocess.check_output(['which', 'ruff'], text=True).strip())
                 result = subprocess.run(["ruff", "format", path_str], capture_output=True, text=True)
                 assert result.returncode == 0, f"Formatting failed: {result.stderr}"
                 len_new = path.read_text(encoding="utf-8").count("\n")

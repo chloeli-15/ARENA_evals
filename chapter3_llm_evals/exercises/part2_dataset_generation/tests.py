@@ -8,11 +8,9 @@ import json
 from typing import List, Dict, Any, Optional, Literal, Callable
 
 # Make sure exercises are in the path
-chapter = r"chapter3_llm_evals"
-exercises_dir = Path(f"{os.getcwd().split(chapter)[0]}/{chapter}/exercises").resolve()
-section_dir = (exercises_dir / "part1_intro").resolve()
-if str(exercises_dir) not in sys.path: sys.path.append(str(exercises_dir))
-os.chdir(exercises_dir)
+exercises_dir = Path(__file__).parent.parent
+if str(exercises_dir) not in sys.path:
+    sys.path.append(str(exercises_dir))
 
 MAIN = __name__ == '__main__'
 
@@ -62,9 +60,9 @@ def test_generate_formatted_response(test_fn: Callable, client):
 
 
 
-def test_rubric(client, dataset, config, eval_prompts):
+def test_rubric(client, dataset, eval_prompts, model = "gpt-4o-mini"):
     import part2_dataset_generation.solutions as solutions
-    scored_dataset = solutions.query_evaluator(client=client, dataset=dataset, config=config, prompts=eval_prompts)
+    scored_dataset = solutions.query_scorer(client=client, dataset=dataset, prompts=eval_prompts)
     ordered_dataset = sorted(scored_dataset, key=operator.itemgetter("score"), reverse=True)
     return ordered_dataset
 
