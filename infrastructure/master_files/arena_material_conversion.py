@@ -17,6 +17,7 @@ import json
 import re
 import subprocess
 from copy import deepcopy
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -28,10 +29,10 @@ ALL_FILES_ABBR = ["soln", "ex", "st", "py"]
 
 ALL_TYPES = ["code", "markdown"]
 ALL_FILTERS_AND_ABBREVS = ["colab", "colab-soln", "soln", "colab-ex", "ex", "streamlit", "st", "python", "py"]
-ALL_TAGS = ["main", "html", "st-dropdown", "master-comment"]
+ALL_TAGS = ["main", "keep-main", "html", "st-dropdown", "master-comment"]
 
 TYPES_TO_VALID_TAGS = {
-    "code": ["main", "master-comment"],
+    "code": ["main", "keep-main", "master-comment"],
     "markdown": ["html", "st-dropdown"],
 }  # for error catching
 
@@ -61,7 +62,11 @@ class Cell:
         # Check all tags are valid, and they're for the correct cell type
         source_orig = deepcopy(self.source)
         tags_without_suffixes = ["st-dropdown" if tag.startswith("st-dropdown[") else tag for tag in self.tags]
-        if not all(tag in (valid_tags := TYPES_TO_VALID_TAGS[self.cell_type]) for tag in tags_without_suffixes):
+        if any(tag.startswith("st-dropdown[") and not tag.endswith("]") for tag in self.tags):
+            raise ValueError(
+                f"Invalid tags {self.tags} for cell type {self.cell_type} - not allowed commas in `st-dropdown[...]` tags (we split tags on commas)"
+            )
+        elif not all(tag in (valid_tags := TYPES_TO_VALID_TAGS[self.cell_type]) for tag in tags_without_suffixes):
             raise ValueError(f"Invalid tags {self.tags} for cell type {self.cell_type}, only allowed {valid_tags}")
 
         # Check all filters are valid
@@ -273,7 +278,10 @@ class Cell:
         # ! (2) Handle "if MAIN", and empty lines
         if ("main" in self.tags) and (files["python"] is not None):
             files["python"] = ["if MAIN:"] + ["    " + line for line in files["python"]]
-        files = {name: _process_source(f, strip_main_blocks=name != "python") for name, f in files.items()}
+        files = {
+            name: _process_source(f, strip_main_blocks=name != "python" and "keep-main" not in self.tags)
+            for name, f in files.items()
+        }
 
         # ! (3) Get the actual objects, and handle COLAB-SPLIT
         for name in ["colab-ex", "colab-soln", "streamlit", "python", "soln-dropdown"]:
@@ -285,7 +293,12 @@ class Cell:
                 elif name.startswith("colab"):
                     # Here, we split it up into multiple cells
                     files[name] = [
-                        {**deepcopy(self.colab), "source": _process_source(files[name][i + 1 : j])}
+                        {
+                            **deepcopy(self.colab),
+                            "source": _process_source(
+                                files[name][i + 1 : j], strip_main_blocks="keep-main" not in self.tags
+                            ),
+                        }
                         for i, j in zip([-1] + split_lines, split_lines + [len(files[name])])
                     ]
                 elif name == "soln-dropdown":
@@ -351,15 +364,14 @@ class Cell:
             else:
                 # We need to insert a new cell to hold the solutions (which will come before this cell)
                 files["soln-dropdown"] = soln_full
-                assert "if MAIN" not in "".join(soln_full), "Can't have 'if MAIN:' in dropdown"
+                assert "if MAIN" not in "".join(soln_full), "Shouldn't have 'if MAIN:' in dropdown"
                 files["streamlit"] = soln_full + ["\n"] + files["streamlit"]
             status["soln-dropdown"] = None
 
         # ! (3) Handle colab titles
-        if status["chapter-stage"] == "title":
+        if (status["chapter-stage"] == "title") and self.source[0].startswith("# ["):
             files["colab-ex"][0] = files["colab-ex"][0] + " (exercises)"
             files["colab-soln"][0] = files["colab-soln"][0] + " (solutions)"
-            status["chapter-stage"] = "pre-intro"
 
         # ! (4) Handle streamlit dropdowns
         if any(tag.startswith("st-dropdown[") for tag in self.tags):
@@ -423,7 +435,7 @@ class Cell:
             import traceback
 
             raise ValueError(
-                f"Cell passed validation checks but failed processing. This shouldn't happen (errors should be caught earlier), please contact Callum if you can't debug from stacktrace.\n\nError was at cell in range {self.lines_str} in `master.py` file.\n\nError message: {e}\n\nFull stacktrace:\n{traceback.format_exc()}"
+                f"Cell passed validation checks but failed processing.\nThis shouldn't happen (errors should be caught earlier), please contact Callum if you can't debug from stacktrace.\nError was at cell in range {self.lines_str} in `master.py` file.\nError message: {e}\nFull stacktrace:\n{traceback.format_exc()}"
             ) from e
 
     @property
@@ -435,6 +447,9 @@ class Cell:
                     "Found learning objectives in a cell which doesn't start with '## Content & Learning Objectives'"
                 )
             return
+        assert (
+            len(self.source) > 1
+        ), "Should have learning objectives in the same cell as the '## Content & Learning Objectives' header, not below it."
         pattern_prefix = r"> ##### Learning Objectives\n>"
         pattern = pattern_prefix + r".*?\n>(.*?)(?=\n\n|$)"
         matches = re.findall(pattern, self.content_str, re.DOTALL)
@@ -442,6 +457,7 @@ class Cell:
         if not matches_wider:
             raise ValueError(
                 f"Found no learning objectves in the `## Content & Learning Objectives` cell. Expected syntax is {pattern_prefix} ..."
+                # and the section headers before each learning objectives section should be look like '### 1️⃣ Setting up our agent'
             )
         if len(matches) != len(matches_wider):
             raise ValueError(
@@ -459,7 +475,7 @@ class Cell:
         """
         Updates status based on the chapter header, if the line is a chapter header. This might be the main header, the
         "# Introduction" header, or one of the chapter headers. Returns a boolean indicating whether a chapter is done,
-        in which case we should add the separator to the Streamlit file.
+        but more importantly it'll update the status dict to reflect where we are now.
         """
         if not ((first_line := self.source[0].strip()).startswith("# ") and self.cell_type == "markdown"):
             return False
@@ -477,17 +493,16 @@ class Cell:
                 r"^\[\d+(\.\d+)*\]\s+.+$", header
             ), f"Chapter header should look like '[1.2.3] Chapter Title', found {header!r}"
             status["chapter-stage"] = "title"
-            print("Parsing pre-intro")
-            return False
-        elif status["chapter-stage"] == "pre-intro":
+            print("Parsing section between main title and '# Introduction'")
+        elif status["chapter-stage"] == "title":
             assert header == "Introduction", f"Next header should be `# Introduction`, but found {header!r}"
             status["chapter-stage"] = "intro"
-            print("Parsing intro")
-            return False
+            print("Parsing section '# Introduction', before exercises start")
         else:
             status["chapter-stage"] = 1 if status["chapter-stage"] == "intro" else status["chapter-stage"] + 1
             print(f"Parsing chapter {header!r}")
-            return True
+
+        return True
 
     @property
     def content_str(self) -> str:
@@ -531,16 +546,25 @@ class MasterFileData:
     streamlit_py_file: str
 
     @property
+    def exercises_dir(self) -> Path:
+        return self.chapter_dir / "exercises" / self.exercise_dir_name
+
+    @property
+    def instructions_dir(self) -> Path:
+        return self.chapter_dir / "instructions" / "pages"
+
+    @property
+    def colab_name(self) -> str:
+        return self.streamlit_page_name.split("[")[-1].replace("]", "").removesuffix(".py")
+
+    @property
     def files(self) -> dict[str, Any]:
-        exercises_dir = self.chapter_dir / "exercises" / self.exercise_dir_name
-        instructions_dir = self.chapter_dir / "instructions" / "pages"
-        colab_name = self.streamlit_page_name.split("_", 1)[1].replace("_", " ").removesuffix(".py")
         return {
-            exercises_dir / "solutions.py": "".join(self.solutions_py_file),
-            instructions_dir / f"{self.streamlit_page_name}.md": "".join(self.streamlit_md_file),
-            instructions_dir / f"{self.streamlit_page_name}.py": self.streamlit_py_file,
-            exercises_dir / f"{colab_name} (exercises).ipynb": self.colab_ex_cells,
-            exercises_dir / f"{colab_name} (solutions).ipynb": self.colab_soln_cells,
+            self.exercises_dir / "solutions.py": "".join(self.solutions_py_file),
+            self.instructions_dir / f"{self.streamlit_page_name}.md": "".join(self.streamlit_md_file),
+            self.instructions_dir / f"{self.streamlit_page_name}.py": self.streamlit_py_file,
+            self.exercises_dir / f"{self.colab_name}_exercises.ipynb": self.colab_ex_cells,
+            self.exercises_dir / f"{self.colab_name}_solutions.ipynb": self.colab_soln_cells,
         }
 
     def __init__(self, master_path: Path, chapter_dir: Path, exercise_dir_name: str, streamlit_page_name: str):
@@ -572,11 +596,22 @@ class MasterFileData:
             if path.suffix == ".py":
                 len_old = path.read_text(encoding="utf-8").count("\n")
                 path_str = str(path).replace("\\", "/")
-                print("ruff_path", subprocess.check_output(['which', 'ruff'], text=True).strip())
-                result = subprocess.run(["ruff", "format", path_str], capture_output=True, text=True)
-                assert result.returncode == 0, f"Formatting failed: {result.stderr}"
+                result = subprocess.run(["ruff", "format", path_str], capture_output=True, text=True, shell=True)
+                assert (
+                    result.returncode == 0
+                ), f"Failed to format {path.name!r}, check file to see if it has any errors."
                 len_new = path.read_text(encoding="utf-8").count("\n")
                 print(f"Successfully formatted {path.name!r}, length went from {len_old} ➔ {len_new}")
+
+    # TODO - nice if this could actually work, but I don't think it's possible
+    # def collapse_sections(self, sections: list[str]) -> None:
+    #     """
+    #     To be run after file generation, to collapse sections when they're opened in Colab.
+    #     """
+    #     exercises_nb = self.exercises_dir / f"{self.colab_name}_exercises.ipynb"
+    #     data = json.loads(exercises_nb.read_text(encoding="utf-8"))
+    #     data["metadata"]["colab"]["collapsed_sections"] = sections
+    #     exercises_nb.write_text(json.dumps(data, indent=4), encoding="utf-8")
 
     @property
     def master_py_path(self) -> Path:
@@ -630,7 +665,7 @@ class MasterFileData:
         cells = _split_into_cells(lines)
 
         status = {
-            "chapter-stage": None,  # or "title", "pre-intro", "intro", "content"
+            "chapter-stage": None,  # or "title", "intro", "content"
             "soln-dropdown": None,  # either None or list of strings (for soln to previous exercise, that'll go in dropdown)
             "logs": [],  # for verbose print messages (helps with debugging and stuff)
             "prev-was-code": False,  # whether last cell was code cell (used for deciding where to put HTML output)
@@ -666,16 +701,24 @@ class MasterFileData:
                     if file_contents[key] is not None:
                         file_list.extend([fc for fc in file_contents[key] if fc is not None])
 
-                # Add the chapter separator, if necessary (it comes just before the title which we just added)
+                # Behaviour if we have a title (this is special)
                 if update_from_header:
-                    self.streamlit_md_file.insert(-2, "\n\n=== NEW CHAPTER ===\n\n")
+                    # If this is the main header, then add the page links below it
+                    if status["chapter-stage"] == "title":
+                        st_lines, colab_lines = self.get_page_links()
+                        self.streamlit_md_file.extend(["", *st_lines, ""])
+                        self.colab_ex_cells[-1]["source"].extend(["", *colab_lines])
+                        self.colab_soln_cells[-1]["source"].extend(["", *colab_lines])
 
-                # Add the learning objectives after the chapter header, if necessary
-                if update_from_header and isinstance(status["chapter-stage"], int) and learning_objectives:
-                    if objs := learning_objectives.pop(status["chapter-stage"], []):
-                        self.streamlit_md_file.extend(["", *objs, ""])
-                        self.colab_ex_cells[-1]["source"].extend(["", *objs])
-                        self.colab_soln_cells[-1]["source"].extend(["", *objs])
+                    # If this is a chapter header...
+                    if isinstance(status["chapter-stage"], int):
+                        # ...add the chapter separator (before the new title)
+                        self.streamlit_md_file.insert(-2, "\n\n=== NEW CHAPTER ===\n\n")
+                        # and add the learning objectives (after the new title), if we have them.
+                        if learning_objectives and (objs := learning_objectives.pop(status["chapter-stage"], [])):
+                            self.streamlit_md_file.extend(["", *objs, ""])
+                            self.colab_ex_cells[-1]["source"].extend(["", *objs])
+                            self.colab_soln_cells[-1]["source"].extend(["", *objs])
 
             first_line = cell.content_str.replace("\n", "\\n")
             first_line = first_line if len(first_line) < 50 else first_line[:60] + " ..."
@@ -694,6 +737,35 @@ class MasterFileData:
         self.streamlit_md_file = "\n".join(_remove_consecutive_empty_lines(self.streamlit_md_file))
         self.solutions_py_file = "\n".join(_remove_consecutive_empty_lines(self.solutions_py_file))
 
+    def get_page_links(self) -> tuple[list[str], list[str]]:
+        MASTER_FILE_ROOT = "https://colab.research.google.com/github/callummcdougall/ARENA_3.0/blob/master_file/"
+        solutions_link = f"{MASTER_FILE_ROOT}{self.chapter_dir.name}/exercises/{self.exercise_dir_name}/{self.colab_name}_solutions.ipynb"
+        exercises_link = f"{MASTER_FILE_ROOT}{self.chapter_dir.name}/exercises/{self.exercise_dir_name}/{self.colab_name}_exercises.ipynb"
+        chapter_name_in_url = self.chapter_dir.name.replace("_", "-")
+        time_suffix = "?t=" + datetime.now().strftime("%Y%m%d")
+
+        colab_lines = [
+            f"> **ARENA [Streamlit Page](https://arena-{chapter_name_in_url}.streamlit.app/{self.streamlit_page_name})**",
+            ">",
+            f"> **Colab: [exercises]({exercises_link}{time_suffix}) | [solutions]({solutions_link}{time_suffix})**",
+            "",
+            "Please send any problems / bugs on the `#errata` channel in the [Slack group](https://join.slack.com/t/arena-uk/shared_invite/zt-2noug8mpy-TRYbCnc3pzj7ITNrZIjKww), and ask any questions on the dedicated channels for this chapter of material.",
+            "",
+            "You can collapse each section so only the headers are visible, by clicking the arrow symbol on the left hand side of the markdown header cells.",
+            "",
+            "Links to all other chapters: [(0) Fundamentals](https://arena-chapter0-fundamentals.streamlit.app/), [(1) Transformer Interpretability](https://arena-chapter1-transformer-interp.streamlit.app/), [(2) RL](https://arena-chapter2-rl.streamlit.app/).",
+        ]
+        streamlit_lines = [
+            f"> **Colab: [exercises]({exercises_link}{time_suffix}) | [solutions]({solutions_link}{time_suffix})**",
+            "",
+            "Please send any problems / bugs on the `#errata` channel in the [Slack group](https://join.slack.com/t/arena-uk/shared_invite/zt-2noug8mpy-TRYbCnc3pzj7ITNrZIjKww), and ask any questions on the dedicated channels for this chapter of material/",
+            "",
+            "If you want to change to dark mode, you can do this by clicking the three horizontal lines in the top-right, then navigating to Settings → Theme.",
+            "",
+            "Links to all other chapters: [(0) Fundamentals](https://arena-chapter0-fundamentals.streamlit.app/), [(1) Transformer Interpretability](https://arena-chapter1-transformer-interp.streamlit.app/), [(2) RL](https://arena-chapter2-rl.streamlit.app/).",
+        ]
+        return streamlit_lines, colab_lines
+
 
 def _convert_master_ipynb_cell_to_master_py_cell_data(cell: dict) -> tuple[str, list[str], list[str], list[str]]:
     """
@@ -702,6 +774,9 @@ def _convert_master_ipynb_cell_to_master_py_cell_data(cell: dict) -> tuple[str, 
     cell_type = cell["cell_type"]
     filters = []
     tags = []
+
+    assert len(cell["source"]) > 0, "Found empty cell source!"
+
     for i, line in enumerate(cell["source"]):
         line_stripped = line.strip().lstrip("# " if cell_type == "code" else "")
         if line_stripped.startswith("FILTERS: "):  # => cell-level filters
@@ -735,10 +810,16 @@ def _split_into_cells(lines: list[str]) -> list[Cell]:
         filters = [filter for filter in filters if filter != ""]
         tags = lines[c_start + 2].strip().removeprefix("# ! TAGS: [").removesuffix("]").split(",")
         tags = [tag for tag in tags if tag != ""]
-        assert lines[c_start + 3] == "", "Expected empty line after (CELL_TYPE, FILTERS, TAGS) in master.py"
-        assert lines[c_start + 4], "Expected first line of cell to be non-empty"
-        source = _strip_empty_lines_from_start_and_end(lines[c_start + 4 : c_end - 1])
-        vscode_lines_str = f"({c_start + 5}, {c_end - 1})"  # this is so we can find & debug it in master.py
+
+        # "TAGS" might have 2 empty lines after it, if cell starts with class or function definition (because the ruff
+        # autoformatter inserts an extra line in this case)
+        assert lines[c_start + 3] == "", f"Expected empty L{c_start + 3} after (CELL_TYPE, FILTERS, TAGS) in master.py"
+        c_start_real = (c_start + 4) if lines[c_start + 4] else (c_start + 5)
+        assert lines[c_start_real], f"Expected first line of cell L{c_start + 4} to be non-empty"
+
+        # Now we know where the real cell content starts, we create a Cell object from it
+        source = _strip_empty_lines_from_start_and_end(lines[c_start_real : c_end - 1])
+        vscode_lines_str = f"({c_start_real + 1}, {c_end - 1})"  # this is so we can find & debug it in master.py
         cells.append(Cell(filters, tags, cell_type, source, vscode_lines_str))
 
     return cells
