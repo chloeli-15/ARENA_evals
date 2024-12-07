@@ -169,7 +169,7 @@ r'''
 #     try:
 #         os.environ["OPENAI_API_KEY"] = userdata.get("OPENAI_API_KEY")
 #     except:
-#         warnings.warn("You don't have an OPENAI_API_KEY variable set in the secrets tab of your google colab.")
+#         warnings.warn("You don't have an OPENAI_API_KEY variable set in the secrets tab of your google colab. You have to set one, or any calls to APIs won't work.")
 
 
 # os.chdir(f"{root}/{chapter}/exercises")
@@ -391,12 +391,12 @@ Most importantly, `response.choices[0].message` contains the model's response. W
 
 r'''
 ### Exercise - Generate response via API
-```c
-Difficulty: 🔴⚪⚪⚪⚪
-Importance: 🔵🔵🔵🔵⚪
-
-You should spend up to 5-10 minutes on this exercise.
-```
+> ```yaml
+> Difficulty: 🔴⚪⚪⚪⚪
+> Importance: 🔵🔵🔵🔵⚪
+> 
+> You should spend up to 5-10 minutes on this exercise.
+> ```
 
 You should fill in the `generate_response` function below. It should:
 
@@ -475,12 +475,12 @@ print(response)
 r'''
 ### Exercise (optional) - Retry with exponential back-off 
 
-```c
-Difficulty: 🔴🔴⚪⚪⚪
-Importance: 🔵🔵🔵⚪⚪
-
-You should spend up to 10-15 minutes on this exercise.
-```
+> ```yaml
+> Difficulty: 🔴🔴⚪⚪⚪
+> Importance: 🔵🔵🔵⚪⚪
+> 
+> You should spend up to 10-15 minutes on this exercise.
+> ```
 
 LLM APIs impose a limit on the number of API calls a user can send within a period of time — either tokens per minute (TPM) or requests per day (RPD). See more info [here](https://platform.openai.com/docs/guides/rate-limits). Therefore, when you use model API calls to generate a large dataset, you will most likely encounter a `RateLimitError`. 
 
@@ -686,12 +686,12 @@ In this process of making the threat model more concrete, we recognize the key a
 
 r'''
 ### Exercise - Build threat models
-```c
-Difficulty: 🔴🔴🔴🔴⚪
-Importance: 🔵🔵🔵🔵🔵
-
-You should spend up to 40-60 minutes on this exercise.
-```
+> ```yaml
+> Difficulty: 🔴🔴🔴🔴⚪
+> Importance: 🔵🔵🔵🔵🔵
+> 
+> You should spend up to 40-60 minutes on this exercise.
+> ```
 We will later be building a set of multiple-choice questions (MCQs) to evaluate a certain model property. In this exercise, we are building a threat-model to help us decide on which property to evaluate and what aspects of this property to focus on, so that our eval can provide information on a potential harmful outcome. Keep in mind that we want a threat-model detailed enough to help us design a MCQ eval, but not as detailed as the threat-models of AI companies & governments used for policy-making.
 
 1. Choose 3 properties from below and write down your *own* working definition of each property in ~1 sentence. Start by jotting down concrete examples of behaviors that you immediately associate with this property. (~10 min)
@@ -908,13 +908,13 @@ An operational definition or an experiment rarely captures the full of what is u
 
 r'''
 ### Exercise - Design a specification
-```c
-Difficulty: 🔴🔴🔴🔴⚪
-Importance: 🔵🔵🔵🔵🔵
-
-You should spend up to 45 minutes on this exercise; 10 minutes on Q1 and 30-35 minutes on Q2 and Q3.
-
-```
+> ```yaml
+> Difficulty: 🔴🔴🔴🔴⚪
+> Importance: 🔵🔵🔵🔵🔵
+> 
+> You should spend up to 45 minutes on this exercise; 10 minutes on Q1 and 30-35 minutes on Q2 and Q3.
+> 
+> ```
 
 1. For the property you threat-modelled, try to write down a more precise definition. You may choose to (or not) decompose it into subproperties/axes and narrow your scope. (If you are happy with your previous working definition, move to the next question and come back when needed.)
 2. Come up with 1-3 **operational definitions**. They must be measurable in an MCQ experiment. Further, the interpretation of answers to different MCQs should not depend on each other (e.g. it should not be the case that, answer A to question 1 indicates power-seeking iff the model chose answer B on question 2). (This is in principle a fine design, but introduces incompatibilities with how we run evals using `inspect` in later chapters.)
@@ -978,13 +978,13 @@ You will test your operational definition and question design that you just spec
 
 r'''
 ### Exercise - Engineer eval question prompt
-```c
-Difficulty: 🔴🔴🔴🔴⚪
-Importance: 🔵🔵🔵🔵🔵
-
-You should spend up to 35-40 minutes on this exercise.
-
-```
+> ```yaml
+> Difficulty: 🔴🔴🔴🔴⚪
+> Importance: 🔵🔵🔵🔵🔵
+> 
+> You should spend up to 35-40 minutes on this exercise.
+> 
+> ```
 For your chosen operational definition, write out a question as a full `user` prompt (and a `system` prompt if more context info needs to be given). Try to make the prompt realistic to a request it might see in a real user scenario (e.g. if the question is sent by employees from a company, what might a internal company API request look like?). For this exercise, the question must satisfy the following constraints:
 * Questions are multiple-choice questions (MCQ).
 * Any number of answer choices is fine, but all MCQs must have the same number of answer choices. Otherwise, it is hard to establish a random baseline (e.g. a 2-choice MCQ has a random baseline of 50%, 4-choice MCQ has 25%).

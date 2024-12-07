@@ -127,7 +127,7 @@ r'''
 #         !mv {root}/{repo}-{branch}/{chapter} {root}/{chapter}
 #         !rm {root}/{branch}.zip
 #         !rmdir {root}/{repo}-{branch}
-        
+
 # if IN_COLAB:
 #     from google.colab import userdata
 #     try:
@@ -283,12 +283,12 @@ Read the [Structured Outputs guide](https://platform.openai.com/docs/guides/stru
 
 r'''
 ### Exercise - Generate structured MCQ outputs
-```c
-Difficulty: 🔴🔴⚪⚪⚪
-Importance: 🔵🔵🔵⚪⚪
-
-You should spend up to 10-15 minutes on this exercise.
-```
+> ```yaml
+> Difficulty: 🔴🔴⚪⚪⚪
+> Importance: 🔵🔵🔵⚪⚪
+> 
+> You should spend up to 10-15 minutes on this exercise.
+> ```
 
 You will do the following in this exercise:
 * Define classes to specify the structure of your MCQs. Note that you can set a class attribute as another class, which will return a nested dictionary.
@@ -308,7 +308,7 @@ Note that the structure of your MCQ must satisfy the following:
 # # TODO: Define the structured output classes below
 
 
-# EXERCISE END
+# END EXERCISE
 # SOLUTION
 
 
@@ -327,7 +327,7 @@ class Question(BaseModel):
 class QuestionGeneration(BaseModel):
     reasoning: str  # Allow model to do chain-of-thought reasoning before generating the questions
     questions: List[Question]
-# SOLUTION END
+# END SOLUTION
 
 @retry_with_exponential_backoff
 def generate_formatted_response(client: OpenAI,
@@ -358,7 +358,7 @@ def generate_formatted_response(client: OpenAI,
         warnings.warn(f"Warning: The model '{model}' is not 'gpt-4o-mini'.")
     # EXERCISE
     # # TODO: Implement the structured output generation here
-    # EXERCISE END
+    # END EXERCISE
     # SOLUTION
     if messages is None:
         messages = apply_message_format(user=user, system=system)
@@ -380,7 +380,7 @@ def generate_formatted_response(client: OpenAI,
         
     except Exception as e:
         print("Error in generation:", e)
-    # SOLUTION END
+    # END SOLUTION
 
 # ! CELL TYPE: code
 # ! FILTERS: []
@@ -483,12 +483,12 @@ Here are some more in-depth examples in the prompt engineering guides by [OpenAI
 r'''
 ### Exercise - Write prompts for question generation
 
-```c
-Difficulty: 🔴🔴🔴⚪⚪
-Importance: 🔵🔵🔵🔵⚪
-
-You should spend up to 20-30 minutes on this exercise.
-```
+> ```yaml
+> Difficulty: 🔴🔴🔴⚪⚪
+> Importance: 🔵🔵🔵🔵⚪
+> 
+> You should spend up to 20-30 minutes on this exercise.
+> ```
 
 In this task, you will write a `system` and `user` prompt for models to generate the kind of eval MCQs that you designed. Below are some prompt templates to start with. 
 
@@ -581,12 +581,12 @@ Before writing the question, think about what would be a great evaluation questi
 
 r'''
 ### Exercise - Write few-shot prompts for generation
-```c
-Difficulty: 🔴🔴⚪⚪⚪
-Importance: 🔵🔵🔵⚪⚪
-
-You should spend up to 10-15 minutes on this exercise.
-```
+> ```yaml
+> Difficulty: 🔴🔴⚪⚪⚪
+> Importance: 🔵🔵🔵⚪⚪
+> 
+> You should spend up to 10-15 minutes on this exercise.
+> ```
 
 We will add some few-shot examples to our generation prompt. If you completed chapter [3.1] and designed some MCQs, you will use these as the few-shot examples (you need at least 4 example MCQs). Otherwise, you can use our `power-seeking` dataset or an existing eval dataset.
 
@@ -662,7 +662,7 @@ def add_few_shot_examples(user_prompt, few_shot_examples: Optional[List[dict]]=N
         for example in examples:
             user_prompt += f"{json.dumps(example)} \n"
     return user_prompt
-   # SOLUTION END
+   # END SOLUTION
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -711,7 +711,7 @@ class GenPrompts():
     #     system_prompt = apply_system_format(self.system_prompt)
     #     user_prompt = apply_user_format(self.user_prompt)
     #     return [system_prompt, user_prompt]
-    # EXERCISE END
+    # END EXERCISE
     # SOLUTION
     def get_message(self) -> List[dict]:
         """Format the system and user prompt into API message format. Return a list of system and user messages."""
@@ -719,10 +719,11 @@ class GenPrompts():
         user_prompt = add_few_shot_examples(self.user_prompt, few_shot_examples = self.few_shot_examples, num_shots=NUM_SHOT)
         user_prompt = apply_user_format(user_prompt)
         return [system_prompt, user_prompt]
-    # SOLUTION END
+    # END SOLUTION
 
 # HIDE
 gen_prompts = GenPrompts(system_prompt=SYSTEM_PROMPT, user_prompt=USER_PROMPT, few_shot_examples=MCQ_EXAMPLES, num_shots= NUM_SHOT)
+# END HIDE
 
 # ! CELL TYPE: code
 # ! FILTERS: []
@@ -741,12 +742,12 @@ if MAIN:
 
 r'''
 ### Exercise - Add variance prompts
-```c
-Difficulty: 🔴🔴🔴⚪⚪
-Importance: 🔵🔵🔵⚪⚪
-
-You should spend up to 15-20 minutes on this exercise.
-```
+> ```yaml
+> Difficulty: 🔴🔴🔴⚪⚪
+> Importance: 🔵🔵🔵⚪⚪
+> 
+> You should spend up to 15-20 minutes on this exercise.
+> ```
 A main flaw of model-generated questions is the lack of diversity - the questions may seem a bit cookie-cutter, whereas ideally, we want a heterogenous set of questions so the style pattern is not a confounder to our results. 
 
 One solution to this problem is to add "variance prompts." We design sentences to add to the user prompt that aim to break the model out of patterns in its generation and increase the diversity of the questions (e.g. "Look at these example questions and identify any patterns that make them repetitive. Then think of more creative questions that break these patterns while still directly measuring power-seeking without confounds."). These sentences should be randomly selected and appended to the user prompt at some frequency `p_var`. This is set to 0.9 because we want to add variance most of the time, but sometimes just want the default behavior without the extra prompts. You should experiment with different variance prompts, and make sure they increase diversity without significantly reducing the quality of model output.
@@ -767,13 +768,13 @@ def add_variance_prompts(user_prompt, var_prompts, p_var) -> List[dict]:
     # EXERCISE
     # TODO: Sample and append an instruction at the end to increase output variance
     # pass
-    # EXERCISE END
+    # END EXERCISE
     # SOLUTION
     if p_var > 0:
         if np.random.binomial(1, p_var):
             user_prompt += random.choice(var_prompts)
     return user_prompt
-    # SOLUTION END
+    # END SOLUTION
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -819,7 +820,7 @@ class GenPrompts():
     #     system_prompt = apply_system_format(self.system_prompt)
     #     user_prompt = apply_user_format(self.user_prompt)
     #     return [system_prompt, user_prompt]
-    # EXERCISE END
+    # END EXERCISE
     # SOLUTION
     def get_message(self) -> List[dict]:
         """Format the system and user prompt into API message format. Return a list of system and user messages."""
@@ -828,10 +829,11 @@ class GenPrompts():
         user_prompt = add_variance_prompts(user_prompt, var_prompts=self.variance_prompts, p_var=P_VAR)
         user_prompt = apply_user_format(user_prompt)
         return [system_prompt, user_prompt]
-    # SOLUTION END
+    # END SOLUTION
 
 # HIDE
 gen_prompts = GenPrompts(system_prompt=SYSTEM_PROMPT, user_prompt=USER_PROMPT, few_shot_examples=MCQ_EXAMPLES, num_shots= NUM_SHOT, variance_prompts=VAR_PROMPTS)
+# END HIDE
 
 # ! CELL TYPE: code
 # ! FILTERS: []
@@ -937,12 +939,12 @@ if MAIN:
 
 r'''
 ### Exercise - Generate questions with LLM
-```c
-Difficulty: 🔴🔴🔴🔴⚪
-Importance: 🔵🔵🔵🔵🔵
-
-You should spend up to 20-25 minutes on this exercise.
-```
+> ```yaml
+> Difficulty: 🔴🔴🔴🔴⚪
+> Importance: 🔵🔵🔵🔵🔵
+> 
+> You should spend up to 20-25 minutes on this exercise.
+> ```
 
 You should fill in the `query_generator` function. This is the main function we will use to query the API to generate questions. It should:
 * Perform the number of API calls necessary to generate any required number of questions (e.g. 50 questions)
@@ -978,7 +980,7 @@ def query_generator(client: OpenAI,
     # EXERCISE
     # # TODO: Fill in the function
     # pass
-    # EXERCISE END
+    # END EXERCISE
     # SOLUTION
     # Calculate the number of calls needed
     num_calls = math.ceil(total_q_to_gen/num_q_per_call)
@@ -1001,8 +1003,7 @@ def query_generator(client: OpenAI,
 
         except Exception as e:
             print(f"Error generating questions: {e}")
-    # SOLUTION END
-
+    # END SOLUTION
 
 # ! CELL TYPE: code
 # ! FILTERS: []
@@ -1092,12 +1093,12 @@ rubric_template = f"""
 
 r'''
 ### Exercise - Design the scoring rubric
-```c
-Difficulty: 🔴🔴🔴⚪⚪
-Importance: 🔵🔵🔵🔵⚪
-
-You should spend up to 25-35 minutes on this exercise.
-```
+> ```yaml
+> Difficulty: 🔴🔴🔴⚪⚪
+> Importance: 🔵🔵🔵🔵⚪
+> 
+> You should spend up to 25-35 minutes on this exercise.
+> ```
 
 For this task, you will do the following:
 * Define a `rubric` for how to score questions. 
@@ -1130,7 +1131,7 @@ scoring_examples = [
     {"role": "assistant", "content": ""}
 ]
 
-# EXERCISE END
+# END EXERCISE
 
 # SOLUTION
 rubric ="""
@@ -1194,7 +1195,7 @@ scoring_examples = [
         }
     ]
 
-# SOLUTION END
+# END SOLUTION
 qc_prompt = QCPrompts(rubric=rubric, scoring_examples=scoring_examples)
 
 # ! CELL TYPE: markdown
@@ -1284,12 +1285,12 @@ if MAIN:
 
 r'''
 ### Exercise - Score questions with LLMs
-```c
-Difficulty: 🔴🔴🔴🔴🔴
-Importance: 🔵🔵🔵🔵🔵
-
-You should spend up to 30-40 minutes on this exercise.
-```
+> ```yaml
+> Difficulty: 🔴🔴🔴🔴🔴
+> Importance: 🔵🔵🔵🔵🔵
+> 
+> You should spend up to 30-40 minutes on this exercise.
+> ```
 You should fill in `query_scorer` function below. This is the main function that evaluates a question dataset using models. Specifically, it should:
 * Divide the dataset into "chunks" of size `chunk_size` (by default, we set `chunk_size = 5`; this means we score 5 questions per chunk)
 * Evaluate questions within a chunk serially using `generate_model_score()`
@@ -1321,7 +1322,7 @@ def query_scorer(client, dataset: List[dict], prompts: QCPrompts, model = MODEL,
     """
     # EXERCISE
     # raise NotImplementedError("Implement the query_scorer function")
-    # EXERCISE END
+    # END EXERCISE
     # SOLUTION
     assert dataset != [], "Dataset cannot be empty"
     scored_dataset = []
@@ -1359,7 +1360,7 @@ def query_scorer(client, dataset: List[dict], prompts: QCPrompts, model = MODEL,
     if score_filepath is not None:
         save_json(score_filepath, scored_dataset)
     return scored_dataset
-    # SOLUTION END
+    # END SOLUTION
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -1517,12 +1518,12 @@ if MAIN:
 
 r'''
 ### Exercise - Checks and summary statistics
-```c
-Difficulty: 🔴🔴⚪⚪⚪
-Importance: 🔵🔵🔵⚪⚪
-
-You should spend up to 20-25 minutes on this exercise.
-```
+> ```yaml
+> Difficulty: 🔴🔴⚪⚪⚪
+> Importance: 🔵🔵🔵⚪⚪
+> 
+> You should spend up to 20-25 minutes on this exercise.
+> ```
 
 Think about possible biases in the dataset and write check functions for them. For example:
 * "Yes-bias": If you have binary answer categories (e.g. yes no answers), does the `answer_matching_behavior` mostly correspond to one answer (e.g. "Yes" is the `answer_matching_behavior` 70% of the times). This means a model with a "say-yes" bias would score higher on the dataset.
@@ -1541,11 +1542,11 @@ def summarize_results(scored_dataset: List[dict], model = MODEL, save_to: Option
     """
     # EXERCISE
     # raise NotImplementedError("Implement the summarize_results function")
-    # EXERCISE END
+    # END EXERCISE
 
 # EXERCISE
 # TODO: Implement your own custom functions to retrieve relevant statistics about the scored dataset.
-# EXERCISE END    
+# END EXERCISE    
 
 # SOLUTION
 def check_category_balance(dataset_filepath: str) -> dict:
@@ -1599,7 +1600,7 @@ def summarize_results(scored_dataset: List[dict], save_to: Optional[str] = None)
         save_json(save_to, log)
 
     return log
-# SOLUTION END
+# END SOLUTION
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -1626,12 +1627,12 @@ SOLUTION
 r'''
 ### Exercise - Filter dataset
 
-```c
-Difficulty: 🔴🔴⚪⚪⚪
-Importance: 🔵🔵⚪⚪⚪
-
-You should spend up to 10-15 minutes on this exercise.
-```
+> ```yaml
+> Difficulty: 🔴🔴⚪⚪⚪
+> Importance: 🔵🔵⚪⚪⚪
+> 
+> You should spend up to 10-15 minutes on this exercise.
+> ```
 Write a function that filters out the generated questions below a certain score threshold. The `filter_dataset` function should:
 * Take a dataset and compare the score of each question in the dataset against a `threshold` value 
 * Return a filtered list of questions that are `than_threshold` the `threshold` value
@@ -1656,7 +1657,7 @@ def filter_dataset(scored_dataset: List[dict], score_field: str, threshold: int,
     """
     # EXERCISE
     # raise NotImplementedError("Implement the filter_dataset function")
-    # EXERCISE END
+    # END EXERCISE
     # SOLUTION
     if score_field not in scored_dataset[0]:
         raise ValueError(f"Score field {score_field} not found in dataset")
@@ -1675,11 +1676,12 @@ def filter_dataset(scored_dataset: List[dict], score_field: str, threshold: int,
     if save_to:
         save_json(save_to, filtered_dataset)
     return filtered_dataset
-    # SOLUTION END
+    # END SOLUTION
 
 # HIDE
 if MAIN:
     tests.test_filter_dataset(filter_dataset)
+# END HIDE
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -1750,7 +1752,6 @@ if MAIN:
     pretty_print_messages(gen_prompts.get_message())
     print("\n\n======================= EVALUATION PROMPTS ==========================\n")
     pretty_print_messages(qc_prompt.get_message())
-
 
 # ! CELL TYPE: code
 # ! FILTERS: []
