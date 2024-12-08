@@ -129,6 +129,7 @@ r'''
 # import sys
 # from importlib.metadata import distributions
 # from pathlib import Path
+# import warnings
 # IN_COLAB = "google.colab" in sys.modules
 
 # chapter = "chapter3_llm_evals"

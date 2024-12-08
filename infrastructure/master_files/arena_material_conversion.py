@@ -738,7 +738,7 @@ class MasterFileData:
         self.solutions_py_file = "\n".join(_remove_consecutive_empty_lines(self.solutions_py_file))
 
     def get_page_links(self) -> tuple[list[str], list[str]]:
-        MASTER_FILE_ROOT = "https://colab.research.google.com/github/callummcdougall/ARENA_3.0/blob/master_file/"
+        MASTER_FILE_ROOT = "https://colab.research.google.com/github/chloeli-15/ARENA_evals/blob/main/"
         solutions_link = f"{MASTER_FILE_ROOT}{self.chapter_dir.name}/exercises/{self.exercise_dir_name}/{self.colab_name}_solutions.ipynb"
         exercises_link = f"{MASTER_FILE_ROOT}{self.chapter_dir.name}/exercises/{self.exercise_dir_name}/{self.colab_name}_exercises.ipynb"
         chapter_name_in_url = self.chapter_dir.name.replace("_", "-")
