@@ -27,20 +27,6 @@ r'''
 # ! TAGS: []
 
 r'''
-ARENA [streamlit page](https://arena3-chapter3-llm-eval.streamlit.app/[3.4]_Dataset_Generation)
-
-Please send any problems / bugs on the `#errata` channel in the [Slack group](https://join.slack.com/t/arena-uk/shared_invite/zt-2noug8mpy-TRYbCnc3pzj7ITNrZIjKww), and ask any questions on the dedicated channels for this chapter of material.
-
-If you want to change to dark mode, you can do this by clicking the three horizontal lines in the top-right, then navigating to Settings → Theme.
-
-Links to other chapters: [(0) Fundamentals](https://arena3-chapter0-fundamentals.streamlit.app/), [(1) Transformers & Mech Interp](https://arena3-chapter1-transformer-interp.streamlit.app/), [(2) RL](https://arena3-chapter2-rl.streamlit.app/).
-'''
-
-# ! CELL TYPE: markdown
-# ! FILTERS: []
-# ! TAGS: []
-
-r'''
 <img src = "https://raw.githubusercontent.com/info-arena/ARENA_img/refs/heads/main/img/ch3-evals-cover.jpeg" width = "600">
 '''
 
@@ -125,6 +111,7 @@ r'''
 # import sys
 # from importlib.metadata import distributions
 # from pathlib import Path
+# import warnings
 # IN_COLAB = "google.colab" in sys.modules
 
 # chapter = "chapter3_llm_evals"
@@ -133,7 +120,7 @@ r'''
 
 # # Install dependencies
 # if "inspect_ai" not in [dist.metadata["Name"] for dist in distributions()]:
-#     %pip install openai anthropic inspect_ai tabulate wikipedia
+#     %pip install openai anthropic inspect_ai tabulate wikipedia dotenv
 
 # # Get root directory, handling 3 different cases: (1) Colab, (2) notebook not in ARENA repo, (3) notebook in ARENA repo
 # root = (
@@ -155,6 +142,13 @@ r'''
 #         !mv {root}/{repo}-{branch}/{chapter} {root}/{chapter}
 #         !rm {root}/{branch}.zip
 #         !rmdir {root}/{repo}-{branch}
+
+# if IN_COLAB:
+#     from google.colab import userdata
+#     try:
+#         os.environ["OPENAI_API_KEY"] = userdata.get("OPENAI_API_KEY")
+#     except:
+#         warnings.warn("You don't have an OPENAI_API_KEY variable set in the secrets tab of your google colab.")
 
 
 # if f"{root}/{chapter}/exercises" not in sys.path:
@@ -206,7 +200,6 @@ api_key = os.getenv("OPENAI_API_KEY")
 openai.api_key = api_key
 
 client = OpenAI()
-
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -481,7 +474,6 @@ if MAIN:
     for problem, answer in x.correct_answers.items():
         print(f"{problem} = {answer}")
 
-
 # ! CELL TYPE: markdown
 # ! FILTERS: []
 # ! TAGS: []
@@ -580,7 +572,6 @@ class Tool:
     def description(self) -> dict: 
         """Returns the tool description in the API syntax"""
         ...
-
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -727,7 +718,6 @@ if MAIN:
 
 Calculator = CalculateTool()
 
-
 # ! CELL TYPE: markdown
 # ! FILTERS: []
 # ! TAGS: []
@@ -753,7 +743,6 @@ if MAIN:
 
     print(response.choices[0].message.content)
     print(response.choices[0].message.tool_calls)
-
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -872,7 +861,6 @@ def apply_tool_call_format(
         "name": tool_call.function.name
     }
 
-
 # ! CELL TYPE: markdown
 # ! FILTERS: []
 # ! TAGS: []
@@ -919,7 +907,6 @@ if MAIN:
     )
     print(response_to_tool_calls.choices[0].message.content)
     # END SOLUTION
-
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -1041,7 +1028,6 @@ class SimpleAgent:
 if MAIN:
     tests.test_execute_tool_calls(SimpleAgent, CalculateTool, ArithmeticTask)
 
-
 # ! CELL TYPE: markdown
 # ! FILTERS: []
 # ! TAGS: []
@@ -1057,7 +1043,6 @@ Then running the agent should cause the tool calls to be executed.
 if MAIN:
     my_simple_agent = SimpleAgent(task=ArithmeticTask(10, 15), tools=[Calculator])
     my_simple_agent.run()
-
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -1286,7 +1271,6 @@ class ArithmeticAgent(SimpleAgent):
             raise ValueError('"<answer>" not found in model response.')
         # END SOLUTION
 
-
 # ! CELL TYPE: markdown
 # ! FILTERS: []
 # ! TAGS: []
@@ -1364,7 +1348,6 @@ if MAIN:
 
     agent_loop(arithmetic_agent_1)
 
-
 # ! CELL TYPE: markdown
 # ! FILTERS: []
 # ! TAGS: []
@@ -1382,7 +1365,6 @@ for message in arithmetic_agent_1.chat_history:
         print(f"""{str(message.role)}:\n {str(message.content)}\n""")
     except:
         print(f""" {message["role"]}:\n {message["content"]}\n""")
-
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -1443,7 +1425,6 @@ print(
     f"""\nLinks (link count {len(page.links)}): [{", ".join(page.links[:7])}, ......]"""
 )
 
-
 # ! CELL TYPE: markdown
 # ! FILTERS: []
 # ! TAGS: []
@@ -1458,13 +1439,11 @@ Now run these two lines (you should see a `DisambiguationError` for the first, a
 
 page = wikipedia.page("Python")
 
-
 # ! CELL TYPE: code
 # ! FILTERS: [~py]
 # ! TAGS: []
 
 page = wikipedia.page("Animalss", auto_suggest=False)
-
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -1489,7 +1468,6 @@ try:
 except DisambiguationError as e:
     page = wikipedia.page(e.options[0])
 print(page.title)
-
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -1522,7 +1500,6 @@ def get_page(title: str) -> WikipediaPage:
         return wikipedia.page(e.options[0], auto_suggest=False, redirect=True)
     except PageError as e:
         return wikipedia.page(title, auto_suggest=True, redirect=True)
-
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -1602,7 +1579,6 @@ def get_permitted_links(current_page: WikipediaPage) -> list[str]:
     permitted_links = [link for link in all_links if link.lower() in content_lower]
     return permitted_links
     # END SOLUTION
-
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -1786,7 +1762,6 @@ class WikiGame:
         return self.current_page == self.goal_page
         # END SOLUTION
 
-
 # ! CELL TYPE: markdown
 # ! FILTERS: []
 # ! TAGS: []
@@ -1943,7 +1918,6 @@ class MovePageTool():
 GetContentTool_inst = GetContentTool()
 MovePageTool_inst = MovePageTool()
 wiki_game_tools = [GetContentTool_inst, MovePageTool_inst]
-
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -2169,7 +2143,6 @@ class WikiAgent(SimpleAgent):
                 print(f"\nMODEL RESPONSE: \n{response.content}")
         # END SOLUTION
 
-
 # ! CELL TYPE: markdown
 # ! FILTERS: []
 # ! TAGS: []
@@ -2210,7 +2183,6 @@ def agent_loop(agent, num_loops=10):
         agent.run()
     # END SOLUTION
 
-
 # ! CELL TYPE: markdown
 # ! FILTERS: []
 # ! TAGS: []
@@ -2228,7 +2200,6 @@ if MAIN:
     agent = WikiAgent(task=game_1, tools=wiki_game_tools)
     agent_loop(agent, game_1, 30)
 
-
 # ! CELL TYPE: code
 # ! FILTERS: []
 # ! TAGS: []
@@ -2237,7 +2208,6 @@ if MAIN:
     game_2 = WikiGame("Albert Einstein", "Aristotle")
     agent = WikiAgent(task=game_2, tools=wiki_game_tools)
     agent_loop(agent, game_2, 30)
-
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -2259,7 +2229,6 @@ if MAIN:
             print(f"{str(message.role)}:\n {str(message.content)}")
         except:
             print(f"""{message["role"]}:\n {message["content"]}""")
-
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -2437,7 +2406,6 @@ class WikiGamePrompting(WikiGame):
         }
         # END SOLUTION
 
-
 # ! CELL TYPE: markdown
 # ! FILTERS: []
 # ! TAGS: []
@@ -2471,7 +2439,6 @@ if MAIN:
     agent = WikiAgent(game, model="gpt-4o-mini", tools=wiki_game_tools)
     agent_loop(agent, game, 30)
 
-
 # ! CELL TYPE: code
 # ! FILTERS: []
 # ! TAGS: []
@@ -2481,7 +2448,6 @@ if MAIN:
     game = WikiGamePrompting("Linux", "Dana Carvey")
     agent = WikiAgent(game, model="gpt-4o-mini", tools=wiki_game_tools)
     agent_loop(agent, game, 30)
-
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -2654,7 +2620,6 @@ class WikiAgentReAct(WikiAgent):
             self.handle_refusal(response)
         # END SOLUTION
 
-
 # ! CELL TYPE: markdown
 # ! FILTERS: []
 # ! TAGS: []
@@ -2682,7 +2647,6 @@ def agent_loop_ReAct(agent, num_loops = 10):
             return
         agent.run()
 
-
 # ! CELL TYPE: markdown
 # ! FILTERS: []
 # ! TAGS: []
@@ -2701,7 +2665,6 @@ if MAIN:
     agent = WikiAgent(task=game, tools=wiki_game_tools)
     agent_loop(agent, game, 40)
 
-
 # ! CELL TYPE: code
 # ! FILTERS: []
 # ! TAGS: []
@@ -2711,7 +2674,6 @@ if MAIN:
     game = WikiGameReAct("Drupe", "17th parallel north", tools=wiki_game_tools)
     agent = WikiAgentReAct(game, model="gpt-4o-mini", tools = wiki_game_tools)
     agent_loop_ReAct(game, agent,40)
-
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -2815,7 +2777,6 @@ if MAIN:
     TestPathTool_inst = TestPathTool()
     wiki_game_tools = [get_content_tool_inst, move_page_tool_inst, TestPathTool_inst]
 
-
 # ! CELL TYPE: markdown
 # ! FILTERS: []
 # ! TAGS: []
@@ -2913,7 +2874,6 @@ class WikiAgentChatHistory(WikiAgentReAct):
                 pass
         # END SOLUTION
 
-
 # ! CELL TYPE: markdown
 # ! FILTERS: []
 # ! TAGS: []
@@ -2929,7 +2889,6 @@ Now see how your agent performs:
 game = WikiGameReAct("Drupe", "17th parallel north", tools=wiki_game_tools)
 agent = WikiAgentChatHistory(game, model="gpt-4o-mini", tools = wiki_game_tools)
 agent_loop_ReAct(game, agent, 40)
-
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -3034,7 +2993,6 @@ class GetAccessiblePageSummaryTool():
 
 GetAccessiblePageSummaryTool_inst = GetAccessiblePageSummaryTool()
 wiki_game_tools = [GetContentTool_inst, MovePageTool_inst, TestPathTool_inst, GetAccessiblePageSummaryTool_inst]
-
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -3231,7 +3189,6 @@ class WikiGameRules(WikiGameReAct):
         }
         # END SOLUTION
 
-
 # ! CELL TYPE: markdown
 # ! FILTERS: []
 # ! TAGS: []
@@ -3310,7 +3267,6 @@ class MovePageTool_rules(MovePageTool):
             },
         }
         # END SOLUTION
-
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
