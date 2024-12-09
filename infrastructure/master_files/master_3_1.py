@@ -228,7 +228,9 @@ First, configure your OpenAI API key below.
 # ! TAGS: []
 
 # Configure your API key
+# FILTERS: ~colab
 load_dotenv()
+# END FILTERS
 api_key = os.getenv("OPENAI_API_KEY")
 openai.api_key = api_key
 
@@ -251,6 +253,8 @@ ANTHROPIC_API_KEY = "your-anthropic-key"
 Note that the names 'OPENAI_API_KEY' and 'ANTHROPIC_API_KEY' must be those exactly.
 
 Install `dotenv` library and import the `load_dotenv` function, which will read in variables in `.env` files.
+
+If you're working in google colab, then the provided code should be able to access API Keys which are stored in the secrets tab on the left-side of the screen (the key icon).
 
 </details>
 '''

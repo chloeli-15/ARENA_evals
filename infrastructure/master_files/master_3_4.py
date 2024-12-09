@@ -120,7 +120,7 @@ r'''
 
 # # Install dependencies
 # if "inspect_ai" not in [dist.metadata["Name"] for dist in distributions()]:
-#     %pip install openai anthropic inspect_ai tabulate wikipedia dotenv
+#     %pip install openai anthropic inspect_ai tabulate wikipedia jaxtyping
 
 # # Get root directory, handling 3 different cases: (1) Colab, (2) notebook not in ARENA repo, (3) notebook in ARENA repo
 # root = (
@@ -179,7 +179,10 @@ from abc import abstractmethod
 import math
 import re
 import openai
+
+# FILTERS: ~colab
 from dotenv import load_dotenv
+# END FILTERS
 
 #Make sure exercises are in the path
 chapter = r"chapter3_llm_evals"
@@ -195,7 +198,10 @@ import part4_llm_agents.tests as tests
 
 MAIN = __name__ == "__main__"
 
+# FILTERS: ~colab
 load_dotenv()
+# END FILTERS
+
 api_key = os.getenv("OPENAI_API_KEY")
 openai.api_key = api_key
 

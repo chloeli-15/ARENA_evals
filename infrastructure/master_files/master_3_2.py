@@ -198,7 +198,9 @@ MODEL = "gpt-4o-mini"
 # ! TAGS: []
 
 # Configure your OpenAI API key
+# FILTERS: ~colab
 load_dotenv()
+# END FILTERS
 api_key = os.getenv("OPENAI_API_KEY")
 openai.api_key = api_key
 client = OpenAI()
