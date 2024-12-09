@@ -215,7 +215,7 @@ if str(exercises_dir) not in sys.path: sys.path.append(str(exercises_dir))
 os.chdir(exercises_dir)
 
 from utils import import_json, save_json, retry_with_exponential_backoff, pretty_print_questions, load_jsonl, omit
-import part3_run_evals_with_inspect.tests as tests
+import part3_evals_with_inspect.tests as tests
 
 MAIN = __name__ == "__main__"
 
