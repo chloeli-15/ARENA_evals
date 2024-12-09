@@ -1661,9 +1661,9 @@ def filter_dataset(scored_dataset: List[dict], score_field: str, min_score: int,
     Returns:
         filtered_dataset: List[dict] - the filtered dataset
     """
-    # EXERCISE
     if score_field not in scored_dataset[0]:
         raise ValueError(f"Score field {score_field} not found in dataset")
+    # EXERCISE
     # raise NotImplementedError("Implement the filter_dataset function")
     # END EXERCISE
     # SOLUTION
@@ -1701,6 +1701,8 @@ Once you have a working model generator and evaluator, you can put them together
 We have provided some simple code below to generate and evaluate questions. First, you should start by establishing:
 * `total_q_to_gen`: the number of questions you want to generate in one run
 * The `min_score` for question to be kept in the filtered dataset
+* The prompts you want to use for generating questions
+* The rubric you want to use for scoring questions
 
 Each time you prompt the model to generate and score questions, you will want to store the generated question, question scores, filtered questions, and log of additional information into 4 files. To keep this organized, you can increment `version` by 1 to number the files each time you run the code.
 '''
@@ -1737,6 +1739,14 @@ if MAIN:
     pretty_print_messages(gen_prompts.get_message())
     print("\n\n======================= EVALUATION PROMPTS ==========================\n")
     pretty_print_messages(qc_prompt.get_message())
+
+# ! CELL TYPE: markdown
+# ! FILTERS: []
+# ! TAGS: []
+
+r'''
+Now, run the code below in order to generate and score questions. Each time you generate and score a new set of questions, you should change the `version` variable in the code above, so that the questions are stored in a separate file. You should also make sure that the `min_score` value you've chosen keeps your final filtered dataset to a high-quality.
+'''
 
 # ! CELL TYPE: code
 # ! FILTERS: []

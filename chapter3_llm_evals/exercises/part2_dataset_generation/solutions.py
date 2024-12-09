@@ -779,6 +779,8 @@ def filter_dataset(
     Returns:
         filtered_dataset: List[dict] - the filtered dataset
     """
+    if score_field not in scored_dataset[0]:
+        raise ValueError(f"Score field {score_field} not found in dataset")
 
     filtered_dataset = [q for q in scored_dataset if q[score_field] >= min_score]
     if save_to:
