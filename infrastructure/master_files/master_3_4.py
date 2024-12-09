@@ -120,7 +120,7 @@ r'''
 
 # # Install dependencies
 # if "inspect_ai" not in [dist.metadata["Name"] for dist in distributions()]:
-#     %pip install openai anthropic inspect_ai tabulate wikipedia jaxtyping
+#     %pip install openai==1.56.1 anthropic inspect_ai tabulate wikipedia jaxtyping
 
 # # Get root directory, handling 3 different cases: (1) Colab, (2) notebook not in ARENA repo, (3) notebook in ARENA repo
 # root = (
@@ -1366,11 +1366,12 @@ If we want to see how the model performed at the task, then we can print all the
 # ! FILTERS: []
 # ! TAGS: []
 
-for message in arithmetic_agent_1.chat_history:
-    try:
-        print(f"""{str(message.role)}:\n {str(message.content)}\n""")
-    except:
-        print(f""" {message["role"]}:\n {message["content"]}\n""")
+if MAIN:
+    for message in arithmetic_agent_1.chat_history:
+        try:
+            print(f"""{str(message.role)}:\n {str(message.content)}\n""")
+        except:
+            print(f""" {message["role"]}:\n {message["content"]}\n""")
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -1921,9 +1922,12 @@ class MovePageTool():
         }  
         # END SOLUTION
 
-GetContentTool_inst = GetContentTool()
-MovePageTool_inst = MovePageTool()
-wiki_game_tools = [GetContentTool_inst, MovePageTool_inst]
+# HIDE
+if MAIN:
+    GetContentTool_inst = GetContentTool()
+    MovePageTool_inst = MovePageTool()
+    wiki_game_tools = [GetContentTool_inst, MovePageTool_inst]
+# END HIDE
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -2644,7 +2648,7 @@ def agent_loop_ReAct(agent, num_loops = 10):
 
     Args:
         agent (WikiAgentReAct): The agent to run
-        game (WikiGameReAct): The game to play
+        game (WikiGamePrompting): The game to play
         num_loops (int): The number of loops to run
     """
     for i in range(num_loops):
@@ -2677,7 +2681,7 @@ if MAIN:
 
 if MAIN: 
     # WikiGame and WikiAgent with ReAct
-    game = WikiGameReAct("Drupe", "17th parallel north", tools=wiki_game_tools)
+    game = WikiGamePrompting("Drupe", "17th parallel north", tools=wiki_game_tools)
     agent = WikiAgentReAct(game, model="gpt-4o-mini", tools = wiki_game_tools)
     agent_loop_ReAct(game, agent,40)
 
@@ -2779,9 +2783,12 @@ class TestPathTool():
             }
         }
         # END SOLUTION
+
+# HIDE
 if MAIN:
     TestPathTool_inst = TestPathTool()
-    wiki_game_tools = [get_content_tool_inst, move_page_tool_inst, TestPathTool_inst]
+    wiki_game_tools = [GetContentTool_inst, MovePageTool_inst, TestPathTool_inst]
+# END HIDE
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -2892,9 +2899,10 @@ Now see how your agent performs:
 # ! FILTERS: []
 # ! TAGS: []
 
-game = WikiGameReAct("Drupe", "17th parallel north", tools=wiki_game_tools)
-agent = WikiAgentChatHistory(game, model="gpt-4o-mini", tools = wiki_game_tools)
-agent_loop_ReAct(game, agent, 40)
+if MAIN:
+    game = WikiGamePrompting("Drupe", "17th parallel north", tools=wiki_game_tools)
+    agent = WikiAgentChatHistory(game, model="gpt-4o-mini", tools = wiki_game_tools)
+    agent_loop_ReAct(game, agent, 40)
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -2997,8 +3005,11 @@ class GetAccessiblePageSummaryTool():
         }
         # END SOLUTION
 
-GetAccessiblePageSummaryTool_inst = GetAccessiblePageSummaryTool()
-wiki_game_tools = [GetContentTool_inst, MovePageTool_inst, TestPathTool_inst, GetAccessiblePageSummaryTool_inst]
+# HIDE
+if MAIN:
+    GetAccessiblePageSummaryTool_inst = GetAccessiblePageSummaryTool()
+    wiki_game_tools = [GetContentTool_inst, MovePageTool_inst, TestPathTool_inst, GetAccessiblePageSummaryTool_inst]
+# END HIDE
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -3095,8 +3106,9 @@ class GetAnyPageContent():
         # END SOLUTION
 
 # HIDE
-GetAnyPageContentTool_inst = GetAnyPageContent()
-wiki_game_tools = [GetContentTool_inst, MovePageTool_inst, TestPathTool_inst, GetAnyPageContentTool_inst]
+if MAIN:
+    GetAnyPageContentTool_inst = GetAnyPageContent()
+    wiki_game_tools = [GetContentTool_inst, MovePageTool_inst, TestPathTool_inst, GetAnyPageContentTool_inst]
 # END HIDE
 
 # ! CELL TYPE: markdown
@@ -3119,9 +3131,9 @@ First, let's modify the prompts in the Wikigame class so that we inform the agen
 # ! FILTERS: []
 # ! TAGS: []
 
-class WikiGameRules(WikiGameReAct):
+class WikiGameRules(WikiGamePrompting):
     """
-    Inherits from WikiGameReAct and adds the ability to store and display the rules of the game.
+    Inherits from WikiGamePrompting and adds the ability to store and display the rules of the game.
 
     Attributes:
         starting_page (str): The title of the starting page (inherited)
