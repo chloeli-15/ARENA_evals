@@ -138,7 +138,7 @@ r'''
 
 # # Install dependencies
 # if "inspect_ai" not in [dist.metadata["Name"] for dist in distributions()]:
-#     %pip install openai anthropic inspect_ai tabulate wikipedia dotenv
+#     %pip install openai anthropic inspect_ai tabulate wikipedia jaxtyping
 
 # # Get root directory, handling 3 different cases: (1) Colab, (2) notebook not in ARENA repo, (3) notebook in ARENA repo
 # root = (
@@ -185,7 +185,11 @@ import sys
 import openai
 from openai import OpenAI
 import json
+
+# FILTERS: ~colab
 from dotenv import load_dotenv
+# END FILTERS
+
 from typing import List, Dict, Any, Optional 
 import random
 import warnings
@@ -224,7 +228,9 @@ First, configure your OpenAI API key below.
 # ! TAGS: []
 
 # Configure your API key
+# FILTERS: ~colab
 load_dotenv()
+# END FILTERS
 api_key = os.getenv("OPENAI_API_KEY")
 openai.api_key = api_key
 
@@ -247,6 +253,8 @@ ANTHROPIC_API_KEY = "your-anthropic-key"
 Note that the names 'OPENAI_API_KEY' and 'ANTHROPIC_API_KEY' must be those exactly.
 
 Install `dotenv` library and import the `load_dotenv` function, which will read in variables in `.env` files.
+
+If you're working in google colab, then the provided code should be able to access API Keys which are stored in the secrets tab on the left-side of the screen (the key icon).
 
 </details>
 '''

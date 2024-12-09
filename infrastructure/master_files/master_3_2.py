@@ -105,7 +105,7 @@ r'''
 
 # # Install dependencies
 # if "inspect_ai" not in [dist.metadata["Name"] for dist in distributions()]:
-#     %pip install openai anthropic inspect_ai tabulate wikipedia dotenv
+#     %pip install openai anthropic inspect_ai tabulate wikipedia jaxtyping
 
 # # Get root directory, handling 3 different cases: (1) Colab, (2) notebook not in ARENA repo, (3) notebook in ARENA repo
 # root = (
@@ -148,7 +148,11 @@ r'''
 import os
 from pathlib import Path
 import sys
+
+# FILTERS: ~colab
 from dotenv import load_dotenv
+# END FILTERS
+
 import openai
 from openai import OpenAI
 import random
@@ -194,7 +198,9 @@ MODEL = "gpt-4o-mini"
 # ! TAGS: []
 
 # Configure your OpenAI API key
+# FILTERS: ~colab
 load_dotenv()
+# END FILTERS
 api_key = os.getenv("OPENAI_API_KEY")
 openai.api_key = api_key
 client = OpenAI()

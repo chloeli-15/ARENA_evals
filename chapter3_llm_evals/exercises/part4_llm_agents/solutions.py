@@ -20,6 +20,7 @@ from abc import abstractmethod
 import math
 import re
 import openai
+
 from dotenv import load_dotenv
 
 # Make sure exercises are in the path
@@ -52,6 +53,7 @@ import part4_llm_agents.tests as tests
 MAIN = __name__ == "__main__"
 
 load_dotenv()
+
 api_key = os.getenv("OPENAI_API_KEY")
 openai.api_key = api_key
 

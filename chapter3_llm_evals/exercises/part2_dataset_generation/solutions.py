@@ -4,7 +4,9 @@
 import os
 from pathlib import Path
 import sys
+
 from dotenv import load_dotenv
+
 import openai
 from openai import OpenAI
 import random
