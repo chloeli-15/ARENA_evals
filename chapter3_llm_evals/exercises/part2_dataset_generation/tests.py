@@ -76,36 +76,28 @@ def test_filter_dataset(student_func: Callable):
         {"id": 5, "score": 80, "name": "Eve"}
     ]
     
-    # Test cases
-    test_cases = [
-        {"score_field": "score", "threshold": 80, "than_threshold": ">", "expected_count": 2},
-        {"score_field": "score", "threshold": 80, "than_threshold": ">=", "expected_count": 3},
-        {"score_field": "score", "threshold": 75, "than_threshold": "==", "expected_count": 1},
-        {"score_field": "score", "threshold": 85, "than_threshold": "!=", "expected_count": 4},
-        {"score_field": "score", "threshold": 80, "than_threshold": "<", "expected_count": 2},
-        {"score_field": "score", "threshold": 80, "than_threshold": "<=", "expected_count": 3},
+    # Test case 1: Basic filtering
+    result = student_func(test_data, "score", 80, None)
+    expected = [
+        {"id": 2, "score": 85, "name": "Bob"},
+        {"id": 3, "score": 90, "name": "Charlie"},
+        {"id": 5, "score": 80, "name": "Eve"}
     ]
+    assert result == expected, f"Failed basic filtering test. Expected {expected}, got {result}"
     
-    for i, case in enumerate(test_cases, 1):
-        result = student_func(test_data, case["score_field"], case["threshold"], case["than_threshold"], None)
-        
-        # Check if the result is a list
-        assert isinstance(result, list), f"Test case {i}: Result should be a list"
-        
-        # Check if the result has the correct number of items
-        assert len(result) == case["expected_count"], f"Test case {i}: Expected {case['expected_count']} items, got {len(result)}"
-        
-        # Check if all items in the result satisfy the condition
-        for item in result:
-            assert eval(f"item['{case['score_field']}'] {case['than_threshold']} {case['threshold']}"), \
-                f"Test case {i}: Item {item} does not satisfy the condition {case['score_field']} {case['than_threshold']} {case['threshold']}"
+    # Test case 2: Filter that returns all items
+    result = student_func(test_data, "score", 70, None)
+    assert result == test_data, "Failed when filter should return all items"
     
-    # Test error handling
-    try:
-        student_func(test_data, "invalid_field", 80, ">", None)
-        assert False, "Function should raise ValueError for invalid score_field"
-    except ValueError:
-        pass
+    # Test case 3: Filter that returns no items
+    result = student_func(test_data, "score", 95, None)
+    assert result == [], "Failed when filter should return empty list"
+    
+    # Test case 4: Test with exact boundary value
+    result = student_func(test_data, "score", 75, None)
+    expected = [q for q in test_data if q["score"] >= 75]
+    assert result == expected, "Failed boundary value test"
+    
     
     print("All tests passed successfully!")
 
