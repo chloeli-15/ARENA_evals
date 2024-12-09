@@ -1337,7 +1337,7 @@ def agent_loop_ReAct(agent, num_loops=10):
 
     Args:
         agent (WikiAgentReAct): The agent to run
-        game (WikiGameReAct): The game to play
+        game (WikiGamePrompting): The game to play
         num_loops (int): The number of loops to run
     """
     for i in range(num_loops):
@@ -1652,9 +1652,9 @@ if MAIN:
 # %%
 
 
-class WikiGameRules(WikiGameReAct):
+class WikiGameRules(WikiGamePrompting):
     """
-    Inherits from WikiGameReAct and adds the ability to store and display the rules of the game.
+    Inherits from WikiGamePrompting and adds the ability to store and display the rules of the game.
 
     Attributes:
         starting_page (str): The title of the starting page (inherited)

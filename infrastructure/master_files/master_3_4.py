@@ -1927,6 +1927,7 @@ if MAIN:
     GetContentTool_inst = GetContentTool()
     MovePageTool_inst = MovePageTool()
     wiki_game_tools = [GetContentTool_inst, MovePageTool_inst]
+# END HIDE
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -2647,7 +2648,7 @@ def agent_loop_ReAct(agent, num_loops = 10):
 
     Args:
         agent (WikiAgentReAct): The agent to run
-        game (WikiGameReAct): The game to play
+        game (WikiGamePrompting): The game to play
         num_loops (int): The number of loops to run
     """
     for i in range(num_loops):
@@ -2787,6 +2788,7 @@ class TestPathTool():
 if MAIN:
     TestPathTool_inst = TestPathTool()
     wiki_game_tools = [GetContentTool_inst, MovePageTool_inst, TestPathTool_inst]
+# END HIDE
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -3007,6 +3009,7 @@ class GetAccessiblePageSummaryTool():
 if MAIN:
     GetAccessiblePageSummaryTool_inst = GetAccessiblePageSummaryTool()
     wiki_game_tools = [GetContentTool_inst, MovePageTool_inst, TestPathTool_inst, GetAccessiblePageSummaryTool_inst]
+# END HIDE
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -3106,6 +3109,7 @@ class GetAnyPageContent():
 if MAIN:
     GetAnyPageContentTool_inst = GetAnyPageContent()
     wiki_game_tools = [GetContentTool_inst, MovePageTool_inst, TestPathTool_inst, GetAnyPageContentTool_inst]
+# END HIDE
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -3127,9 +3131,9 @@ First, let's modify the prompts in the Wikigame class so that we inform the agen
 # ! FILTERS: []
 # ! TAGS: []
 
-class WikiGameRules(WikiGameReAct):
+class WikiGameRules(WikiGamePrompting):
     """
-    Inherits from WikiGameReAct and adds the ability to store and display the rules of the game.
+    Inherits from WikiGamePrompting and adds the ability to store and display the rules of the game.
 
     Attributes:
         starting_page (str): The title of the starting page (inherited)
