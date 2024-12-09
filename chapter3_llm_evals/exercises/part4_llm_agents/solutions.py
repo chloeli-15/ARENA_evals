@@ -1358,7 +1358,7 @@ if MAIN:
 
 if MAIN:
     # WikiGame and WikiAgent with ReAct
-    game = WikiGameReAct("Drupe", "17th parallel north", tools=wiki_game_tools)
+    game = WikiGamePrompting("Drupe", "17th parallel north", tools=wiki_game_tools)
     agent = WikiAgentReAct(game, model="gpt-4o-mini", tools=wiki_game_tools)
     agent_loop_ReAct(game, agent, 40)
 
@@ -1435,7 +1435,7 @@ class TestPathTool:
 
 if MAIN:
     TestPathTool_inst = TestPathTool()
-    wiki_game_tools = [get_content_tool_inst, move_page_tool_inst, TestPathTool_inst]
+    wiki_game_tools = [GetContentTool_inst, MovePageTool_inst, TestPathTool_inst]
 
 # %%
 
@@ -1496,9 +1496,10 @@ class WikiAgentChatHistory(WikiAgentReAct):
 
 # %%
 
-game = WikiGameReAct("Drupe", "17th parallel north", tools=wiki_game_tools)
-agent = WikiAgentChatHistory(game, model="gpt-4o-mini", tools=wiki_game_tools)
-agent_loop_ReAct(game, agent, 40)
+if MAIN:
+    game = WikiGamePrompting("Drupe", "17th parallel north", tools=wiki_game_tools)
+    agent = WikiAgentChatHistory(game, model="gpt-4o-mini", tools=wiki_game_tools)
+    agent_loop_ReAct(game, agent, 40)
 
 # %%
 

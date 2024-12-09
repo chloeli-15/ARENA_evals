@@ -2678,7 +2678,7 @@ if MAIN:
 
 if MAIN: 
     # WikiGame and WikiAgent with ReAct
-    game = WikiGameReAct("Drupe", "17th parallel north", tools=wiki_game_tools)
+    game = WikiGamePrompting("Drupe", "17th parallel north", tools=wiki_game_tools)
     agent = WikiAgentReAct(game, model="gpt-4o-mini", tools = wiki_game_tools)
     agent_loop_ReAct(game, agent,40)
 
@@ -2782,7 +2782,7 @@ class TestPathTool():
         # END SOLUTION
 if MAIN:
     TestPathTool_inst = TestPathTool()
-    wiki_game_tools = [get_content_tool_inst, move_page_tool_inst, TestPathTool_inst]
+    wiki_game_tools = [GetContentTool_inst, MovePageTool_inst, TestPathTool_inst]
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -2893,9 +2893,10 @@ Now see how your agent performs:
 # ! FILTERS: []
 # ! TAGS: []
 
-game = WikiGameReAct("Drupe", "17th parallel north", tools=wiki_game_tools)
-agent = WikiAgentChatHistory(game, model="gpt-4o-mini", tools = wiki_game_tools)
-agent_loop_ReAct(game, agent, 40)
+if MAIN:
+    game = WikiGamePrompting("Drupe", "17th parallel north", tools=wiki_game_tools)
+    agent = WikiAgentChatHistory(game, model="gpt-4o-mini", tools = wiki_game_tools)
+    agent_loop_ReAct(game, agent, 40)
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
