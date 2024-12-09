@@ -1922,9 +1922,11 @@ class MovePageTool():
         }  
         # END SOLUTION
 
-GetContentTool_inst = GetContentTool()
-MovePageTool_inst = MovePageTool()
-wiki_game_tools = [GetContentTool_inst, MovePageTool_inst]
+# HIDE
+if MAIN:
+    GetContentTool_inst = GetContentTool()
+    MovePageTool_inst = MovePageTool()
+    wiki_game_tools = [GetContentTool_inst, MovePageTool_inst]
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -2780,6 +2782,8 @@ class TestPathTool():
             }
         }
         # END SOLUTION
+
+# HIDE
 if MAIN:
     TestPathTool_inst = TestPathTool()
     wiki_game_tools = [GetContentTool_inst, MovePageTool_inst, TestPathTool_inst]
@@ -2999,8 +3003,10 @@ class GetAccessiblePageSummaryTool():
         }
         # END SOLUTION
 
-GetAccessiblePageSummaryTool_inst = GetAccessiblePageSummaryTool()
-wiki_game_tools = [GetContentTool_inst, MovePageTool_inst, TestPathTool_inst, GetAccessiblePageSummaryTool_inst]
+# HIDE
+if MAIN:
+    GetAccessiblePageSummaryTool_inst = GetAccessiblePageSummaryTool()
+    wiki_game_tools = [GetContentTool_inst, MovePageTool_inst, TestPathTool_inst, GetAccessiblePageSummaryTool_inst]
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -3097,9 +3103,9 @@ class GetAnyPageContent():
         # END SOLUTION
 
 # HIDE
-GetAnyPageContentTool_inst = GetAnyPageContent()
-wiki_game_tools = [GetContentTool_inst, MovePageTool_inst, TestPathTool_inst, GetAnyPageContentTool_inst]
-# END HIDE
+if MAIN:
+    GetAnyPageContentTool_inst = GetAnyPageContent()
+    wiki_game_tools = [GetContentTool_inst, MovePageTool_inst, TestPathTool_inst, GetAnyPageContentTool_inst]
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []

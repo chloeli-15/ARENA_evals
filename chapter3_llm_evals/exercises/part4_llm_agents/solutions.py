@@ -892,9 +892,10 @@ class MovePageTool:
         }
 
 
-GetContentTool_inst = GetContentTool()
-MovePageTool_inst = MovePageTool()
-wiki_game_tools = [GetContentTool_inst, MovePageTool_inst]
+if MAIN:
+    GetContentTool_inst = GetContentTool()
+    MovePageTool_inst = MovePageTool()
+    wiki_game_tools = [GetContentTool_inst, MovePageTool_inst]
 
 # %%
 
@@ -1560,13 +1561,14 @@ class GetAccessiblePageSummaryTool:
         }
 
 
-GetAccessiblePageSummaryTool_inst = GetAccessiblePageSummaryTool()
-wiki_game_tools = [
-    GetContentTool_inst,
-    MovePageTool_inst,
-    TestPathTool_inst,
-    GetAccessiblePageSummaryTool_inst,
-]
+if MAIN:
+    GetAccessiblePageSummaryTool_inst = GetAccessiblePageSummaryTool()
+    wiki_game_tools = [
+        GetContentTool_inst,
+        MovePageTool_inst,
+        TestPathTool_inst,
+        GetAccessiblePageSummaryTool_inst,
+    ]
 
 # %%
 
@@ -1638,13 +1640,14 @@ class GetAnyPageContent:
         }
 
 
-GetAnyPageContentTool_inst = GetAnyPageContent()
-wiki_game_tools = [
-    GetContentTool_inst,
-    MovePageTool_inst,
-    TestPathTool_inst,
-    GetAnyPageContentTool_inst,
-]
+if MAIN:
+    GetAnyPageContentTool_inst = GetAnyPageContent()
+    wiki_game_tools = [
+        GetContentTool_inst,
+        MovePageTool_inst,
+        TestPathTool_inst,
+        GetAnyPageContentTool_inst,
+    ]
 
 # %%
 
