@@ -120,7 +120,7 @@ r'''
 
 # # Install dependencies
 # if "inspect_ai" not in [dist.metadata["Name"] for dist in distributions()]:
-#     %pip install openai anthropic inspect_ai tabulate wikipedia jaxtyping
+#     %pip install openai==1.56.1 anthropic inspect_ai tabulate wikipedia jaxtyping
 
 # # Get root directory, handling 3 different cases: (1) Colab, (2) notebook not in ARENA repo, (3) notebook in ARENA repo
 # root = (
@@ -1366,11 +1366,12 @@ If we want to see how the model performed at the task, then we can print all the
 # ! FILTERS: []
 # ! TAGS: []
 
-for message in arithmetic_agent_1.chat_history:
-    try:
-        print(f"""{str(message.role)}:\n {str(message.content)}\n""")
-    except:
-        print(f""" {message["role"]}:\n {message["content"]}\n""")
+if MAIN:
+    for message in arithmetic_agent_1.chat_history:
+        try:
+            print(f"""{str(message.role)}:\n {str(message.content)}\n""")
+        except:
+            print(f""" {message["role"]}:\n {message["content"]}\n""")
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []

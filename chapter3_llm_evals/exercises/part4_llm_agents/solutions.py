@@ -608,11 +608,12 @@ if MAIN:
 
 # %%
 
-for message in arithmetic_agent_1.chat_history:
-    try:
-        print(f"""{str(message.role)}:\n {str(message.content)}\n""")
-    except:
-        print(f""" {message["role"]}:\n {message["content"]}\n""")
+if MAIN:
+    for message in arithmetic_agent_1.chat_history:
+        try:
+            print(f"""{str(message.role)}:\n {str(message.content)}\n""")
+        except:
+            print(f""" {message["role"]}:\n {message["content"]}\n""")
 
 # %%
 
