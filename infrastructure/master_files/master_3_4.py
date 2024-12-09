@@ -193,7 +193,7 @@ os.chdir(exercises_dir)
 
 from utils import import_json, save_json, retry_with_exponential_backoff, pretty_print_questions, load_jsonl, omit
 from utils import countrylist
-from utils import evaluate_expression, apply_user_format, apply_assistant_format, establish_client_anthropic, establish_client_OpenAI, retry_with_exponential_backoff
+from utils import evaluate_expression, apply_user_format, apply_system_format, apply_assistant_format, establish_client_anthropic, establish_client_OpenAI, retry_with_exponential_backoff
 import part4_llm_agents.tests as tests
 
 MAIN = __name__ == "__main__"
@@ -2208,7 +2208,7 @@ Your agent should be able to accomplish the following tasks:
 if MAIN:
     game_1 = WikiGame("Barack Obama", "India")
     agent = WikiAgent(task=game_1, tools=wiki_game_tools)
-    agent_loop(agent, game_1, 30)
+    agent_loop(agent, 30)
 
 # ! CELL TYPE: code
 # ! FILTERS: []
@@ -2217,7 +2217,7 @@ if MAIN:
 if MAIN:
     game_2 = WikiGame("Albert Einstein", "Aristotle")
     agent = WikiAgent(task=game_2, tools=wiki_game_tools)
-    agent_loop(agent, game_2, 30)
+    agent_loop(agent, 30)
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -2447,7 +2447,7 @@ if MAIN:
     # Original WikiGame and WikiAgent
     game = WikiGame("Linux", "Dana Carvey")
     agent = WikiAgent(game, model="gpt-4o-mini", tools=wiki_game_tools)
-    agent_loop(agent, game, 30)
+    agent_loop(agent, 30)
 
 # ! CELL TYPE: code
 # ! FILTERS: []
@@ -2457,7 +2457,7 @@ if MAIN:
     #Improved WikiGame and WikiAgent
     game = WikiGamePrompting("Linux", "Dana Carvey")
     agent = WikiAgent(game, model="gpt-4o-mini", tools=wiki_game_tools)
-    agent_loop(agent, game, 30)
+    agent_loop(agent, 30)
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
@@ -2673,7 +2673,7 @@ if MAIN:
     # WikiGame and WikiAgent with only improved prompting
     game = WikiGamePrompting("Drupe", "17th parallel north")
     agent = WikiAgent(task=game, tools=wiki_game_tools)
-    agent_loop(agent, game, 40)
+    agent_loop(agent, 40)
 
 # ! CELL TYPE: code
 # ! FILTERS: []
@@ -2902,7 +2902,7 @@ Now see how your agent performs:
 if MAIN:
     game = WikiGamePrompting("Drupe", "17th parallel north", tools=wiki_game_tools)
     agent = WikiAgentChatHistory(game, model="gpt-4o-mini", tools = wiki_game_tools)
-    agent_loop_ReAct(game, agent, 40)
+    agent_loop_ReAct(agent, 40)
 
 # ! CELL TYPE: markdown
 # ! FILTERS: []
