@@ -43,6 +43,7 @@ from utils import countrylist
 from utils import (
     evaluate_expression,
     apply_user_format,
+    apply_system_format,
     apply_assistant_format,
     establish_client_anthropic,
     establish_client_OpenAI,
@@ -1088,14 +1089,14 @@ def agent_loop(agent, num_loops=10):
 if MAIN:
     game_1 = WikiGame("Barack Obama", "India")
     agent = WikiAgent(task=game_1, tools=wiki_game_tools)
-    agent_loop(agent, game_1, 30)
+    agent_loop(agent, 30)
 
 # %%
 
 if MAIN:
     game_2 = WikiGame("Albert Einstein", "Aristotle")
     agent = WikiAgent(task=game_2, tools=wiki_game_tools)
-    agent_loop(agent, game_2, 30)
+    agent_loop(agent, 30)
 
 # %%
 
@@ -1185,7 +1186,7 @@ if MAIN:
     # Original WikiGame and WikiAgent
     game = WikiGame("Linux", "Dana Carvey")
     agent = WikiAgent(game, model="gpt-4o-mini", tools=wiki_game_tools)
-    agent_loop(agent, game, 30)
+    agent_loop(agent, 30)
 
 # %%
 
@@ -1193,7 +1194,7 @@ if MAIN:
     # Improved WikiGame and WikiAgent
     game = WikiGamePrompting("Linux", "Dana Carvey")
     agent = WikiAgent(game, model="gpt-4o-mini", tools=wiki_game_tools)
-    agent_loop(agent, game, 30)
+    agent_loop(agent, 30)
 
 # %%
 
@@ -1353,7 +1354,7 @@ if MAIN:
     # WikiGame and WikiAgent with only improved prompting
     game = WikiGamePrompting("Drupe", "17th parallel north")
     agent = WikiAgent(task=game, tools=wiki_game_tools)
-    agent_loop(agent, game, 40)
+    agent_loop(agent, 40)
 
 # %%
 
@@ -1500,7 +1501,7 @@ class WikiAgentChatHistory(WikiAgentReAct):
 if MAIN:
     game = WikiGamePrompting("Drupe", "17th parallel north", tools=wiki_game_tools)
     agent = WikiAgentChatHistory(game, model="gpt-4o-mini", tools=wiki_game_tools)
-    agent_loop_ReAct(game, agent, 40)
+    agent_loop_ReAct(agent, 40)
 
 # %%
 

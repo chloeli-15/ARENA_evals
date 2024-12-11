@@ -104,10 +104,7 @@ def test_solver_functions(solver_functions, test_dataset : Optional[list[Sample]
         model = "openai/gpt-4o-mini",
         log_dir = "./logs_from_solver_tests/"
     )
-    return f"Now call \"!inspect view\" with on the following log to see how your solvers worked  /logs_from_solver_tests/{log.eval.created}_{log.eval.task}_{log.eval.task_id}.json"
+    try: f"Now call \"!inspect view\" with on the following log to see how your solvers worked  /logs_from_solver_tests/{log[0].eval.created}_{log[0].eval.task}_{log[0].eval.task_id}.json"
+    except: f"Now call \"!inspect view\" with on the following log to see how your solvers worked  /logs_from_solver_tests/{log.eval.created}_{log.eval.task}_{log.eval.task_id}.json"
 
-
-#%%
-log = read_eval_log("C:\\Users\\styme\\OneDrive\\Documents\\AI STUFF\\Model Written Evals\\Code Replication\\ARENA_evals\\chapter3_llm_evals\\exercises\\logs\\2024-09-24T16-33-11+01-00_theory-of-mind_EQKNhWJD5ityeSnQZ8yLyz.json")
-# %%
 # %%
